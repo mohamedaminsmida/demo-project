@@ -20,10 +20,11 @@ type ServiceItem = {
 function ServiceCard({ service }: { service: ServiceItem }) {
     const isDark = service.variant === 'dark';
     const alignContentCenter = service.id === 'new-tires' || service.id === 'used-tires';
+    const useGrayBackground = service.id === 'new-tires' || service.id === 'wheels';
 
     return (
         <div
-            className={`flex flex-col gap-4 p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : 'bg-white text-slate-900'} ${
+            className={`flex flex-col gap-4 p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : useGrayBackground ? 'bg-[#f5f5f5] text-slate-900' : 'bg-white text-slate-900'} ${
                 alignContentCenter ? 'items-center md:items-start' : ''
             }`}
         >

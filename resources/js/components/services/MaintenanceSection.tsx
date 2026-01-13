@@ -18,6 +18,7 @@ type MaintenanceBlock = {
     imageClass?: string;
     iconMaxWidth?: string;
     iconMaxHeight?: string;
+    backgroundClass?: string;
 };
 
 const maintenanceBlocks: MaintenanceBlock[] = [
@@ -30,6 +31,7 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: oilIcon,
         ctaLabel: 'Schedule service',
         ctaHref: '#contact',
+        backgroundClass: 'bg-[#f5f5f5]',
     },
     {
         id: 'brakes',
@@ -40,6 +42,7 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: brakesIcon,
         ctaLabel: 'Book brake service',
         ctaHref: '#contact',
+        backgroundClass: 'bg-[#f5f5f5]',
     },
 ];
 
@@ -56,7 +59,7 @@ export default function MaintenanceSection() {
                     {maintenanceBlocks.map((block, index) => (
                         <div
                             key={block.id}
-                            className={`flex flex-col gap-8 bg-white px-4 py-6 lg:flex-row ${
+                            className={`flex flex-col gap-8 ${block.backgroundClass ?? 'bg-white'} px-4 py-6 lg:flex-row ${
                                 index === 0 ? 'lg:gap-12' : 'lg:gap-2'
                             } ${index % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}
                         >
