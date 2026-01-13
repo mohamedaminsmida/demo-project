@@ -1,12 +1,13 @@
 import { Head } from '@inertiajs/react';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import firstServiceImage from '../../images/FIRST.jpg';
 import heroBackgroundImage from '../../images/first_section.png';
 import secondServiceImage from '../../images/SECONDE.jpg';
-import wheelsBackgroundImage from '../../images/wheels_background.jpg';
 
+import BookingWizard from '../components/booking/BookingWizard';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
+import ServicesCards from '../components/services/ServicesCards';
 import { getServiceBySlug, isBrakeService, isOilService, isRepairService, isTireService, type ServiceConfig } from '../config/services';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,7 +26,20 @@ interface VehicleInfo {
     notes: string;
 }
 
-function buildServicePreview(service: ServiceConfig) {
+interface ServicePreviewFeature {
+    label: string;
+    description?: string;
+    highlighted?: boolean;
+}
+
+interface ServicePreviewData {
+    title: string;
+    subtitle?: string;
+    features: ServicePreviewFeature[];
+    price?: number;
+}
+
+function buildServicePreview(service: ServiceConfig): ServicePreviewData {
     const baseFeatures = [
         { label: 'Professional technicians', description: 'Factory-trained and certified', highlighted: true },
         { label: 'Same-day availability', description: 'Flexible appointment windows' },
@@ -41,6 +55,7 @@ function buildServicePreview(service: ServiceConfig) {
                 { label: 'TPMS inspection', description: 'Sensor diagnostics' },
                 { label: 'Alignment check', description: 'Recommended for new tires' },
             ],
+            price: service.basePrice,
         };
     }
 
@@ -53,6 +68,7 @@ function buildServicePreview(service: ServiceConfig) {
                 { label: 'Multi-point inspection', description: 'Complimentary report' },
                 { label: 'Service reminders', description: 'Text/email updates' },
             ],
+            price: service.basePrice,
         };
     }
 
@@ -60,6 +76,7 @@ function buildServicePreview(service: ServiceConfig) {
         title: `${service.name} Diagnostics`,
         subtitle: 'Repairs',
         features: baseFeatures,
+        price: service.basePrice,
     };
 }
 
@@ -179,61 +196,35 @@ const initialState: BookingState = {
 // Helper Components
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ServiceHeader({ service, children }: { service: ServiceConfig; children?: ReactNode }) {
-    return (
-        <div className="mb-10 space-y-6">
-            {children && (
-                <div className="rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-[0_15px_35px_rgba(15,23,42,0.08)]">{children}</div>
-            )}
-
-            <div
-                className="min-h-[180px] rounded-2xl p-8 text-white shadow-lg"
-                style={{
-                    backgroundImage: `linear-gradient(135deg, rgba(17,24,39,0.92), rgba(15,23,42,0.78)), url(${wheelsBackgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                }}
-            >
-                <div className="flex items-start justify-between">
-                    <div>
-                        <p className="text-xs font-medium tracking-wide text-white/70 uppercase">Booking</p>
-                        <h2 className="text-2xl font-bold text-white">{service.name}</h2>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm text-white/70">Est. Duration</p>
-                        <p className="text-lg font-semibold text-white">{service.estimatedDuration}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 function StepIndicator({ currentStep, className = '' }: { currentStep: number; className?: string }) {
     return (
-        <div className={`flex flex-wrap items-center justify-between gap-4 ${className}`}>
+        <div className={`flex items-start justify-between ${className}`}>
             {STEPS.map((step, index) => (
-                <div key={step.id} className="flex min-w-[130px] flex-1 flex-col items-center gap-2">
-                    <div className="flex items-center gap-3">
-                        <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold transition-colors ${
-                                currentStep >= step.id ? 'bg-green-800 text-white' : 'bg-gray-200 text-gray-600'
-                            }`}
-                        >
-                            {currentStep > step.id ? (
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            ) : (
-                                step.id
-                            )}
+                <div key={step.id} className="flex flex-1 flex-col items-center gap-3">
+                    <div className="flex w-full items-center justify-center">
+                        {index > 0 && <div className={`h-1 flex-1 rounded-full ${currentStep > step.id ? 'bg-green-800' : 'bg-gray-200'}`} />}
+                        <div className="mx-2 flex-shrink-0">
+                            <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold transition-colors ${
+                                    currentStep >= step.id ? 'bg-green-800 text-white' : 'bg-gray-200 text-gray-600'
+                                }`}
+                            >
+                                {currentStep > step.id ? (
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                ) : (
+                                    step.id
+                                )}
+                            </div>
                         </div>
                         {index < STEPS.length - 1 && (
-                            <div className={`h-1 w-12 self-center rounded-full md:w-16 ${currentStep > step.id ? 'bg-green-800' : 'bg-gray-200'}`} />
+                            <div className={`h-1 flex-1 rounded-full ${currentStep > step.id ? 'bg-green-800' : 'bg-gray-200'}`} />
                         )}
                     </div>
-                    <span className={`text-sm font-medium ${currentStep >= step.id ? 'text-green-800' : 'text-gray-400'}`}>{step.name}</span>
+                    <span className={`text-center text-sm font-medium ${currentStep >= step.id ? 'text-green-800' : 'text-gray-400'}`}>
+                        {step.name}
+                    </span>
                 </div>
             ))}
         </div>
@@ -375,45 +366,8 @@ function TextArea({
     );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Step Components
 // ─────────────────────────────────────────────────────────────────────────────
-
-function Step1ServiceSummary({ service }: { service: ServiceConfig }) {
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Service Summary</h3>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Service</p>
-                        <p className="text-xl font-bold text-gray-900">{service.name}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Category</p>
-                        <p className="text-base text-gray-700 capitalize">{service.category}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Description</p>
-                        <p className="text-base text-gray-700">{service.description}</p>
-                    </div>
-                    <div className="flex gap-8">
-                        <div>
-                            <p className="text-sm font-medium text-gray-500">Estimated Duration</p>
-                            <p className="text-base text-gray-700">{service.estimatedDuration}</p>
-                        </div>
-                        {service.basePrice && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">Starting Price</p>
-                                <p className="text-base font-semibold text-green-700">${service.basePrice}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function Step2VehicleInfo({
     vehicle,
@@ -448,7 +402,7 @@ function Step2VehicleInfo({
                     />
                 </FormField>
 
-                <FormField label="Make" required>
+                <FormField label="Brand" required>
                     <Input value={vehicle.make} onChange={(v) => updateField('make', v)} placeholder="e.g., Toyota, Ford, Honda" required />
                 </FormField>
 
@@ -1061,80 +1015,64 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" background={heroBackground}>
             <Head title={`Book ${service.name}`} />
 
-            <ServiceHeader service={service}>
-                <StepIndicator currentStep={currentStep} className="px-2" />
-            </ServiceHeader>
-
-            <ServicePreview
-                title={buildServicePreview(service).title}
-                subtitle={buildServicePreview(service).subtitle}
-                features={buildServicePreview(service).features}
-                primaryImage={firstServiceImage}
-                secondaryImage={secondServiceImage}
-                className="mb-12"
-                footer={
-                    <div className="text-sm text-gray-500">
-                        Need help choosing the right options?{' '}
-                        <a href="/services" className="font-semibold text-green-700 hover:text-green-800">
-                            Chat with a specialist
-                        </a>
-                    </div>
-                }
-            />
-
-            <div className="min-h-[400px]">
-                {currentStep === 1 && <Step1ServiceSummary service={service} />}
-                {currentStep === 2 && (
-                    <Step2VehicleInfo
-                        vehicle={state.vehicle}
-                        onChange={(vehicle) => setState({ ...state, vehicle })}
-                        showTireSize={isTireService(service)}
+            <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit}>
+                <div>
+                    <ServicePreview
+                        title={buildServicePreview(service).title}
+                        subtitle={buildServicePreview(service).subtitle}
+                        features={buildServicePreview(service).features}
+                        price={buildServicePreview(service).price}
+                        primaryImage={firstServiceImage}
+                        secondaryImage={secondServiceImage}
+                        className="mb-10"
                     />
-                )}
-                {currentStep === 3 && <Step3ServiceDetails service={service} state={state} onChange={setState} />}
-                {currentStep === 4 && (
-                    <Step4Appointment appointment={state.appointment} onChange={(appointment) => setState({ ...state, appointment })} />
-                )}
-                {currentStep === 5 && <Step5CustomerInfo customer={state.customer} onChange={(customer) => setState({ ...state, customer })} />}
-                {currentStep === 6 && <Step6Review service={service} state={state} />}
-            </div>
+
+                    <div className="mt-25 mb-6">
+                        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">Book Another Service</h2>
+                        <ServicesCards
+                            services={[
+                                {
+                                    id: 'alignment',
+                                    title: 'Wheel Alignment Package',
+                                    description: 'Mount & balance included, TPMS inspection, Alignment check',
+                                    backgroundImage: firstServiceImage,
+                                    price: 120,
+                                },
+                                {
+                                    id: 'oil-change',
+                                    title: 'Oil Change Service',
+                                    description: 'OEM-grade fluids & parts, Multi-point inspection',
+                                    backgroundImage: secondServiceImage,
+                                    price: 45,
+                                },
+                                {
+                                    id: 'brake-service',
+                                    title: 'Brake Service',
+                                    description: 'Professional brake inspection and repair',
+                                    backgroundImage: firstServiceImage,
+                                    price: 200,
+                                },
+                            ]}
+                        />
+                    </div>
+                </div>
+
+                <Step2VehicleInfo
+                    vehicle={state.vehicle}
+                    onChange={(vehicle) => setState({ ...state, vehicle })}
+                    showTireSize={isTireService(service)}
+                />
+                <Step3ServiceDetails service={service} state={state} onChange={setState} />
+                <Step4Appointment appointment={state.appointment} onChange={(appointment) => setState({ ...state, appointment })} />
+                <Step5CustomerInfo customer={state.customer} onChange={(customer) => setState({ ...state, customer })} />
+                <Step6Review service={service} state={state} />
+            </BookingWizard>
 
             {submitError && (
                 <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700">
                     <p>{submitError}</p>
                 </div>
             )}
-
-            <div className="mt-8 flex justify-between border-t border-gray-200 pt-6">
-                <button
-                    type="button"
-                    onClick={handleBack}
-                    disabled={currentStep === 1}
-                    className="inline-flex items-center rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    Back
-                </button>
-
-                {currentStep < 6 ? (
-                    <button
-                        type="button"
-                        onClick={handleNext}
-                        disabled={!canProceed()}
-                        className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        Continue
-                    </button>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {isSubmitting ? 'Submitting...' : 'Confirm Booking'}
-                    </button>
-                )}
-            </div>
         </Layout>
     );
 }
