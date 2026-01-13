@@ -1,4 +1,8 @@
+import alignmentImage from '../../../images/alignment.png';
+import newTiresImage from '../../../images/new_tires.png';
 import redArrowIcon from '../../../images/svg/red-arrow.svg';
+import usedTiresImage from '../../../images/used_tiers.png';
+import wheelsImage from '../../../images/wheels.png';
 import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
@@ -10,6 +14,7 @@ type ServiceItem = {
     variant: 'light' | 'dark';
     ctaLabel: string;
     ctaHref: string;
+    image?: string;
 };
 
 function ServiceCard({ service }: { service: ServiceItem }) {
@@ -22,6 +27,11 @@ function ServiceCard({ service }: { service: ServiceItem }) {
                 alignContentCenter ? 'items-center md:items-start' : ''
             }`}
         >
+            {service.image && (
+                <div className={`flex md:mb-5 ${alignContentCenter ? 'w-full justify-center md:ml-16 md:justify-start' : ''}`}>
+                    <img src={service.image} alt="" aria-hidden className="h-16 w-auto" />
+                </div>
+            )}
             <h3 className={`text-2xl font-semibold md:text-3xl ${alignContentCenter ? 'text-center md:ml-16 md:self-start md:text-left' : ''}`}>
                 {service.title}
             </h3>
@@ -99,6 +109,7 @@ export default function TiresWheelsSection() {
             variant: 'light',
             ctaLabel: newTiresContent.ctaLabel ?? 'Call for availability',
             ctaHref: 'tel:+1-000-000-0000',
+            image: newTiresImage,
         },
         {
             id: 'alignments',
@@ -111,6 +122,7 @@ export default function TiresWheelsSection() {
             variant: 'dark',
             ctaLabel: alignmentsContent.ctaLabel ?? 'Book alignment',
             ctaHref: '#contact',
+            image: alignmentImage,
         },
         {
             id: 'used-tires',
@@ -135,6 +147,7 @@ export default function TiresWheelsSection() {
             variant: 'dark',
             ctaLabel: 'Get a quote',
             ctaHref: '#contact',
+            image: usedTiresImage,
         },
         {
             id: 'wheels',
@@ -153,6 +166,7 @@ export default function TiresWheelsSection() {
             variant: 'light',
             ctaLabel: 'Explore packages',
             ctaHref: '#contact',
+            image: wheelsImage,
         },
     ];
 
