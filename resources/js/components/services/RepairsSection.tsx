@@ -51,10 +51,10 @@ const repairCards: RepairCard[] = [
 
 export default function RepairsSection() {
     return (
-        <section className="mb-10 bg-[#f5f5f5] py-14 sm:py-5">
+        <section className="mb-2 mb-20 bg-[#f5f5f5] py-14 sm:py-0">
             <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center md:mb-8">
-                    <h2 className="mt-2 text-[clamp(2rem,4vw,2.8rem)] font-black tracking-[0.05em] text-[#232323] uppercase">Repairs</h2>
+                    <h2 className="text-[clamp(2rem,4vw,2.8rem)] font-black tracking-[0.05em] text-[#232323] uppercase">Repairs</h2>
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-3">

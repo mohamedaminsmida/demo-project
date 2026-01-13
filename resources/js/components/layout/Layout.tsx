@@ -7,12 +7,13 @@ import Header from './Header';
 type LayoutProps = PropsWithChildren<{
     background?: ReactNode;
     boxed?: boolean;
+    backgroundColorClass?: string;
 }>;
 
-export default function Layout({ children, background, boxed = true }: LayoutProps) {
+export default function Layout({ children, background, boxed = true, backgroundColorClass = 'bg-[#050505]' }: LayoutProps) {
     return (
         <LocaleProvider>
-            <div className="min-h-screen bg-[#050505] text-slate-900">
+            <div className={`min-h-screen ${backgroundColorClass} text-slate-900`}>
                 {background && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
                         {background}

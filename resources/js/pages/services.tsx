@@ -9,7 +9,7 @@ import TiresWheelsSection from '../components/services/TiresWheelsSection';
 
 export default function Services() {
     return (
-        <Layout boxed={false}>
+        <Layout boxed={false} backgroundColorClass="bg-[#f5f5f5]">
             <Head title="Services" />
 
             <div className="space-y-0 bg-[#f5f5f5]">

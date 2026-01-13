@@ -14,6 +14,8 @@ type MaintenanceBlock = {
     icon: string;
     ctaLabel: string;
     ctaHref: string;
+    imageWrapperClass?: string;
+    imageClass?: string;
 };
 
 const maintenanceBlocks: MaintenanceBlock[] = [
@@ -26,6 +28,8 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: oilIcon,
         ctaLabel: 'Schedule service',
         ctaHref: '#contact',
+        imageWrapperClass: 'relative lg:h-[420px] lg:w-[450px]',
+        imageClass: 'h-72 w-full object-cover lg:h-full',
     },
     {
         id: 'brakes',
@@ -36,6 +40,8 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: brakesIcon,
         ctaLabel: 'Book brake service',
         ctaHref: '#contact',
+        imageWrapperClass: 'relative lg:h-[420px] lg:w-[450px]',
+        imageClass: 'h-72 w-full object-cover lg:h-full',
     },
 ];
 
@@ -56,7 +62,7 @@ export default function MaintenanceSection() {
                                 index === 0 ? 'lg:gap-12' : 'lg:gap-10'
                             } ${index % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}
                         >
-                            <div className="relative lg:h-[420px] lg:w-[450px]">
+                            <div className={block.imageWrapperClass ?? 'relative lg:h-[420px] lg:w-[450px]'}>
                                 <div
                                     className={`absolute -bottom-4 ${index % 2 === 0 ? '-left-4' : '-right-4'} h-16 w-3 bg-red-600`}
                                     aria-hidden
@@ -64,7 +70,9 @@ export default function MaintenanceSection() {
                                 <img
                                     src={block.image}
                                     alt={block.title}
-                                    className={`h-72 w-full object-cover lg:h-full ${index % 2 !== 0 ? 'lg:-scale-x-100' : ''}`}
+                                    className={`${block.imageClass ?? 'h-72 w-full object-cover lg:h-full'} ${
+                                        index % 2 !== 0 ? 'lg:-scale-x-100' : ''
+                                    }`}
                                 />
                             </div>
                             <div className="flex flex-1 flex-col space-y-2 text-left">
