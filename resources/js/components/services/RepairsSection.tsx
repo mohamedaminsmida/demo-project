@@ -1,4 +1,7 @@
+import engineReplacementImage from '../../../images/engine_replacement.png';
+import liftImage from '../../../images/lift.png';
 import redArrowIcon from '../../../images/svg/red-arrow.svg';
+import transmissionImage from '../../../images/transmission.png';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type RepairCard = {
@@ -6,6 +9,7 @@ type RepairCard = {
     title: string;
     description: string;
     bullets: string[];
+    image: string;
     variant: 'light' | 'dark';
     ctaLabel: string;
     ctaHref: string;
@@ -18,6 +22,7 @@ const repairCards: RepairCard[] = [
         description:
             'Professional transmission diagnostics, service, and replacement. Reliable brake inspections and repairs to keep you safe on the road.',
         bullets: ['Fluid service', 'Transmission repair', 'Full rebuild or replacement'],
+        image: transmissionImage,
         variant: 'light',
         ctaLabel: 'Request estimate',
         ctaHref: '#contact',
@@ -27,6 +32,7 @@ const repairCards: RepairCard[] = [
         title: 'Engine Replacement',
         description: 'Complete engine replacement performed with precision and high-quality parts.',
         bullets: ['Engine sourcing', 'Installation', 'Final testing & tune'],
+        image: engineReplacementImage,
         variant: 'dark',
         ctaLabel: 'Call for details',
         ctaHref: 'tel:+1-000-000-0000',
@@ -36,6 +42,7 @@ const repairCards: RepairCard[] = [
         title: 'Lift Kits',
         description: 'Upgrade height and suspension with professional lift kit installation.',
         bullets: ['Lift kit fitting', 'Alignment after installation', 'Safety inspection'],
+        image: liftImage,
         variant: 'light',
         ctaLabel: 'Get a quote',
         ctaHref: '#contact',
@@ -53,15 +60,36 @@ export default function RepairsSection() {
                 <div className="grid gap-5 md:grid-cols-3">
                     {repairCards.map((card) => {
                         const isDark = card.variant === 'dark';
+                        const isTransmission = card.id === 'transmissions';
+                        const isEngine = card.id === 'engine-replacement';
+                        const isLiftCard = card.id === 'lift-kits';
                         return (
                             <article
                                 key={card.id}
                                 className={`${
                                     isDark ? 'bg-[#1c1c1c] text-white' : 'bg-white text-[#1f1f1f]'
-                                } mx-auto flex h-full w-full max-w-[360px] flex-col p-7 shadow-lg md:min-h-[370px]`}
+                                } mx-auto flex h-full w-full max-w-[360px] flex-col p-7 shadow-lg md:min-h-[350px]`}
                             >
                                 <div className="mb-5 space-y-2">
-                                    <h3 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-[#1f1f1f]'}`}>{card.title}</h3>
+                                    <div
+                                        className={`${
+                                            isTransmission ? 'max-w-[210px]' : isEngine ? 'max-w-[240px]' : isLiftCard ? 'max-w-[130px]' : 'w-full'
+                                        }`}
+                                    >
+                                        <img
+                                            src={card.image}
+                                            alt={card.title}
+                                            className={`mb-4 w-full rounded-md object-contain ${
+                                                isTransmission
+                                                    ? 'max-h-24 md:max-h-28'
+                                                    : isEngine
+                                                      ? 'max-h-28 md:max-h-32'
+                                                      : isLiftCard
+                                                        ? 'max-h-24 md:max-h-28'
+                                                        : ''
+                                            }`}
+                                        />
+                                    </div>
                                     <p className={`text-sm leading-relaxed ${isDark ? 'text-white/80' : 'text-[#4c4c4c]'}`}>{card.description}</p>
                                 </div>
                                 <ul className="flex flex-1 flex-col gap-3 text-sm">
