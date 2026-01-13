@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo } from 'react';
 
 import { Link, usePage } from '@inertiajs/react';
 
@@ -7,21 +7,9 @@ import { useLocale } from '../../locales/LocaleProvider';
 import LanguageSelector from './LanguageSelector';
 
 export default function Header() {
-    const { content: localeContent, currentCode, setLocale } = useLocale();
-    const [isScrolled, setIsScrolled] = useState(false);
+    const { content: localeContent, setLocale } = useLocale();
     const { url } = usePage();
     const pathname = url.split('?')[0];
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 16);
-        };
-
-        handleScroll();
-        window.addEventListener('scroll', handleScroll);
-
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
 
     const navLinks = useMemo(
         () => [
@@ -35,10 +23,10 @@ export default function Header() {
 
     return (
         <header className="z-40 w-full bg-transparent px-4 py-0.5 text-white md:px-6 md:py-1">
-            <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-2 py-0.5 text-white md:gap-5 md:px-6 md:py-1">
+            <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-2 py-0.5 text-white md:gap-5 md:px-6 md:py-1">
                 <div className="flex -translate-y-1 items-center gap-2.5">
                     <Link href="/">
-                        <img src="/storage/images/logo.png" alt="Luque Atelier logo" className="h-15 w-auto object-contain sm:h-20 lg:h-24" />
+                        <img src="/storage/images/logo.png" alt="Luque Atelier logo" className="h-16 w-auto object-contain sm:h-22 lg:h-26" />
                     </Link>
                 </div>
 

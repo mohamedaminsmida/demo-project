@@ -5,12 +5,11 @@ import Footer from './Footer';
 import Header from './Header';
 
 type LayoutProps = PropsWithChildren<{
-    hero?: ReactNode;
     background?: ReactNode;
     boxed?: boolean;
 }>;
 
-export default function Layout({ children, hero, background, boxed = true }: LayoutProps) {
+export default function Layout({ children, background, boxed = true }: LayoutProps) {
     return (
         <LocaleProvider>
             <div className="min-h-screen bg-[#050505] text-slate-900">
