@@ -16,6 +16,8 @@ type MaintenanceBlock = {
     ctaHref: string;
     imageWrapperClass?: string;
     imageClass?: string;
+    iconMaxWidth?: string;
+    iconMaxHeight?: string;
 };
 
 const maintenanceBlocks: MaintenanceBlock[] = [
@@ -28,8 +30,6 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: oilIcon,
         ctaLabel: 'Schedule service',
         ctaHref: '#contact',
-        imageWrapperClass: 'relative lg:h-[420px] lg:w-[450px]',
-        imageClass: 'h-72 w-full object-cover lg:h-full',
     },
     {
         id: 'brakes',
@@ -40,8 +40,6 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         icon: brakesIcon,
         ctaLabel: 'Book brake service',
         ctaHref: '#contact',
-        imageWrapperClass: 'relative lg:h-[420px] lg:w-[450px]',
-        imageClass: 'h-72 w-full object-cover lg:h-full',
     },
 ];
 
@@ -59,50 +57,36 @@ export default function MaintenanceSection() {
                         <div
                             key={block.id}
                             className={`flex flex-col gap-8 bg-white px-4 py-6 lg:flex-row ${
-                                index === 0 ? 'lg:gap-12' : 'lg:gap-10'
+                                index === 0 ? 'lg:gap-12' : 'lg:gap-2'
                             } ${index % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}
                         >
-                            {(() => {
-                                const isOilCard = block.id === 'oil-changes';
-                                const isBrakesCard = block.id === 'brakes';
-                                const imageWrapperClass =
-                                    block.imageWrapperClass ??
-                                    (isOilCard
-                                        ? 'relative max-w-[420px]'
-                                        : isBrakesCard
-                                          ? 'relative max-w-[420px]'
-                                          : 'relative lg:h-[420px] lg:w-[450px]');
-                                const imageSizingClass =
-                                    block.imageClass ??
-                                    (isOilCard
-                                        ? 'max-h-[320px] w-full object-cover md:max-h-[360px]'
-                                        : isBrakesCard
-                                          ? 'max-h-[320px] w-full object-cover md:max-h-[360px]'
-                                          : 'h-72 w-full object-cover lg:h-full');
-
-                                return (
-                                    <div className={imageWrapperClass}>
-                                        <div
-                                            className={`absolute -bottom-4 ${index % 2 === 0 ? '-left-4' : '-right-4'} h-16 w-3 bg-red-600`}
-                                            aria-hidden
-                                        ></div>
-                                        <img
-                                            src={block.image}
-                                            alt={block.title}
-                                            className={`${imageSizingClass} ${index % 2 !== 0 ? 'lg:-scale-x-100' : ''}`}
-                                        />
-                                    </div>
-                                );
-                            })()}
-                            <div className="flex flex-1 flex-col space-y-2 text-left">
+                            <div className={block.imageWrapperClass ?? 'relative lg:h-[420px] lg:w-[450px]'}>
+                                <div
+                                    className={`absolute -bottom-4 ${index % 2 === 0 ? '-left-4' : '-right-4'} h-16 w-3 bg-red-600`}
+                                    aria-hidden
+                                ></div>
+                                <img
+                                    src={block.image}
+                                    alt={block.title}
+                                    className={`${block.imageClass ?? 'h-72 w-full object-cover lg:h-full'} ${index % 2 !== 0 ? 'lg:-scale-x-100' : ''}`}
+                                />
+                            </div>
+                            <div className="flex flex-1 flex-col justify-center space-y-2 text-left">
                                 <div className="flex flex-col gap-1">
-                                    <div className="flex justify-start">
-                                        <img src={block.icon} alt="" aria-hidden className="h-14 w-14 object-contain md:h-50 md:w-50" />
+                                    <div className="mb-6 flex justify-start">
+                                        <div className={block.iconMaxWidth ?? 'max-w-[250px]'}>
+                                            <img
+                                                src={block.icon}
+                                                alt=""
+                                                aria-hidden
+                                                className={`w-full object-contain ${block.iconMaxHeight ?? 'max-h-20 md:max-h-50'}`}
+                                            />
+                                        </div>
                                     </div>
                                     <h3 className="text-xl font-semibold text-slate-900 md:text-2xl">{block.title}</h3>
                                 </div>
                                 <p className="text-sm text-slate-600 md:text-base">{block.description}</p>
-                                <ul className="space-y-2 text-xs text-slate-700 md:text-sm">
+                                <ul className="space-y-2 text-xs text-slate-700 md:mb-5 md:text-sm">
                                     {block.bullets.map((bullet) => (
                                         <li key={bullet} className="flex items-start gap-2">
                                             <img src={redArrowIcon} alt="" aria-hidden className="mt-0.5 h-4 w-4" />
