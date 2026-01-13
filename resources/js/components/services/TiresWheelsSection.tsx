@@ -171,7 +171,7 @@ export default function TiresWheelsSection() {
     ];
 
     return (
-        <section id="tires-section" className="bg-white pt-12 pb-6 lg:pt-10 lg:pb-0">
+        <section id="tires-section" className="bg-[#f5f5f5] pt-12 pb-6 lg:pt-10 lg:pb-0">
             <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center lg:mb-8">
                     <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">Tires & Wheels</h2>
