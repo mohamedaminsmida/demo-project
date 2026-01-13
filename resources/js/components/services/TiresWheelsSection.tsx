@@ -1,3 +1,4 @@
+import redArrowIcon from '../../../images/svg/red-arrow.svg';
 import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
@@ -13,26 +14,48 @@ type ServiceItem = {
 
 function ServiceCard({ service }: { service: ServiceItem }) {
     const isDark = service.variant === 'dark';
+    const alignContentCenter = service.id === 'new-tires' || service.id === 'used-tires';
 
     return (
-        <div className={`flex flex-col gap-4 p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : 'bg-white text-slate-900'}`}>
-            <h3 className="text-2xl font-semibold md:text-3xl">{service.title}</h3>
-            <p className={`text-base leading-relaxed ${isDark ? 'text-white/80' : 'text-slate-600'}`}>{service.description}</p>
+        <div
+            className={`flex flex-col gap-4 p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : 'bg-white text-slate-900'} ${
+                alignContentCenter ? 'items-center md:items-start' : ''
+            }`}
+        >
+            <h3 className={`text-2xl font-semibold md:text-3xl ${alignContentCenter ? 'text-center md:ml-16 md:self-start md:text-left' : ''}`}>
+                {service.title}
+            </h3>
+            <p
+                className={`text-base leading-relaxed ${isDark ? 'text-white/80' : 'text-slate-600'} ${
+                    alignContentCenter ? 'mx-auto max-w-xl text-center md:ml-16 md:text-left' : ''
+                }`}
+            >
+                {service.description}
+            </p>
 
             {service.sections.map((section) => (
-                <div key={section.heading} className="space-y-2">
+                <div
+                    key={section.heading}
+                    className={`w-full space-y-2 ${alignContentCenter ? 'mx-auto max-w-xl text-center md:ml-16 md:text-left' : ''}`}
+                >
                     <p className={`text-base font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{section.heading}</p>
                     <ul className="space-y-1 text-sm">
                         {section.items.map((item) => (
-                            <li key={`${section.heading}-${item}`} className={isDark ? 'text-white/75' : 'text-slate-700'}>
-                                {item}
+                            <li
+                                key={`${section.heading}-${item}`}
+                                className={`flex items-start gap-2 ${
+                                    isDark ? 'text-white/75' : 'text-slate-700'
+                                } ${alignContentCenter ? 'justify-center md:justify-start' : ''}`}
+                            >
+                                <img src={redArrowIcon} alt="" aria-hidden className="mt-0.5 h-4 w-4" />
+                                <span>{item}</span>
                             </li>
                         ))}
                     </ul>
                 </div>
             ))}
 
-            <div className="pt-3">
+            <div className={`pt-3 ${alignContentCenter ? 'mx-auto flex w-full max-w-xl justify-center md:ml-16 md:justify-start' : ''}`}>
                 <ServiceCtaButton label={service.ctaLabel} href={service.ctaHref} variant="filled" />
             </div>
         </div>
@@ -92,15 +115,21 @@ export default function TiresWheelsSection() {
         {
             id: 'used-tires',
             title: 'Used Tires',
-            description: 'Certified used tires inspected for tread depth and structure with quick installation.',
+            description: 'Budget-friendly, safety-checked used tires that deliver performance and value.',
             sections: [
                 {
                     heading: 'Includes',
-                    items: ['Tread & safety inspection', 'Mounting & balancing', 'Flat repair services'],
+                    items: ['Inspection before sale', 'Mounting & balancing', 'Warranty options'],
                 },
                 {
                     heading: 'Standard services rates',
-                    items: ['$40 — pair installation', 'Trade-in options available'],
+                    items: [
+                        'Flat Repairs',
+                        '$30 + tax (13"–18")',
+                        '$35 + tax (19"–22")',
+                        'Tire Rotation',
+                        '$45 (when tires are not purchased in-store)',
+                    ],
                 },
             ],
             variant: 'dark',
@@ -109,16 +138,16 @@ export default function TiresWheelsSection() {
         },
         {
             id: 'wheels',
-            title: 'Wheels & Packages',
-            description: 'Upgrade aesthetics and performance with OEM replacements or custom forged sets.',
+            title: 'Wheels',
+            description: 'Wheel installation, replacement, and upgrades for aesthetics and performance.',
             sections: [
                 {
                     heading: 'Includes',
-                    items: ['Wheel fitment consultation', 'Mounting & balancing', 'Protective coating options'],
+                    items: ['Wheel mounting', 'Balancing', 'Fitment assistance'],
                 },
                 {
                     heading: 'Standard services rates',
-                    items: ['Packages from $899', 'Refinishing from $120 per wheel'],
+                    items: ['Tire Dismount + Disposal', '$35 per tire (13"–17")', '$45 per tire (18"–20")'],
                 },
             ],
             variant: 'light',
@@ -128,14 +157,14 @@ export default function TiresWheelsSection() {
     ];
 
     return (
-        <section id="tires-section" className="bg-white pt-12 pb-10 lg:pt-20 lg:pb-14">
+        <section id="tires-section" className="bg-white pt-12 pb-10 lg:pt-10 lg:pb-10">
             <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
-                {/* Section Header */}
-                <div className="mb-8 text-center lg:mb-12">
+                <div className="mb-8 text-center lg:mb-8">
                     <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">Tires & Wheels</h2>
                 </div>
+            </div>
 
-                {/* Services Grid */}
+            <div className="w-full">
                 <div className="grid gap-0 md:grid-cols-2">
                     {services.map((service) => (
                         <ServiceCard key={service.id} service={service} />
