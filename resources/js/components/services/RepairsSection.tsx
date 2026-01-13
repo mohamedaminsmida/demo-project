@@ -24,8 +24,8 @@ const repairCards: RepairCard[] = [
         bullets: ['Fluid service', 'Transmission repair', 'Full rebuild or replacement'],
         image: transmissionImage,
         variant: 'light',
-        ctaLabel: 'Request estimate',
-        ctaHref: '#contact',
+        ctaLabel: 'Book Now',
+        ctaHref: '/appointment?service=transmission',
     },
     {
         id: 'engine-replacement',
@@ -34,8 +34,8 @@ const repairCards: RepairCard[] = [
         bullets: ['Engine sourcing', 'Installation', 'Final testing & tune'],
         image: engineReplacementImage,
         variant: 'dark',
-        ctaLabel: 'Call for details',
-        ctaHref: 'tel:+1-000-000-0000',
+        ctaLabel: 'Book Now',
+        ctaHref: '/appointment?service=engine-replacement',
     },
     {
         id: 'lift-kits',
@@ -44,8 +44,8 @@ const repairCards: RepairCard[] = [
         bullets: ['Lift kit fitting', 'Alignment after installation', 'Safety inspection'],
         image: liftImage,
         variant: 'light',
-        ctaLabel: 'Get a quote',
-        ctaHref: '#contact',
+        ctaLabel: 'Book Now',
+        ctaHref: '/appointment?service=lift-kit',
     },
 ];
 

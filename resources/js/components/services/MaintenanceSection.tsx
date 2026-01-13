@@ -29,8 +29,8 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         bullets: ['Conventional / synthetic options', 'Filter replacement', 'Multi-point check'],
         image: firstImage,
         icon: oilIcon,
-        ctaLabel: 'Schedule service',
-        ctaHref: '#contact',
+        ctaLabel: 'Book Now',
+        ctaHref: '/appointment?service=oil-change',
         backgroundClass: 'bg-[#f5f5f5]',
     },
     {
@@ -40,8 +40,8 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         bullets: ['Pad and rotor replacements', 'Caliper diagnostics', 'Fluid bleed or flush'],
         image: secondeImage,
         icon: brakesIcon,
-        ctaLabel: 'Book brake service',
-        ctaHref: '#contact',
+        ctaLabel: 'Book Now',
+        ctaHref: '/appointment?service=brakes',
         backgroundClass: 'bg-[#f5f5f5]',
     },
 ];

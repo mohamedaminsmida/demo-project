@@ -14,3 +14,7 @@ Route::get('/services', function () {
 Route::get('/service-appointment', function () {
     return Inertia::render('service-appointment');
 })->name('service.appointment');
+
+Route::get('/appointment', function () {
+    return Inertia::render('BookService');
+})->name('appointment');

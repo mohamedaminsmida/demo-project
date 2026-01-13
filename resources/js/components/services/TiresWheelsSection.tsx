@@ -108,8 +108,8 @@ export default function TiresWheelsSection() {
                 { heading: newTiresContent.ratesTitle, items: [...newTiresContent.rates] },
             ],
             variant: 'light',
-            ctaLabel: newTiresContent.ctaLabel ?? 'Call for availability',
-            ctaHref: 'tel:+1-000-000-0000',
+            ctaLabel: newTiresContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=new-tires',
             image: newTiresImage,
         },
         {
@@ -121,8 +121,8 @@ export default function TiresWheelsSection() {
                 { heading: alignmentsContent.ratesTitle, items: [...alignmentsContent.rates] },
             ],
             variant: 'dark',
-            ctaLabel: alignmentsContent.ctaLabel ?? 'Book alignment',
-            ctaHref: '#contact',
+            ctaLabel: alignmentsContent.ctaLabel ?? 'Book Alignment',
+            ctaHref: '/appointment?service=alignment',
             image: alignmentImage,
         },
         {
@@ -146,8 +146,8 @@ export default function TiresWheelsSection() {
                 },
             ],
             variant: 'dark',
-            ctaLabel: 'Get a quote',
-            ctaHref: '#contact',
+            ctaLabel: 'Book Now',
+            ctaHref: '/appointment?service=used-tires',
             image: usedTiresImage,
         },
         {
@@ -165,8 +165,8 @@ export default function TiresWheelsSection() {
                 },
             ],
             variant: 'light',
-            ctaLabel: 'Explore packages',
-            ctaHref: '#contact',
+            ctaLabel: 'Book Now',
+            ctaHref: '/appointment?service=wheels',
             image: wheelsImage,
         },
     ];
