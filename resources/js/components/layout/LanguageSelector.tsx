@@ -26,7 +26,15 @@ export default function LanguageSelector({ current, options, onSelect }: Languag
             <summary className="inline-flex cursor-pointer list-none items-center justify-between gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold tracking-[0.15em] text-slate-800 uppercase transition hover:border-slate-300 md:text-xs">
                 <span className="text-sm leading-none">{current.flag}</span>
                 <span>{current.code}</span>
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden
+                    className="transition-transform duration-200 group-open:rotate-180"
+                >
                     <path d="M3 5L6 8L9 5" stroke="#111" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
             </summary>

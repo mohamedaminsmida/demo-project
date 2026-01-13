@@ -24,7 +24,15 @@ export default function OurServicesSection() {
                         At Luque Tires, we provide complete tire care, essential maintenance, and expert repairs — all with honest pricing, fast
                         turnaround, and bilingual service. Choose a category below to explore what we offer.
                     </p>
-                    <ServiceCtaButton />
+                    <ServiceCtaButton
+                        onClick={(event) => {
+                            if (typeof window !== 'undefined') {
+                                event.preventDefault();
+                                const target = document.querySelector('#tires-section');
+                                target?.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }}
+                    />
                 </div>
             </div>
         </section>

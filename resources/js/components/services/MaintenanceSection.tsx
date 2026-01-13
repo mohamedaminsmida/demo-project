@@ -62,19 +62,38 @@ export default function MaintenanceSection() {
                                 index === 0 ? 'lg:gap-12' : 'lg:gap-10'
                             } ${index % 2 !== 0 ? 'lg:flex-row-reverse' : ''}`}
                         >
-                            <div className={block.imageWrapperClass ?? 'relative lg:h-[420px] lg:w-[450px]'}>
-                                <div
-                                    className={`absolute -bottom-4 ${index % 2 === 0 ? '-left-4' : '-right-4'} h-16 w-3 bg-red-600`}
-                                    aria-hidden
-                                ></div>
-                                <img
-                                    src={block.image}
-                                    alt={block.title}
-                                    className={`${block.imageClass ?? 'h-72 w-full object-cover lg:h-full'} ${
-                                        index % 2 !== 0 ? 'lg:-scale-x-100' : ''
-                                    }`}
-                                />
-                            </div>
+                            {(() => {
+                                const isOilCard = block.id === 'oil-changes';
+                                const isBrakesCard = block.id === 'brakes';
+                                const imageWrapperClass =
+                                    block.imageWrapperClass ??
+                                    (isOilCard
+                                        ? 'relative max-w-[420px]'
+                                        : isBrakesCard
+                                          ? 'relative max-w-[420px]'
+                                          : 'relative lg:h-[420px] lg:w-[450px]');
+                                const imageSizingClass =
+                                    block.imageClass ??
+                                    (isOilCard
+                                        ? 'max-h-[320px] w-full object-cover md:max-h-[360px]'
+                                        : isBrakesCard
+                                          ? 'max-h-[320px] w-full object-cover md:max-h-[360px]'
+                                          : 'h-72 w-full object-cover lg:h-full');
+
+                                return (
+                                    <div className={imageWrapperClass}>
+                                        <div
+                                            className={`absolute -bottom-4 ${index % 2 === 0 ? '-left-4' : '-right-4'} h-16 w-3 bg-red-600`}
+                                            aria-hidden
+                                        ></div>
+                                        <img
+                                            src={block.image}
+                                            alt={block.title}
+                                            className={`${imageSizingClass} ${index % 2 !== 0 ? 'lg:-scale-x-100' : ''}`}
+                                        />
+                                    </div>
+                                );
+                            })()}
                             <div className="flex flex-1 flex-col space-y-2 text-left">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex justify-start">
