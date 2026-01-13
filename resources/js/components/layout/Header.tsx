@@ -2,6 +2,7 @@ import { Fragment, useMemo } from 'react';
 
 import { Link, usePage } from '@inertiajs/react';
 
+import logoImage from '../../../images/logo.png';
 import { locales } from '../../locales';
 import { useLocale } from '../../locales/LocaleProvider';
 import LanguageSelector from './LanguageSelector';
@@ -26,7 +27,7 @@ export default function Header() {
             <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-2 py-0.5 text-white md:gap-5 md:px-6 md:py-1">
                 <div className="flex -translate-y-1 items-center gap-2.5">
                     <Link href="/">
-                        <img src="/storage/images/logo.png" alt="Luque Atelier logo" className="h-16 w-auto object-contain sm:h-22 lg:h-26" />
+                        <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto object-contain sm:h-22 lg:h-26" />
                     </Link>
                 </div>
 

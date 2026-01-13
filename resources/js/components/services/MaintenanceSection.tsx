@@ -1,3 +1,5 @@
+import firstImage from '../../../images/FIRST.jpg';
+import secondeImage from '../../../images/SECONDE.jpg';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type MaintenanceBlock = {
@@ -16,7 +18,7 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         title: 'Oil Changes',
         description: 'Quick, clean oil changes to protect your engine and improve performance.',
         bullets: ['Conventional / synthetic options', 'Filter replacement', 'Multi-point check'],
-        image: '/storage/images/FIRST.jpg',
+        image: firstImage,
         ctaLabel: 'Schedule service',
         ctaHref: '#contact',
     },
@@ -25,7 +27,7 @@ const maintenanceBlocks: MaintenanceBlock[] = [
         title: 'Brakes',
         description: 'Reliable brake inspections and repairs to keep you safe on the road.',
         bullets: ['Pad and rotor replacements', 'Caliper diagnostics', 'Fluid bleed or flush'],
-        image: '/storage/images/SECONDE.jpg',
+        image: secondeImage,
         ctaLabel: 'Book brake service',
         ctaHref: '#contact',
     },

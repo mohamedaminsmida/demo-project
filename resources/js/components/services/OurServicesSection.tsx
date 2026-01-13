@@ -1,10 +1,11 @@
 import type { CSSProperties } from 'react';
 
+import firstSectionBg from '../../../images/first_section.png';
 import ServiceCtaButton from './ServiceCtaButton';
 
 export default function OurServicesSection() {
     const sectionStyle: CSSProperties = {
-        backgroundImage: "url('/storage/images/first_section.png')",
+        backgroundImage: `url(${firstSectionBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
