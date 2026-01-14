@@ -1,13 +1,16 @@
 import { Head } from '@inertiajs/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import firstServiceImage from '../../images/FIRST.jpg';
 import heroBackgroundImage from '../../images/first_section.png';
 import secondServiceImage from '../../images/SECONDE.jpg';
+import CheckIcon from '../../images/svg/check.svg';
 
+import AppointmentDatePicker from '../components/booking/AppointmentDatePicker';
 import BookingWizard from '../components/booking/BookingWizard';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
+import { Checkbox, Input, RadioGroup, Select, TextArea } from '../components/ui';
 import { getServiceBySlug, isBrakeService, isOilService, isRepairService, isTireService, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
@@ -16,7 +19,7 @@ import { useServices } from '../hooks/useServices';
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-type VehicleType = 'car' | 'suv' | 'truck' | 'van';
+type VehicleType = 'car' | 'light-truck' | 'truck' | 'motorcycle' | 'van' | 'other';
 
 interface VehicleInfo {
     vehicleType: VehicleType | '';
@@ -135,9 +138,9 @@ interface BookingState {
 
 const STEPS = [
     { id: 1, name: 'Service Summary' },
-    { id: 2, name: 'Vehicle Info' },
-    { id: 3, name: 'Service Details' },
-    { id: 4, name: 'Appointment' },
+    { id: 2, name: 'Appointment' },
+    { id: 3, name: 'Vehicle Info' },
+    { id: 4, name: 'Service Details' },
     { id: 5, name: 'Customer Info' },
     { id: 6, name: 'Review & Submit' },
 ];
@@ -145,10 +148,67 @@ const STEPS = [
 const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 
 const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-    { value: 'car', label: 'Car' },
-    { value: 'suv', label: 'SUV' },
-    { value: 'truck', label: 'Truck' },
-    { value: 'van', label: 'Van' },
+    { value: 'car', label: 'Cars' },
+    { value: 'light-truck', label: 'Light Trucks / SUVs' },
+    { value: 'truck', label: 'Trucks' },
+    { value: 'motorcycle', label: 'Motorcycles & Scooters' },
+    { value: 'van', label: 'Vans & Minivans' },
+    { value: 'other', label: 'Other' },
+];
+
+const VEHICLE_BRANDS: { value: string; label: string }[] = [
+    'Acura',
+    'Alfa Romeo',
+    'Audi',
+    'BMW',
+    'Buick',
+    'Cadillac',
+    'Chevrolet',
+    'Chrysler',
+    'Dodge',
+    'Ferrari',
+    'Fiat',
+    'Ford',
+    'GMC',
+    'Genesis',
+    'Honda',
+    'Hyundai',
+    'Infiniti',
+    'Jaguar',
+    'Jeep',
+    'Kia',
+    'Lamborghini',
+    'Land Rover',
+    'Lexus',
+    'Lincoln',
+    'Maserati',
+    'Mazda',
+    'McLaren',
+    'Mercedes-Benz',
+    'Mini',
+    'Mitsubishi',
+    'Nissan',
+    'Porsche',
+    'Ram',
+    'Subaru',
+    'Tesla',
+    'Toyota',
+    'Volkswagen',
+    'Volvo',
+].map((brand) => ({ value: brand, label: brand }));
+
+const TIRE_SIZES: string[] = [
+    '175/65R15',
+    '185/65R15',
+    '195/65R15',
+    '205/55R16',
+    '215/55R17',
+    '225/65R17',
+    '235/60R18',
+    '245/60R18',
+    '255/55R19',
+    '265/70R17',
+    'Other',
 ];
 
 const initialState: BookingState = {
@@ -245,129 +305,6 @@ function FormField({ label, required, children }: { label: string; required?: bo
     );
 }
 
-function Input({
-    type = 'text',
-    value,
-    onChange,
-    placeholder,
-    required,
-    className = '',
-}: {
-    type?: string;
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    required?: boolean;
-    className?: string;
-}) {
-    return (
-        <input
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            required={required}
-            className={`w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none ${className}`}
-        />
-    );
-}
-
-function Select({
-    value,
-    onChange,
-    options,
-    placeholder,
-    required,
-}: {
-    value: string;
-    onChange: (value: string) => void;
-    options: { value: string; label: string }[];
-    placeholder?: string;
-    required?: boolean;
-}) {
-    return (
-        <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            required={required}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
-        >
-            {placeholder && <option value="">{placeholder}</option>}
-            {options.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                </option>
-            ))}
-        </select>
-    );
-}
-
-function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
-    return (
-        <label className="flex cursor-pointer items-center gap-3">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-            />
-            <span className="text-sm text-gray-700">{label}</span>
-        </label>
-    );
-}
-
-function RadioGroup({
-    value,
-    onChange,
-    options,
-    name,
-}: {
-    value: string;
-    onChange: (value: string) => void;
-    options: { value: string; label: string }[];
-    name: string;
-}) {
-    return (
-        <div className="flex flex-wrap gap-4">
-            {options.map((opt) => (
-                <label key={opt.value} className="flex cursor-pointer items-center gap-2">
-                    <input
-                        type="radio"
-                        name={name}
-                        value={opt.value}
-                        checked={value === opt.value}
-                        onChange={(e) => onChange(e.target.value)}
-                        className="h-4 w-4 border-gray-300 text-green-600 focus:ring-green-500"
-                    />
-                    <span className="text-sm text-gray-700">{opt.label}</span>
-                </label>
-            ))}
-        </div>
-    );
-}
-
-function TextArea({
-    value,
-    onChange,
-    placeholder,
-    rows = 4,
-}: {
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    rows?: number;
-}) {
-    return (
-        <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            rows={rows}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
-        />
-    );
-}
-
 // Step Components
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -380,15 +317,36 @@ function Step2VehicleInfo({
     onChange: (vehicle: VehicleInfo) => void;
     showTireSize: boolean;
 }) {
+    const [useCustomBrand, setUseCustomBrand] = useState(() => {
+        if (!vehicle.make) return false;
+        return !VEHICLE_BRANDS.some((brand) => brand.value === vehicle.make);
+    });
+
     const updateField = <K extends keyof VehicleInfo>(field: K, value: VehicleInfo[K]) => {
         onChange({ ...vehicle, [field]: value });
     };
 
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 40 }, (_, i) => ({
-        value: String(currentYear - i),
-        label: String(currentYear - i),
-    }));
+    useEffect(() => {
+        if (!vehicle.make) {
+            setUseCustomBrand(false);
+            return;
+        }
+
+        const matchesPredefined = VEHICLE_BRANDS.some((brand) => brand.value === vehicle.make);
+        setUseCustomBrand(!matchesPredefined);
+    }, [vehicle.make]);
+
+    const yearOptions = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const range = Array.from({ length: 45 }, (_, i) => currentYear - i);
+
+        return [
+            { value: '', label: 'Select model year' },
+            { value: String(currentYear), label: `${currentYear} (Current Year)` },
+            ...range.slice(1).map((year) => ({ value: String(year), label: String(year) })),
+            { value: 'pre-1980', label: '1979 or Older' },
+        ];
+    }, []);
 
     return (
         <div className="space-y-6">
@@ -404,21 +362,44 @@ function Step2VehicleInfo({
                     />
                 </FormField>
 
-                <FormField label="Brand" required>
-                    <Input value={vehicle.make} onChange={(v) => updateField('make', v)} placeholder="e.g., Toyota, Ford, Honda" required />
+                <FormField label="Vehicle Brand" required>
+                    <Select
+                        value={useCustomBrand ? '__custom' : vehicle.make}
+                        onChange={(v) => {
+                            if (v === '__custom') {
+                                setUseCustomBrand(true);
+                                updateField('make', '');
+                                return;
+                            }
+                            setUseCustomBrand(false);
+                            updateField('make', v);
+                        }}
+                        options={[...VEHICLE_BRANDS, { value: '__custom', label: 'Other / Not Listed' }]}
+                        placeholder="Select brand"
+                        required
+                    />
+                    {useCustomBrand && (
+                        <Input className="mt-2" value={vehicle.make} onChange={(v) => updateField('make', v)} placeholder="Enter brand" required />
+                    )}
                 </FormField>
 
-                <FormField label="Model" required>
+                <FormField label="Vehicle Model" required>
                     <Input value={vehicle.model} onChange={(v) => updateField('model', v)} placeholder="e.g., Camry, F-150, Civic" required />
                 </FormField>
 
                 <FormField label="Year" required>
-                    <Select value={vehicle.year} onChange={(v) => updateField('year', v)} options={years} placeholder="Select year" required />
+                    <Select value={vehicle.year} onChange={(v) => updateField('year', v)} options={yearOptions} required />
                 </FormField>
 
                 {showTireSize && (
                     <FormField label="Tire Size" required>
-                        <Input value={vehicle.tireSize} onChange={(v) => updateField('tireSize', v)} placeholder="e.g., 225/65R17" required />
+                        <Select
+                            value={vehicle.tireSize}
+                            onChange={(v) => updateField('tireSize', v)}
+                            options={TIRE_SIZES.map((size) => ({ value: size, label: size }))}
+                            placeholder="Select tire size"
+                            required
+                        />
                     </FormField>
                 )}
 
@@ -427,7 +408,7 @@ function Step2VehicleInfo({
                 </FormField>
             </div>
 
-            <FormField label="Additional Notes">
+            <FormField label="Additional Notes (Optional)">
                 <TextArea
                     value={vehicle.notes}
                     onChange={(v) => updateField('notes', v)}
@@ -564,8 +545,6 @@ function Step3RepairOptions({ options, onChange }: { options: RepairOptions; onC
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Repair Details</h3>
-
             <FormField label="Describe the Problem" required>
                 <TextArea
                     value={options.problemDescription}
@@ -586,117 +565,189 @@ function Step3RepairOptions({ options, onChange }: { options: RepairOptions; onC
                     ]}
                 />
             </FormField>
-
-            <FormField label="Upload Photos (Optional)">
-                <div className="rounded-lg border-2 border-dashed border-gray-300 p-4">
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-green-700 hover:file:bg-green-100"
-                    />
-                    {options.photos.length > 0 && <p className="mt-2 text-sm text-gray-600">{options.photos.length} file(s) selected</p>}
-                </div>
-            </FormField>
         </div>
     );
 }
 
-function Step3ServiceDetails({ service, state, onChange }: { service: ServiceConfig; state: BookingState; onChange: (state: BookingState) => void }) {
-    if (isTireService(service)) {
-        return <Step3TireOptions options={state.tireOptions} onChange={(tireOptions) => onChange({ ...state, tireOptions })} />;
-    }
+// Helper to check if service has specific required fields from database
+function serviceHasField(service: ServiceConfig, fieldName: string): boolean {
+    return Array.isArray(service.requiredFields) && service.requiredFields.includes(fieldName as any);
+}
 
-    if (isOilService(service)) {
-        return <Step3OilOptions options={state.oilOptions} onChange={(oilOptions) => onChange({ ...state, oilOptions })} />;
-    }
+// Check if service has any tire-related fields
+function hasTireFields(service: ServiceConfig): boolean {
+    return (
+        serviceHasField(service, 'tire_condition') ||
+        serviceHasField(service, 'number_of_tires') ||
+        serviceHasField(service, 'tpms_service') ||
+        serviceHasField(service, 'alignment_service') ||
+        serviceHasField(service, 'wheel_type') ||
+        isTireService(service)
+    );
+}
 
-    if (isBrakeService(service)) {
-        return <Step3BrakeOptions options={state.brakeOptions} onChange={(brakeOptions) => onChange({ ...state, brakeOptions })} />;
-    }
+// Check if service has any oil-related fields
+function hasOilFields(service: ServiceConfig): boolean {
+    return serviceHasField(service, 'oil_type') || serviceHasField(service, 'last_change_date') || isOilService(service);
+}
 
-    if (isRepairService(service)) {
-        return <Step3RepairOptions options={state.repairOptions} onChange={(repairOptions) => onChange({ ...state, repairOptions })} />;
+// Check if service has any brake-related fields
+function hasBrakeFields(service: ServiceConfig): boolean {
+    return (
+        serviceHasField(service, 'brake_position') ||
+        serviceHasField(service, 'noise_or_vibration') ||
+        serviceHasField(service, 'warning_light') ||
+        isBrakeService(service)
+    );
+}
+
+// Check if service has any repair-related fields
+function hasRepairFields(service: ServiceConfig): boolean {
+    return (
+        serviceHasField(service, 'problem_description') ||
+        serviceHasField(service, 'vehicle_drivable') ||
+        serviceHasField(service, 'photo_paths') ||
+        isRepairService(service)
+    );
+}
+
+// Check if service has any required fields at all
+function hasAnyRequiredFields(service: ServiceConfig): boolean {
+    return hasTireFields(service) || hasOilFields(service) || hasBrakeFields(service) || hasRepairFields(service);
+}
+
+function Step3ServiceDetails({
+    services,
+    state,
+    onChange,
+}: {
+    services: ServiceConfig[];
+    state: BookingState;
+    onChange: (state: BookingState) => void;
+}) {
+    if (!services || services.length === 0) {
+        return (
+            <div className="space-y-6">
+                <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                        </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">No Services Selected</h3>
+                    <p className="mt-2 text-gray-500">Please go back to Step 1 and select at least one service to continue.</p>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Service Details</h3>
-            <p className="text-gray-600">No additional details required for this service.</p>
+            {/* Header */}
+            <div className="border-b border-gray-200 pb-4">
+                <h3 className="text-xl font-bold text-gray-900">Service Details</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                    Complete the details for your {services.length} selected service{services.length > 1 ? 's' : ''}
+                </p>
+            </div>
+
+            {/* Service Cards */}
+            <div className="space-y-4">
+                {services.map((service) => {
+                    const hasOptions = hasAnyRequiredFields(service);
+
+                    return (
+                        <div
+                            key={service.id}
+                            className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                        >
+                            {/* Service Header */}
+                            <div className="flex items-center gap-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white px-5 py-4">
+                                <div className="flex-1">
+                                    <h4 className="text-lg font-semibold text-gray-900">{service.name}</h4>
+                                    {service.category && (
+                                        <p className="text-xs font-medium tracking-wide text-green-600 uppercase">{service.category}</p>
+                                    )}
+                                </div>
+                                {hasOptions ? (
+                                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Details Required</span>
+                                ) : (
+                                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Ready</span>
+                                )}
+                            </div>
+
+                            {/* Service Options */}
+                            <div className="p-5">
+                                {hasTireFields(service) && (
+                                    <Step3TireOptions options={state.tireOptions} onChange={(tireOptions) => onChange({ ...state, tireOptions })} />
+                                )}
+
+                                {hasOilFields(service) && (
+                                    <Step3OilOptions options={state.oilOptions} onChange={(oilOptions) => onChange({ ...state, oilOptions })} />
+                                )}
+
+                                {hasBrakeFields(service) && (
+                                    <Step3BrakeOptions
+                                        options={state.brakeOptions}
+                                        onChange={(brakeOptions) => onChange({ ...state, brakeOptions })}
+                                    />
+                                )}
+
+                                {hasRepairFields(service) && (
+                                    <Step3RepairOptions
+                                        options={state.repairOptions}
+                                        onChange={(repairOptions) => onChange({ ...state, repairOptions })}
+                                    />
+                                )}
+
+                                {!hasOptions && (
+                                    <div className="flex items-center gap-3 rounded-lg bg-green-50 px-4 py-3">
+                                        <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <p className="text-sm font-medium text-green-700">
+                                            No additional details required for this service. You're all set!
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
 
 function Step4Appointment({ appointment, onChange }: { appointment: AppointmentInfo; onChange: (appointment: AppointmentInfo) => void }) {
-    const updateField = <K extends keyof AppointmentInfo>(field: K, value: AppointmentInfo[K]) => {
-        onChange({ ...appointment, [field]: value });
-    };
+    const handleDateChange = useCallback(
+        (date: string) => {
+            onChange({ ...appointment, date });
+        },
+        [appointment, onChange],
+    );
 
-    // Generate next 14 days for date selection
-    const availableDates = useMemo(() => {
-        const dates: { value: string; label: string }[] = [];
-        const today = new Date();
-        for (let i = 1; i <= 14; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-            // Skip Sundays
-            if (date.getDay() !== 0) {
-                const value = date.toISOString().split('T')[0];
-                const label = date.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                });
-                dates.push({ value, label });
-            }
-        }
-        return dates;
-    }, []);
+    const handleTimeChange = useCallback(
+        (time: string) => {
+            onChange({ ...appointment, time });
+        },
+        [appointment, onChange],
+    );
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Select Appointment</h3>
-
-            <FormField label="Preferred Date" required>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                    {availableDates.map((date) => (
-                        <button
-                            key={date.value}
-                            type="button"
-                            onClick={() => updateField('date', date.value)}
-                            className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                                appointment.date === date.value
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
-                            }`}
-                        >
-                            {date.label}
-                        </button>
-                    ))}
-                </div>
-            </FormField>
-
-            {appointment.date && (
-                <FormField label="Preferred Time" required>
-                    <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-                        {TIME_SLOTS.map((time) => (
-                            <button
-                                key={time}
-                                type="button"
-                                onClick={() => updateField('time', time)}
-                                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                                    appointment.time === time
-                                        ? 'border-green-500 bg-green-50 text-green-700'
-                                        : 'border-gray-200 hover:border-green-300 hover:bg-green-50'
-                                }`}
-                            >
-                                {time}
-                            </button>
-                        ))}
-                    </div>
-                </FormField>
-            )}
+            <h3 className="text-lg font-semibold text-gray-900">Appointment Date</h3>
+            <AppointmentDatePicker
+                selectedDate={appointment.date}
+                selectedTime={appointment.time}
+                onDateChange={handleDateChange}
+                onTimeChange={handleTimeChange}
+            />
         </div>
     );
 }
@@ -858,15 +909,21 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const canProceed = useCallback((): boolean => {
         switch (currentStep) {
             case 1:
+                // Service Summary
                 return true;
             case 2:
+                // Appointment
+                return !!(state.appointment.date && state.appointment.time);
+            case 3:
+                // Vehicle Info
                 const v = state.vehicle;
                 const baseValid = v.vehicleType && v.make && v.model && v.year;
                 if (service && isTireService(service)) {
                     return !!(baseValid && v.tireSize);
                 }
                 return !!baseValid;
-            case 3:
+            case 4:
+                // Service Details
                 if (!service) return false;
                 if (isTireService(service)) {
                     return !!state.tireOptions.newOrUsed;
@@ -881,12 +938,13 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     return !!(state.repairOptions.problemDescription && state.repairOptions.drivable);
                 }
                 return true;
-            case 4:
-                return !!(state.appointment.date && state.appointment.time);
             case 5:
+                // Customer Info
                 const c = state.customer;
-                return !!(c.fullName && c.phone && c.email);
+                const emailValid = c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email);
+                return !!(c.fullName && c.phone && emailValid);
             case 6:
+                // Review & Submit
                 return true;
             default:
                 return false;
@@ -911,8 +969,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         setIsSubmitting(true);
         setSubmitError(null);
 
+        // Combine the main service with any additional selected services
+        // Ensure IDs are numbers for the backend validation
+        const mainServiceId = typeof service.id === 'string' ? parseInt(service.id, 10) : service.id;
+        const allServiceIds = [
+            mainServiceId,
+            ...selectedServiceIds
+                .filter((id) => id !== service.id.toString() && id !== service.id)
+                .map((id) => (typeof id === 'string' ? parseInt(id, 10) : id)),
+        ].filter((id) => !isNaN(id));
+
         const payload = {
-            service_id: service.id,
+            service_ids: allServiceIds,
             vehicle: {
                 type: state.vehicle.vehicleType,
                 make: state.vehicle.make,
@@ -920,6 +988,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 year: state.vehicle.year,
                 tire_size: state.vehicle.tireSize || null,
                 vin: state.vehicle.vin || null,
+                notes: state.vehicle.notes || null,
             },
             service_options: {
                 tire_options: isTireService(service) ? state.tireOptions : null,
@@ -941,8 +1010,10 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 email: state.customer.email,
                 sms_updates: state.customer.smsUpdates,
             },
-            notes: state.vehicle.notes || null,
         };
+
+        console.log('Submitting appointment with payload:', payload);
+        console.log('Appointment state:', state.appointment);
 
         try {
             const response = await fetch('/api/appointments', {
@@ -954,12 +1025,20 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 body: JSON.stringify(payload),
             });
 
+            const data = await response.json();
+            console.log('Server response:', data);
+
             if (!response.ok) {
-                throw new Error('Failed to submit appointment');
+                // Log detailed validation errors
+                if (data.errors) {
+                    console.error('Validation errors:', data.errors);
+                }
+                throw new Error(data.message || 'Failed to submit appointment');
             }
 
             setSubmitSuccess(true);
         } catch (error) {
+            console.error('Submit error:', error);
             setSubmitError(error instanceof Error ? error.message : 'An error occurred');
         } finally {
             setIsSubmitting(false);
@@ -969,7 +1048,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Service not found
     if (!service) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" background={heroBackground}>
+            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
                 <Head title="Book Service" />
                 <div className="py-12 text-center">
                     <h1 className="mb-4 text-2xl font-bold text-gray-900">Service Not Found</h1>
@@ -988,13 +1067,11 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Success state
     if (submitSuccess) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" background={heroBackground}>
+            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-[#f5f5f5f5]" background={heroBackground}>
                 <Head title="Booking Confirmed" />
                 <div className="py-12 text-center">
-                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                        <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+                        <img src={CheckIcon} alt="Booking confirmed" className="h-8 w-8" />
                     </div>
                     <h1 className="mb-4 text-2xl font-bold text-gray-900">Booking Confirmed!</h1>
                     <p className="mb-2 text-gray-600">
@@ -1023,10 +1100,10 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     }
 
     return (
-        <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" background={heroBackground}>
+        <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
             <Head title={`Book ${service.name}`} />
 
-            <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit}>
+            <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit} canProceed={canProceed}>
                 <div>
                     {serviceLoading ? (
                         <div className="mb-10 bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12">
@@ -1055,6 +1132,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                                     backgroundImage: service.image || (index % 2 === 0 ? firstServiceImage : secondServiceImage),
                                     price: service.basePrice,
                                 }))}
+                                selectedServiceIds={selectedServiceIds}
                                 onServiceSelect={(serviceId) => {
                                     setSelectedServiceIds((prev) => {
                                         if (prev.includes(serviceId)) {
@@ -1068,13 +1146,17 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     </div>
                 </div>
 
+                <Step4Appointment appointment={state.appointment} onChange={(appointment) => setState((prev) => ({ ...prev, appointment }))} />
                 <Step2VehicleInfo
                     vehicle={state.vehicle}
                     onChange={(vehicle) => setState({ ...state, vehicle })}
                     showTireSize={isTireService(service)}
                 />
-                <Step3ServiceDetails service={service} state={state} onChange={setState} />
-                <Step4Appointment appointment={state.appointment} onChange={(appointment) => setState({ ...state, appointment })} />
+                <Step3ServiceDetails
+                    services={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
+                    state={state}
+                    onChange={setState}
+                />
                 <Step5CustomerInfo customer={state.customer} onChange={(customer) => setState({ ...state, customer })} />
                 <Step6Review service={service} state={state} />
             </BookingWizard>

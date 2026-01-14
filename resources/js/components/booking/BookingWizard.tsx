@@ -1,25 +1,64 @@
 import React from 'react';
 
+import CarIcon from '../../../images/svg/car.svg';
+import DateIcon from '../../../images/svg/date.svg';
+import PersonIcon from '../../../images/svg/person.svg';
+import SendIcon from '../../../images/svg/send.svg';
+import ServicesListIcon from '../../../images/svg/services_list.svg';
+import ToolIcon from '../../../images/svg/tool.svg';
+
 export interface BookingWizardProps {
     currentStep: number;
     onStepChange: (step: number) => void;
     onComplete: () => void;
+    canProceed?: () => boolean;
     children: React.ReactNode[];
 }
 
-const STEPS = [
-    { id: 1, title: 'Service' },
-    { id: 2, title: 'Vehicle Info' },
-    { id: 3, title: 'Service Details' },
-    { id: 4, title: 'Appointment' },
-    { id: 5, title: 'Customer Info' },
-    { id: 6, title: 'Submit' },
+const STEP_ICON_CLASS = 'h-5 w-5';
+
+const STEPS: { id: number; title: string; icon: string }[] = [
+    {
+        id: 1,
+        title: 'Service',
+        icon: ServicesListIcon,
+    },
+    {
+        id: 2,
+        title: 'Appointment',
+        icon: DateIcon,
+    },
+    {
+        id: 3,
+        title: 'Vehicle Info',
+        icon: CarIcon,
+    },
+    {
+        id: 4,
+        title: 'Service Details',
+        icon: ToolIcon,
+    },
+    {
+        id: 5,
+        title: 'Customer Info',
+        icon: PersonIcon,
+    },
+    {
+        id: 6,
+        title: 'Submit',
+        icon: SendIcon,
+    },
 ];
 
-export default function BookingWizard({ currentStep, onStepChange, onComplete, children }: BookingWizardProps) {
+export default function BookingWizard({ currentStep, onStepChange, onComplete, canProceed, children }: BookingWizardProps) {
     const childArray = React.Children.toArray(children);
 
     const handleNext = () => {
+        // Check if validation passes before proceeding
+        if (canProceed && !canProceed()) {
+            return;
+        }
+
         if (currentStep < STEPS.length) {
             onStepChange(currentStep + 1);
         } else {
@@ -34,7 +73,7 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pt-6">
             {/* Step Indicator */}
             <div className="mx-auto max-w-5xl px-4">
                 <div className="flex w-full items-start justify-between">
@@ -46,17 +85,13 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
                                     type="button"
                                     onClick={() => step.id <= currentStep && onStepChange(step.id)}
                                     disabled={step.id > currentStep}
-                                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors disabled:opacity-100 ${
+                                    className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-base font-semibold transition-colors disabled:opacity-100 ${
                                         currentStep >= step.id ? 'bg-green-700 text-white' : 'bg-[#B22222] text-white'
                                     } ${step.id <= currentStep ? 'cursor-pointer hover:bg-green-800' : 'cursor-default'}`}
                                 >
-                                    {currentStep > step.id ? (
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    ) : (
-                                        step.id
-                                    )}
+                                    <span className="flex items-center justify-center">
+                                        <img src={step.icon} alt={`${step.title} icon`} className={STEP_ICON_CLASS} />
+                                    </span>
                                 </button>
                                 {index < STEPS.length - 1 && (
                                     <div className={`h-0.5 flex-1 ${currentStep > step.id ? 'bg-green-700' : 'bg-[#B22222]'}`} />
@@ -94,7 +129,8 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
                     <button
                         type="button"
                         onClick={handleNext}
-                        className="inline-flex cursor-pointer items-center rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+                        disabled={canProceed ? !canProceed() : false}
+                        className="inline-flex cursor-pointer items-center rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-700"
                     >
                         Continue
                     </button>
@@ -102,7 +138,8 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
                     <button
                         type="button"
                         onClick={onComplete}
-                        className="inline-flex cursor-pointer items-center rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800"
+                        disabled={canProceed ? !canProceed() : false}
+                        className="inline-flex cursor-pointer items-center rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-700"
                     >
                         Confirm Booking
                     </button>

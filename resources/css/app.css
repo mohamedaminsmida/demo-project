@@ -1,7 +1,13 @@
 @import 'tailwindcss';
+@import './theme.css';
+
+@plugin 'tailwindcss-animate';
+@plugin 'tailwindcss-react-aria-components';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
 @theme {
     --font-sans: 'Karla', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

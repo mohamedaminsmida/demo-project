@@ -13,6 +13,9 @@
         "laravel/horizon": "^5.42",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
+        "nyholm/psr7": "^1.8",
+        "railsware/mailtrap-php": "^3.9",
+        "symfony/http-client": "^8.0",
         "tightenco/ziggy": "^2.6"
     },
     "require-dev": {

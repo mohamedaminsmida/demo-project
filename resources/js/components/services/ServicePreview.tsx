@@ -47,7 +47,7 @@ export default function ServicePreview({
     const formattedPrice = typeof price === 'number' ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price) : null;
 
     return (
-        <section className={`bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12 ${className}`}>
+        <section className={`rounded-3xl bg-[#f5f5f5f5] px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12 ${className}`}>
             <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="space-y-6">
                     <div className="space-y-3">

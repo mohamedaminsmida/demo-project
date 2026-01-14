@@ -3,9 +3,17 @@
 namespace App\Filament\Resources\ServiceAppointmentResource\Pages;
 
 use App\Filament\Resources\ServiceAppointmentResource;
+use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewServiceAppointment extends ViewRecord
 {
     protected static string $resource = ServiceAppointmentResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\EditAction::make(),
+        ];
+    }
 }

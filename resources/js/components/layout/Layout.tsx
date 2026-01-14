@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import { LocaleProvider } from '../../locales/LocaleProvider';
 import Footer from './Footer';
@@ -8,9 +9,23 @@ type LayoutProps = PropsWithChildren<{
     background?: ReactNode;
     boxed?: boolean;
     backgroundColorClass?: string;
+    contentBackgroundClass?: string;
 }>;
 
-export default function Layout({ children, background, boxed = true, backgroundColorClass = 'bg-[#050505]' }: LayoutProps) {
+export default function Layout({
+    children,
+    background,
+    boxed = true,
+    backgroundColorClass = 'bg-[#050505]',
+    contentBackgroundClass = 'bg-white',
+}: LayoutProps) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => setIsMounted(true), 50);
+        return () => window.clearTimeout(timer);
+    }, []);
+
     return (
         <LocaleProvider>
             <div className={`min-h-screen ${backgroundColorClass} text-slate-900`}>
@@ -22,11 +37,29 @@ export default function Layout({ children, background, boxed = true, backgroundC
                 <div className="relative flex min-h-screen flex-col">
                     <Header />
 
-                    <main className={`w-full flex-1 ${boxed ? 'mx-auto max-w-6xl px-4 py-12' : ''}`}>
+                    <main
+                        className={`w-full flex-1 transition-opacity duration-500 ease-out ${
+                            boxed ? 'mx-auto max-w-6xl px-4 py-12' : ''
+                        } ${isMounted ? 'opacity-100' : 'opacity-0'}`}
+                    >
                         {boxed ? (
-                            <div className="rounded-3xl border border-white/80 bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">{children}</div>
-                        ) : (
+                            <div
+                                className={`rounded-3xl border border-white/80 ${contentBackgroundClass} p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]`}
+                            >
+                                {isMounted ? (
+                                    children
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="h-8 w-1/3 animate-pulse rounded bg-slate-200" />
+                                        <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
+                                        <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+                                    </div>
+                                )}
+                            </div>
+                        ) : isMounted ? (
                             children
+                        ) : (
+                            <div className="mx-auto my-12 h-64 w-full max-w-4xl animate-pulse rounded-3xl bg-white/70" />
                         )}
                     </main>
 

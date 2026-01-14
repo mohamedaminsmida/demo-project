@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 export type ServiceCard = {
     id: string;
     title: string;
@@ -12,19 +10,12 @@ export type ServiceCard = {
 export type ServicesCardsProps = {
     services: ServiceCard[];
     className?: string;
+    selectedServiceIds?: string[];
     onServiceSelect?: (serviceId: string) => void;
 };
 
-export default function ServicesCards({ services, className = '', onServiceSelect }: ServicesCardsProps) {
-    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-
+export default function ServicesCards({ services, className = '', selectedServiceIds = [], onServiceSelect }: ServicesCardsProps) {
     const handleCardClick = (serviceId: string) => {
-        setSelectedServiceIds((prev) => {
-            if (prev.includes(serviceId)) {
-                return prev.filter((id) => id !== serviceId);
-            }
-            return [...prev, serviceId];
-        });
         onServiceSelect?.(serviceId);
     };
 

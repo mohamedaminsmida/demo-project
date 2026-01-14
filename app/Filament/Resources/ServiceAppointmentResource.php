@@ -88,6 +88,54 @@ class ServiceAppointmentResource extends Resource
                             ->searchable(),
                     ]),
 
+                Components\Section::make('Service Details (Customer Provided)')
+                    ->description('Details filled by customer during booking')
+                    ->schema([
+                        Forms\Components\Placeholder::make('service_details_info')
+                            ->label('')
+                            ->content(function ($record) {
+                                if (!$record) return 'Save the appointment first to see service details.';
+                                
+                                $details = [];
+                                foreach ($record->appointmentServices as $appointmentService) {
+                                    $serviceName = $appointmentService->service->name ?? 'Unknown Service';
+                                    $detail = $appointmentService->details;
+                                    
+                                    if (!$detail) {
+                                        $details[] = "<strong>{$serviceName}</strong>: No additional details provided.";
+                                        continue;
+                                    }
+                                    
+                                    $info = ["<strong>{$serviceName}</strong>:"];
+                                    
+                                    // Tire details
+                                    if ($detail->tire_condition) $info[] = "• Tire Condition: {$detail->tire_condition}";
+                                    if ($detail->number_of_tires) $info[] = "• Number of Tires: {$detail->number_of_tires}";
+                                    if ($detail->tpms_service) $info[] = "• TPMS Service: Yes";
+                                    if ($detail->alignment_service) $info[] = "• Alignment Service: Yes";
+                                    
+                                    // Oil details
+                                    if ($detail->oil_type) $info[] = "• Oil Type: {$detail->oil_type}";
+                                    if ($detail->last_change_date) $info[] = "• Last Change Date: " . $detail->last_change_date->format('M d, Y');
+                                    
+                                    // Brake details
+                                    if ($detail->brake_position) $info[] = "• Brake Position: {$detail->brake_position}";
+                                    if ($detail->noise_or_vibration) $info[] = "• Noise/Vibration: Yes";
+                                    if ($detail->warning_light) $info[] = "• Warning Light: Yes";
+                                    
+                                    // Repair details
+                                    if ($detail->problem_description) $info[] = "• Problem: {$detail->problem_description}";
+                                    if ($detail->vehicle_drivable) $info[] = "• Vehicle Drivable: {$detail->vehicle_drivable}";
+                                    
+                                    $details[] = implode('<br>', $info);
+                                }
+                                
+                                return new \Illuminate\Support\HtmlString(implode('<br><br>', $details) ?: 'No service details available.');
+                            }),
+                    ])
+                    ->collapsible()
+                    ->collapsed(false),
+
                 Components\Section::make('Pricing & Status')
                     ->schema([
                         Forms\Components\TextInput::make('estimated_price')
