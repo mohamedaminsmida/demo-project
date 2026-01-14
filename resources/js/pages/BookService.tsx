@@ -9,6 +9,8 @@ import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
 import { getServiceBySlug, isBrakeService, isOilService, isRepairService, isTireService, type ServiceConfig } from '../config/services';
+import { useService } from '../hooks/useService';
+import { useServices } from '../hooks/useServices';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -833,16 +835,25 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         />
     );
 
+    // Fetch services from database
+    const { services: dbServices, loading: servicesLoading } = useServices();
+
     // Get service slug from URL if not passed as prop
     const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
     const slug = serviceSlug || urlParams.get('service') || '';
-    const service = getServiceBySlug(slug);
+
+    // Fetch the selected service from database
+    const { service: dbService, loading: serviceLoading } = useService(slug);
+
+    // Fallback to static config if database service not loaded yet
+    const service = dbService || getServiceBySlug(slug);
 
     const [currentStep, setCurrentStep] = useState(1);
     const [state, setState] = useState<BookingState>(initialState);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
     const canProceed = useCallback((): boolean => {
         switch (currentStep) {
@@ -1017,43 +1028,43 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
 
             <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit}>
                 <div>
-                    <ServicePreview
-                        title={buildServicePreview(service).title}
-                        subtitle={buildServicePreview(service).subtitle}
-                        features={buildServicePreview(service).features}
-                        price={buildServicePreview(service).price}
-                        primaryImage={firstServiceImage}
-                        secondaryImage={secondServiceImage}
-                        className="mb-10"
-                    />
+                    {serviceLoading ? (
+                        <div className="mb-10 bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12">
+                            <div className="py-12 text-center">
+                                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>
+                                <p className="mt-4 text-gray-600">Loading service details...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <ServicePreview service={service} className="mb-10" />
+                    )}
 
                     <div className="mt-25 mb-6">
-                        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">Book Another Service</h2>
-                        <ServicesCards
-                            services={[
-                                {
-                                    id: 'alignment',
-                                    title: 'Wheel Alignment Package',
-                                    description: 'Mount & balance included, TPMS inspection, Alignment check',
-                                    backgroundImage: firstServiceImage,
-                                    price: 120,
-                                },
-                                {
-                                    id: 'oil-change',
-                                    title: 'Oil Change Service',
-                                    description: 'OEM-grade fluids & parts, Multi-point inspection',
-                                    backgroundImage: secondServiceImage,
-                                    price: 45,
-                                },
-                                {
-                                    id: 'brake-service',
-                                    title: 'Brake Service',
-                                    description: 'Professional brake inspection and repair',
-                                    backgroundImage: firstServiceImage,
-                                    price: 200,
-                                },
-                            ]}
-                        />
+                        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">Select Services</h2>
+                        {servicesLoading ? (
+                            <div className="py-12 text-center">
+                                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>
+                                <p className="mt-4 text-gray-600">Loading services...</p>
+                            </div>
+                        ) : (
+                            <ServicesCards
+                                services={dbServices.map((service, index) => ({
+                                    id: service.id.toString(),
+                                    title: service.name,
+                                    description: service.description,
+                                    backgroundImage: service.image || (index % 2 === 0 ? firstServiceImage : secondServiceImage),
+                                    price: service.basePrice,
+                                }))}
+                                onServiceSelect={(serviceId) => {
+                                    setSelectedServiceIds((prev) => {
+                                        if (prev.includes(serviceId)) {
+                                            return prev.filter((id) => id !== serviceId);
+                                        }
+                                        return [...prev, serviceId];
+                                    });
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
 

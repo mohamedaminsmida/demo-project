@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
+import defaultServiceImage from '../../../images/FIRST.jpg';
 import checkIcon from '../../../images/svg/check.svg';
+import type { ServiceConfig } from '../../config/services';
 
 export type ServicePreviewFeature = {
     label: string;
@@ -9,26 +11,38 @@ export type ServicePreviewFeature = {
 };
 
 export type ServicePreviewProps = {
-    title: string;
+    service?: ServiceConfig;
+    // Legacy props for backward compatibility
+    title?: string;
     subtitle?: string;
-    primaryImage: string;
-    secondaryImage: string;
-    features: ServicePreviewFeature[];
+    primaryImage?: string;
+    secondaryImage?: string;
+    features?: ServicePreviewFeature[];
     price?: number;
     className?: string;
     footer?: ReactNode;
 };
 
 export default function ServicePreview({
-    title,
-    subtitle,
-    primaryImage,
-    secondaryImage,
-    features,
-    price,
+    service,
+    title: legacyTitle,
+    subtitle: legacySubtitle,
+    primaryImage: legacyPrimaryImage,
+    secondaryImage: legacySecondaryImage,
+    features: legacyFeatures,
+    price: legacyPrice,
     className = '',
     footer,
 }: ServicePreviewProps) {
+    // Use service data if provided, otherwise fall back to legacy props
+    const title = service?.name || legacyTitle || 'Service';
+    const subtitle = service?.category?.toUpperCase() || legacySubtitle;
+    const primaryImage = service?.image || legacyPrimaryImage || defaultServiceImage;
+
+    // Build features from service details or use legacy features
+    const features = service?.details?.includes ? service.details.includes.map((item) => ({ label: item })) : legacyFeatures || [];
+
+    const price = service?.basePrice || legacyPrice;
     const keyOptions = features;
     const formattedPrice = typeof price === 'number' ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price) : null;
 
@@ -68,12 +82,30 @@ export default function ServicePreview({
                     <div className="mt-4 lg:absolute lg:top-1/2 lg:-left-24 lg:mt-0 lg:w-[240px] lg:-translate-y-[5%]">
                         <div className="rounded-[22px] border border-white/70 bg-white/95 p-4 shadow-[0_18px_40px_rgba(5,122,85,0.18)] backdrop-blur">
                             <div className="mb-3 flex items-center gap-2.5">
-                                <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl bg-gray-900/90 text-white">
-                                    {secondaryImage ? (
-                                        <img src={secondaryImage} alt="Service detail" className="h-full w-full object-cover" loading="lazy" />
-                                    ) : (
-                                        <span className="text-base font-semibold">{title.charAt(0)}</span>
-                                    )}
+                                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-green-700/90 text-white">
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                        <path
+                                            d="M12 3L3 7l9 4 9-4-9-4Z"
+                                            stroke="currentColor"
+                                            strokeWidth="1.4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M3 12l9 4 9-4"
+                                            stroke="currentColor"
+                                            strokeWidth="1.4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M3 17l9 4 9-4"
+                                            stroke="currentColor"
+                                            strokeWidth="1.4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                    </svg>
                                 </div>
                                 <button type="button" className="ml-auto rounded-full border border-gray-200 p-1.5 text-gray-400">
                                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
