@@ -7,10 +7,20 @@ import CheckIcon from '../../images/svg/check.svg';
 
 import AppointmentDatePicker from '../components/booking/AppointmentDatePicker';
 import BookingWizard from '../components/booking/BookingWizard';
+import {
+    BrakeOptions as BrakeOptionsForm,
+    OilOptions as OilOptionsForm,
+    RepairOptions as RepairOptionsForm,
+    TireOptions as TireOptionsForm,
+    type BrakeOptionsData,
+    type OilOptionsData,
+    type RepairOptionsData,
+    type TireOptionsData,
+} from '../components/booking/service-options';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
-import { Checkbox, Input, RadioGroup, Select, TextArea } from '../components/ui';
+import { Checkbox, Input, Select, TextArea } from '../components/ui';
 import { getServiceBySlug, isBrakeService, isOilService, isRepairService, isTireService, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
@@ -85,30 +95,11 @@ function buildServicePreview(service: ServiceConfig): ServicePreviewData {
     };
 }
 
-interface TireOptions {
-    newOrUsed: 'new' | 'used' | '';
-    numberOfTires: number;
-    tpms: boolean;
-    alignment: boolean;
-    flatRepair: boolean;
-}
-
-interface OilOptions {
-    oilType: 'conventional' | 'synthetic' | '';
-    lastChangeDate: string;
-}
-
-interface BrakeOptions {
-    position: 'front' | 'rear' | 'both' | '';
-    noiseOrVibration: boolean;
-    warningLight: boolean;
-}
-
-interface RepairOptions {
-    problemDescription: string;
-    drivable: 'yes' | 'no' | '';
-    photos: File[];
-}
+// Use types from service option components
+type TireOptions = TireOptionsData;
+type OilOptions = OilOptionsData;
+type BrakeOptions = BrakeOptionsData;
+type RepairOptions = RepairOptionsData;
 
 interface AppointmentInfo {
     date: string;
@@ -122,12 +113,23 @@ interface CustomerInfo {
     smsUpdates: boolean;
 }
 
-interface BookingState {
-    vehicle: VehicleInfo;
+// Service-specific details stored per service ID
+interface ServiceDetails {
     tireOptions: TireOptions;
     oilOptions: OilOptions;
     brakeOptions: BrakeOptions;
     repairOptions: RepairOptions;
+}
+
+interface BookingState {
+    vehicle: VehicleInfo;
+    // Legacy single-service options (kept for backward compatibility)
+    tireOptions: TireOptions;
+    oilOptions: OilOptions;
+    brakeOptions: BrakeOptions;
+    repairOptions: RepairOptions;
+    // Per-service details keyed by service ID
+    serviceDetails: Record<string, ServiceDetails>;
     appointment: AppointmentInfo;
     customer: CustomerInfo;
 }
@@ -238,10 +240,21 @@ const initialState: BookingState = {
         warningLight: false,
     },
     repairOptions: {
+        symptoms: {
+            noise: false,
+            vibration: false,
+            warning_light: false,
+            performance: false,
+            leak: false,
+            electrical: false,
+            other: false,
+        },
+        otherSymptomDescription: '',
         problemDescription: '',
         drivable: '',
         photos: [],
     },
+    serviceDetails: {},
     appointment: {
         date: '',
         time: '',
@@ -420,155 +433,6 @@ function Step2VehicleInfo({
     );
 }
 
-function Step3TireOptions({ options, onChange }: { options: TireOptions; onChange: (options: TireOptions) => void }) {
-    const updateField = <K extends keyof TireOptions>(field: K, value: TireOptions[K]) => {
-        onChange({ ...options, [field]: value });
-    };
-
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tire Service Details</h3>
-
-            <FormField label="New or Used Tires" required>
-                <RadioGroup
-                    name="newOrUsed"
-                    value={options.newOrUsed}
-                    onChange={(v) => updateField('newOrUsed', v as 'new' | 'used')}
-                    options={[
-                        { value: 'new', label: 'New Tires' },
-                        { value: 'used', label: 'Used Tires' },
-                    ]}
-                />
-            </FormField>
-
-            <FormField label="Number of Tires" required>
-                <Select
-                    value={String(options.numberOfTires)}
-                    onChange={(v) => updateField('numberOfTires', Number(v))}
-                    options={[
-                        { value: '1', label: '1 Tire' },
-                        { value: '2', label: '2 Tires' },
-                        { value: '3', label: '3 Tires' },
-                        { value: '4', label: '4 Tires' },
-                        { value: '5', label: '5 Tires (includes spare)' },
-                    ]}
-                />
-            </FormField>
-
-            <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Additional Services</p>
-                <div className="space-y-2">
-                    <Checkbox checked={options.tpms} onChange={(v) => updateField('tpms', v)} label="TPMS Sensor Service ($85 per sensor)" />
-                    <Checkbox checked={options.alignment} onChange={(v) => updateField('alignment', v)} label="Wheel Alignment ($120)" />
-                    <Checkbox checked={options.flatRepair} onChange={(v) => updateField('flatRepair', v)} label="Flat Repair (if applicable)" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Step3OilOptions({ options, onChange }: { options: OilOptions; onChange: (options: OilOptions) => void }) {
-    const updateField = <K extends keyof OilOptions>(field: K, value: OilOptions[K]) => {
-        onChange({ ...options, [field]: value });
-    };
-
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Oil Change Details</h3>
-
-            <FormField label="Oil Type" required>
-                <RadioGroup
-                    name="oilType"
-                    value={options.oilType}
-                    onChange={(v) => updateField('oilType', v as 'conventional' | 'synthetic')}
-                    options={[
-                        { value: 'conventional', label: 'Conventional Oil' },
-                        { value: 'synthetic', label: 'Synthetic Oil' },
-                    ]}
-                />
-            </FormField>
-
-            <FormField label="Last Oil Change Date">
-                <Input type="date" value={options.lastChangeDate} onChange={(v) => updateField('lastChangeDate', v)} />
-            </FormField>
-        </div>
-    );
-}
-
-function Step3BrakeOptions({ options, onChange }: { options: BrakeOptions; onChange: (options: BrakeOptions) => void }) {
-    const updateField = <K extends keyof BrakeOptions>(field: K, value: BrakeOptions[K]) => {
-        onChange({ ...options, [field]: value });
-    };
-
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Brake Service Details</h3>
-
-            <FormField label="Which Brakes Need Service?" required>
-                <RadioGroup
-                    name="brakePosition"
-                    value={options.position}
-                    onChange={(v) => updateField('position', v as 'front' | 'rear' | 'both')}
-                    options={[
-                        { value: 'front', label: 'Front Brakes' },
-                        { value: 'rear', label: 'Rear Brakes' },
-                        { value: 'both', label: 'Both Front & Rear' },
-                    ]}
-                />
-            </FormField>
-
-            <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Symptoms</p>
-                <div className="space-y-2">
-                    <Checkbox
-                        checked={options.noiseOrVibration}
-                        onChange={(v) => updateField('noiseOrVibration', v)}
-                        label="Noise or vibration when braking"
-                    />
-                    <Checkbox checked={options.warningLight} onChange={(v) => updateField('warningLight', v)} label="Brake warning light is on" />
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Step3RepairOptions({ options, onChange }: { options: RepairOptions; onChange: (options: RepairOptions) => void }) {
-    const updateField = <K extends keyof RepairOptions>(field: K, value: RepairOptions[K]) => {
-        onChange({ ...options, [field]: value });
-    };
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            updateField('photos', Array.from(e.target.files));
-        }
-    };
-
-    return (
-        <div className="space-y-6">
-            <FormField label="Describe the Problem" required>
-                <TextArea
-                    value={options.problemDescription}
-                    onChange={(v) => updateField('problemDescription', v)}
-                    placeholder="Please describe the issue you're experiencing with your vehicle..."
-                    rows={4}
-                />
-            </FormField>
-
-            <FormField label="Is the Vehicle Drivable?" required>
-                <RadioGroup
-                    name="drivable"
-                    value={options.drivable}
-                    onChange={(v) => updateField('drivable', v as 'yes' | 'no')}
-                    options={[
-                        { value: 'yes', label: 'Yes, it can be driven' },
-                        { value: 'no', label: 'No, it needs towing' },
-                    ]}
-                />
-            </FormField>
-        </div>
-    );
-}
-
 // Helper to check if service has specific required fields from database
 function serviceHasField(service: ServiceConfig, fieldName: string): boolean {
     return Array.isArray(service.requiredFields) && service.requiredFields.includes(fieldName as any);
@@ -616,6 +480,45 @@ function hasAnyRequiredFields(service: ServiceConfig): boolean {
     return hasTireFields(service) || hasOilFields(service) || hasBrakeFields(service) || hasRepairFields(service);
 }
 
+// Default empty service details
+const emptyServiceDetails: ServiceDetails = {
+    tireOptions: { newOrUsed: '', numberOfTires: 4, tpms: false, alignment: false, flatRepair: false },
+    oilOptions: { oilType: '', lastChangeDate: '' },
+    brakeOptions: { position: '', noiseOrVibration: false, warningLight: false },
+    repairOptions: {
+        symptoms: {
+            noise: false,
+            vibration: false,
+            warning_light: false,
+            performance: false,
+            leak: false,
+            electrical: false,
+            other: false,
+        },
+        otherSymptomDescription: '',
+        problemDescription: '',
+        drivable: '',
+        photos: [],
+    },
+};
+
+// Get service details for a specific service, creating default if not exists
+function getServiceDetails(state: BookingState, serviceId: string): ServiceDetails {
+    return state.serviceDetails[serviceId] || emptyServiceDetails;
+}
+
+// Update service details for a specific service
+function updateServiceDetails(state: BookingState, serviceId: string, updates: Partial<ServiceDetails>): BookingState {
+    const currentDetails = getServiceDetails(state, serviceId);
+    return {
+        ...state,
+        serviceDetails: {
+            ...state.serviceDetails,
+            [serviceId]: { ...currentDetails, ...updates },
+        },
+    };
+}
+
 function Step3ServiceDetails({
     services,
     state,
@@ -659,7 +562,9 @@ function Step3ServiceDetails({
             {/* Service Cards */}
             <div className="space-y-4">
                 {services.map((service) => {
+                    const serviceId = service.id.toString();
                     const hasOptions = hasAnyRequiredFields(service);
+                    const details = getServiceDetails(state, serviceId);
 
                     return (
                         <div
@@ -684,24 +589,34 @@ function Step3ServiceDetails({
                             {/* Service Options */}
                             <div className="p-5">
                                 {hasTireFields(service) && (
-                                    <Step3TireOptions options={state.tireOptions} onChange={(tireOptions) => onChange({ ...state, tireOptions })} />
+                                    <TireOptionsForm
+                                        options={details.tireOptions}
+                                        onChange={(tireOptions) => onChange(updateServiceDetails(state, serviceId, { tireOptions }))}
+                                        serviceId={serviceId}
+                                    />
                                 )}
 
                                 {hasOilFields(service) && (
-                                    <Step3OilOptions options={state.oilOptions} onChange={(oilOptions) => onChange({ ...state, oilOptions })} />
+                                    <OilOptionsForm
+                                        options={details.oilOptions}
+                                        onChange={(oilOptions) => onChange(updateServiceDetails(state, serviceId, { oilOptions }))}
+                                        serviceId={serviceId}
+                                    />
                                 )}
 
                                 {hasBrakeFields(service) && (
-                                    <Step3BrakeOptions
-                                        options={state.brakeOptions}
-                                        onChange={(brakeOptions) => onChange({ ...state, brakeOptions })}
+                                    <BrakeOptionsForm
+                                        options={details.brakeOptions}
+                                        onChange={(brakeOptions) => onChange(updateServiceDetails(state, serviceId, { brakeOptions }))}
+                                        serviceId={serviceId}
                                     />
                                 )}
 
                                 {hasRepairFields(service) && (
-                                    <Step3RepairOptions
-                                        options={state.repairOptions}
-                                        onChange={(repairOptions) => onChange({ ...state, repairOptions })}
+                                    <RepairOptionsForm
+                                        options={details.repairOptions}
+                                        onChange={(repairOptions) => onChange(updateServiceDetails(state, serviceId, { repairOptions }))}
+                                        serviceId={serviceId}
                                     />
                                 )}
 
@@ -775,12 +690,16 @@ function Step5CustomerInfo({ customer, onChange }: { customer: CustomerInfo; onC
                 </FormField>
             </div>
 
-            <Checkbox checked={customer.smsUpdates} onChange={(v) => updateField('smsUpdates', v)} label="Send me SMS updates about my appointment" />
+            <Checkbox
+                isSelected={customer.smsUpdates}
+                onChange={(v) => updateField('smsUpdates', v)}
+                label="Send me SMS updates about my appointment"
+            />
         </div>
     );
 }
 
-function Step6Review({ service, state }: { service: ServiceConfig; state: BookingState }) {
+function Step6Review({ service, state, selectedServices }: { service: ServiceConfig; state: BookingState; selectedServices: ServiceConfig[] }) {
     const formatDate = (dateStr: string) => {
         if (!dateStr) return 'Not selected';
         return new Date(dateStr).toLocaleDateString('en-US', {
@@ -791,77 +710,153 @@ function Step6Review({ service, state }: { service: ServiceConfig; state: Bookin
         });
     };
 
+    // Get selected symptoms as readable list
+    const getSelectedSymptoms = () => {
+        if (!state.repairOptions.symptoms) return [];
+        const symptomLabels: Record<string, string> = {
+            noise: 'Unusual noise (clicking, grinding, squealing)',
+            vibration: 'Vibration or shaking',
+            warning_light: 'Warning light on dashboard',
+            performance: 'Performance issue (power loss, stalling)',
+            leak: 'Fluid leak',
+            electrical: 'Electrical problem',
+            other: 'Other',
+        };
+        return Object.entries(state.repairOptions.symptoms)
+            .filter(([, selected]) => selected)
+            .map(([key]) => symptomLabels[key] || key);
+    };
+
+    // Helper to render a detail row
+    const DetailRow = ({ label, value }: { label: string; value: string | React.ReactNode }) => (
+        <div className="flex justify-between border-b border-gray-100 py-2 last:border-0">
+            <span className="text-gray-500">{label}</span>
+            <span className="text-right font-medium text-gray-900">{value}</span>
+        </div>
+    );
+
     return (
         <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900">Review Your Booking</h3>
 
             <div className="space-y-4">
-                {/* Service */}
+                {/* Services */}
                 <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-2 font-semibold text-gray-900">Service</h4>
-                    <p className="text-gray-700">{service.name}</p>
-                    <p className="text-sm text-gray-500">{service.estimatedDuration}</p>
+                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">
+                        Services Booked ({selectedServices.length > 0 ? selectedServices.length : 1})
+                    </h4>
+                    {selectedServices.length > 0 ? (
+                        <ul className="space-y-2">
+                            {selectedServices.map((s) => (
+                                <li key={s.id} className="flex items-center justify-between border-b border-gray-100 py-2 last:border-0">
+                                    <span className="font-medium text-gray-900">{s.name}</span>
+                                    {s.basePrice && <span className="text-sm text-green-600">${s.basePrice.toFixed(2)}</span>}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <>
+                            <DetailRow label="Service Type" value={service.name} />
+                            {service.estimatedDuration && <DetailRow label="Estimated Duration" value={service.estimatedDuration} />}
+                        </>
+                    )}
                 </div>
 
                 {/* Vehicle */}
                 <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-2 font-semibold text-gray-900">Vehicle</h4>
-                    <p className="text-gray-700">
-                        {state.vehicle.year} {state.vehicle.make} {state.vehicle.model}
-                    </p>
-                    <p className="text-sm text-gray-500 capitalize">{state.vehicle.vehicleType}</p>
-                    {state.vehicle.tireSize && <p className="text-sm text-gray-500">Tire Size: {state.vehicle.tireSize}</p>}
+                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Vehicle Information</h4>
+                    <DetailRow label="Vehicle" value={`${state.vehicle.year} ${state.vehicle.make} ${state.vehicle.model}`} />
+                    <DetailRow label="Type" value={<span className="capitalize">{state.vehicle.vehicleType}</span>} />
+                    {state.vehicle.tireSize && <DetailRow label="Tire Size" value={state.vehicle.tireSize} />}
+                    {state.vehicle.vin && <DetailRow label="VIN" value={state.vehicle.vin} />}
+                    {state.vehicle.notes && <DetailRow label="Notes" value={state.vehicle.notes} />}
                 </div>
 
-                {/* Service Options */}
+                {/* Tire Service Options */}
                 {isTireService(service) && state.tireOptions.newOrUsed && (
                     <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-2 font-semibold text-gray-900">Tire Options</h4>
-                        <p className="text-gray-700 capitalize">{state.tireOptions.newOrUsed} Tires</p>
-                        <p className="text-sm text-gray-500">{state.tireOptions.numberOfTires} tire(s)</p>
-                        {state.tireOptions.tpms && <p className="text-sm text-gray-500">+ TPMS Service</p>}
-                        {state.tireOptions.alignment && <p className="text-sm text-gray-500">+ Wheel Alignment</p>}
+                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Tire Service Details</h4>
+                        <DetailRow label="Tire Condition" value={<span className="capitalize">{state.tireOptions.newOrUsed} Tires</span>} />
+                        <DetailRow label="Number of Tires" value={`${state.tireOptions.numberOfTires} tire(s)`} />
+                        <DetailRow label="TPMS Service" value={state.tireOptions.tpms ? 'Yes' : 'No'} />
+                        <DetailRow label="Wheel Alignment" value={state.tireOptions.alignment ? 'Yes' : 'No'} />
+                        <DetailRow label="Flat Repair" value={state.tireOptions.flatRepair ? 'Yes' : 'No'} />
                     </div>
                 )}
 
+                {/* Oil Change Options */}
                 {isOilService(service) && state.oilOptions.oilType && (
                     <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-2 font-semibold text-gray-900">Oil Change Options</h4>
-                        <p className="text-gray-700 capitalize">{state.oilOptions.oilType} Oil</p>
+                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Oil Change Details</h4>
+                        <DetailRow label="Oil Type" value={<span className="capitalize">{state.oilOptions.oilType.replace(/-/g, ' ')}</span>} />
+                        {state.oilOptions.lastChangeDate && <DetailRow label="Last Oil Change" value={state.oilOptions.lastChangeDate} />}
                     </div>
                 )}
 
+                {/* Brake Service Options */}
                 {isBrakeService(service) && state.brakeOptions.position && (
                     <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-2 font-semibold text-gray-900">Brake Service Options</h4>
-                        <p className="text-gray-700 capitalize">{state.brakeOptions.position} Brakes</p>
-                        {state.brakeOptions.noiseOrVibration && <p className="text-sm text-gray-500">Noise/vibration reported</p>}
-                        {state.brakeOptions.warningLight && <p className="text-sm text-gray-500">Warning light on</p>}
+                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Brake Service Details</h4>
+                        <DetailRow label="Brake Position" value={<span className="capitalize">{state.brakeOptions.position} Brakes</span>} />
+                        <DetailRow label="Noise or Vibration" value={state.brakeOptions.noiseOrVibration ? 'Yes' : 'No'} />
+                        <DetailRow label="Warning Light On" value={state.brakeOptions.warningLight ? 'Yes' : 'No'} />
                     </div>
                 )}
 
+                {/* Repair Service Options */}
                 {isRepairService(service) && state.repairOptions.problemDescription && (
                     <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-2 font-semibold text-gray-900">Repair Details</h4>
-                        <p className="text-gray-700">{state.repairOptions.problemDescription}</p>
-                        <p className="text-sm text-gray-500">Vehicle is {state.repairOptions.drivable === 'yes' ? 'drivable' : 'not drivable'}</p>
+                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Repair Details</h4>
+
+                        {/* Symptoms */}
+                        {getSelectedSymptoms().length > 0 && (
+                            <div className="border-b border-gray-100 py-2">
+                                <span className="mb-2 block text-gray-500">Symptoms Reported</span>
+                                <ul className="list-inside list-disc space-y-1">
+                                    {getSelectedSymptoms().map((symptom) => (
+                                        <li key={symptom} className="text-sm text-gray-900">
+                                            {symptom}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Other symptom description */}
+                        {state.repairOptions.symptoms?.other && state.repairOptions.otherSymptomDescription && (
+                            <div className="border-b border-gray-100 py-2">
+                                <span className="mb-1 block text-gray-500">Other Symptom Description</span>
+                                <p className="text-sm text-gray-900">{state.repairOptions.otherSymptomDescription}</p>
+                            </div>
+                        )}
+
+                        {/* Problem description */}
+                        <div className="border-b border-gray-100 py-2">
+                            <span className="mb-1 block text-gray-500">Problem Description</span>
+                            <p className="text-sm text-gray-900">{state.repairOptions.problemDescription}</p>
+                        </div>
+
+                        <DetailRow
+                            label="Vehicle Drivable"
+                            value={state.repairOptions.drivable === 'yes' ? 'Yes, can be driven' : 'No, needs towing'}
+                        />
                     </div>
                 )}
 
                 {/* Appointment */}
                 <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-2 font-semibold text-gray-900">Appointment</h4>
-                    <p className="text-gray-700">{formatDate(state.appointment.date)}</p>
-                    <p className="text-sm text-gray-500">{state.appointment.time || 'Time not selected'}</p>
+                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Appointment</h4>
+                    <DetailRow label="Date" value={formatDate(state.appointment.date)} />
+                    <DetailRow label="Time" value={state.appointment.time || 'Not selected'} />
                 </div>
 
                 {/* Customer */}
                 <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-2 font-semibold text-gray-900">Contact Information</h4>
-                    <p className="text-gray-700">{state.customer.fullName}</p>
-                    <p className="text-sm text-gray-500">{state.customer.phone}</p>
-                    <p className="text-sm text-gray-500">{state.customer.email}</p>
-                    {state.customer.smsUpdates && <p className="mt-1 text-xs text-green-600">SMS updates enabled</p>}
+                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Contact Information</h4>
+                    <DetailRow label="Full Name" value={state.customer.fullName} />
+                    <DetailRow label="Phone" value={state.customer.phone} />
+                    <DetailRow label="Email" value={state.customer.email} />
+                    <DetailRow label="SMS Updates" value={state.customer.smsUpdates ? 'Enabled' : 'Disabled'} />
                 </div>
             </div>
         </div>
@@ -906,6 +901,24 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
+    // Pre-select service from URL query parameter when services are loaded
+    useEffect(() => {
+        if (!servicesLoading && dbServices.length > 0 && slug) {
+            // Find the service that matches the slug from URL
+            const matchingService = dbServices.find((s) => s.slug === slug || s.name.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase());
+            if (matchingService) {
+                const serviceId = matchingService.id.toString();
+                // Only add if not already selected
+                setSelectedServiceIds((prev) => {
+                    if (!prev.includes(serviceId)) {
+                        return [...prev, serviceId];
+                    }
+                    return prev;
+                });
+            }
+        }
+    }, [servicesLoading, dbServices, slug]);
+
     const canProceed = useCallback((): boolean => {
         switch (currentStep) {
             case 1:
@@ -923,20 +936,49 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 }
                 return !!baseValid;
             case 4:
-                // Service Details
-                if (!service) return false;
-                if (isTireService(service)) {
-                    return !!state.tireOptions.newOrUsed;
+                // Service Details - validate all selected services
+                const selectedServices = dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()));
+
+                // Check each selected service has required fields filled
+                for (const selectedService of selectedServices) {
+                    const serviceId = selectedService.id.toString();
+                    const details = state.serviceDetails[serviceId];
+
+                    // If no details exist for this service, check if it needs any
+                    if (!details) {
+                        if (hasAnyRequiredFields(selectedService)) {
+                            return false;
+                        }
+                        continue;
+                    }
+
+                    // Check tire service requirements
+                    if (hasTireFields(selectedService)) {
+                        if (!details.tireOptions.newOrUsed) return false;
+                    }
+
+                    // Check oil service requirements
+                    if (hasOilFields(selectedService)) {
+                        if (!details.oilOptions.oilType) return false;
+                    }
+
+                    // Check brake service requirements
+                    if (hasBrakeFields(selectedService)) {
+                        if (!details.brakeOptions.position) return false;
+                    }
+
+                    // Check repair service requirements
+                    if (hasRepairFields(selectedService)) {
+                        // At least one symptom must be selected
+                        const hasAnySymptom = details.repairOptions.symptoms && Object.values(details.repairOptions.symptoms).some(Boolean);
+                        if (!hasAnySymptom) return false;
+                        // If "other" is selected, description is required
+                        if (details.repairOptions.symptoms?.other && !details.repairOptions.otherSymptomDescription) return false;
+                        if (!details.repairOptions.problemDescription) return false;
+                        if (!details.repairOptions.drivable) return false;
+                    }
                 }
-                if (isOilService(service)) {
-                    return !!state.oilOptions.oilType;
-                }
-                if (isBrakeService(service)) {
-                    return !!state.brakeOptions.position;
-                }
-                if (isRepairService(service)) {
-                    return !!(state.repairOptions.problemDescription && state.repairOptions.drivable);
-                }
+
                 return true;
             case 5:
                 // Customer Info
@@ -979,6 +1021,47 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 .map((id) => (typeof id === 'string' ? parseInt(id, 10) : id)),
         ].filter((id) => !isNaN(id));
 
+        // Build per-service details
+        const serviceDetailsPayload: Record<string, any> = {};
+        selectedServiceIds.forEach((serviceId) => {
+            const details = state.serviceDetails[serviceId];
+            if (details) {
+                serviceDetailsPayload[serviceId] = {
+                    tire_options: details.tireOptions.newOrUsed
+                        ? {
+                              newOrUsed: details.tireOptions.newOrUsed,
+                              numberOfTires: details.tireOptions.numberOfTires,
+                              tpms: details.tireOptions.tpms,
+                              alignment: details.tireOptions.alignment,
+                              flatRepair: details.tireOptions.flatRepair,
+                          }
+                        : null,
+                    oil_options: details.oilOptions.oilType
+                        ? {
+                              oilType: details.oilOptions.oilType,
+                              lastChangeDate: details.oilOptions.lastChangeDate,
+                          }
+                        : null,
+                    brake_options: details.brakeOptions.position
+                        ? {
+                              position: details.brakeOptions.position,
+                              noiseOrVibration: details.brakeOptions.noiseOrVibration,
+                              warningLight: details.brakeOptions.warningLight,
+                          }
+                        : null,
+                    repair_options:
+                        details.repairOptions.symptoms && Object.values(details.repairOptions.symptoms).some(Boolean)
+                            ? {
+                                  symptoms: details.repairOptions.symptoms,
+                                  other_symptom_description: details.repairOptions.otherSymptomDescription || null,
+                                  problem_description: details.repairOptions.problemDescription,
+                                  drivable: details.repairOptions.drivable,
+                              }
+                            : null,
+                };
+            }
+        });
+
         const payload = {
             service_ids: allServiceIds,
             vehicle: {
@@ -990,18 +1073,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 vin: state.vehicle.vin || null,
                 notes: state.vehicle.notes || null,
             },
-            service_options: {
-                tire_options: isTireService(service) ? state.tireOptions : null,
-                oil_options: isOilService(service) ? state.oilOptions : null,
-                brake_options: isBrakeService(service) ? state.brakeOptions : null,
-                repair_options: isRepairService(service)
-                    ? {
-                          problem_description: state.repairOptions.problemDescription,
-                          drivable: state.repairOptions.drivable,
-                          has_photos: state.repairOptions.photos.length > 0,
-                      }
-                    : null,
-            },
+            service_details: serviceDetailsPayload,
             date: state.appointment.date,
             time: state.appointment.time,
             customer: {
@@ -1059,6 +1131,24 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     >
                         View Services
                     </a>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Loading state - show full-screen loader while submitting
+    if (isSubmitting) {
+        return (
+            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
+                <Head title="Submitting..." />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="rounded-2xl bg-white p-8 shadow-2xl">
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-green-600"></div>
+                            <p className="text-lg font-semibold text-gray-900">Submitting your Appointment...</p>
+                            <p className="text-sm text-gray-500">Please wait while we process your request</p>
+                        </div>
+                    </div>
                 </div>
             </Layout>
         );
@@ -1158,7 +1248,11 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     onChange={setState}
                 />
                 <Step5CustomerInfo customer={state.customer} onChange={(customer) => setState({ ...state, customer })} />
-                <Step6Review service={service} state={state} />
+                <Step6Review
+                    service={service}
+                    state={state}
+                    selectedServices={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
+                />
             </BookingWizard>
 
             {submitError && (

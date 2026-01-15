@@ -26,6 +26,8 @@ class ServiceAppointmentDetail extends Model
         'noise_or_vibration',
         'warning_light',
         // Repair fields
+        'symptom_type',
+        'other_symptom_description',
         'problem_description',
         'vehicle_drivable',
         'photo_paths',

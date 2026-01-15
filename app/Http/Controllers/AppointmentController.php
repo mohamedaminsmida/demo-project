@@ -84,8 +84,8 @@ class AppointmentController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Attach services to the appointment with their details
-            $serviceOptions = $request->input('service_options', []);
+            // Attach services to the appointment with their per-service details
+            $serviceDetails = $request->input('service_details', []);
             
             foreach ($services as $service) {
                 $appointmentService = AppointmentService::create([
@@ -94,12 +94,20 @@ class AppointmentController extends Controller
                     'price' => $service->base_price,
                 ]);
 
-                // Save service-specific details based on service category/type
+                // Get details specific to this service
+                $serviceId = (string) $service->id;
+                $details = $serviceDetails[$serviceId] ?? null;
+                
+                if (!$details) {
+                    continue;
+                }
+
+                // Save service-specific details
                 $detailData = ['appointment_service_id' => $appointmentService->id];
                 
                 // Tire options
-                if (!empty($serviceOptions['tire_options'])) {
-                    $tireOpts = $serviceOptions['tire_options'];
+                if (!empty($details['tire_options'])) {
+                    $tireOpts = $details['tire_options'];
                     $detailData['tire_condition'] = $tireOpts['newOrUsed'] ?? null;
                     $detailData['number_of_tires'] = $tireOpts['numberOfTires'] ?? null;
                     $detailData['tpms_service'] = $tireOpts['tpms'] ?? false;
@@ -107,23 +115,25 @@ class AppointmentController extends Controller
                 }
                 
                 // Oil options
-                if (!empty($serviceOptions['oil_options'])) {
-                    $oilOpts = $serviceOptions['oil_options'];
+                if (!empty($details['oil_options'])) {
+                    $oilOpts = $details['oil_options'];
                     $detailData['oil_type'] = $oilOpts['oilType'] ?? null;
                     $detailData['last_change_date'] = $oilOpts['lastChangeDate'] ?? null;
                 }
                 
                 // Brake options
-                if (!empty($serviceOptions['brake_options'])) {
-                    $brakeOpts = $serviceOptions['brake_options'];
+                if (!empty($details['brake_options'])) {
+                    $brakeOpts = $details['brake_options'];
                     $detailData['brake_position'] = $brakeOpts['position'] ?? null;
                     $detailData['noise_or_vibration'] = $brakeOpts['noiseOrVibration'] ?? false;
                     $detailData['warning_light'] = $brakeOpts['warningLight'] ?? false;
                 }
                 
                 // Repair options
-                if (!empty($serviceOptions['repair_options'])) {
-                    $repairOpts = $serviceOptions['repair_options'];
+                if (!empty($details['repair_options'])) {
+                    $repairOpts = $details['repair_options'];
+                    $detailData['symptom_type'] = $repairOpts['symptom_type'] ?? null;
+                    $detailData['other_symptom_description'] = $repairOpts['other_symptom_description'] ?? null;
                     $detailData['problem_description'] = $repairOpts['problem_description'] ?? null;
                     $detailData['vehicle_drivable'] = $repairOpts['drivable'] ?? null;
                 }
@@ -136,10 +146,11 @@ class AppointmentController extends Controller
 
             DB::commit();
 
-            // Send confirmation email
+            // Send confirmation email using Laravel Notification
             try {
                 $appointment->load(['services', 'vehicle']);
-                (new \App\Mail\AppointmentConfirmation($appointment))->send();
+                \Illuminate\Support\Facades\Notification::route('mail', $appointment->customer_email)
+                    ->notify(new \App\Notifications\AppointmentConfirmationNotification($appointment));
             } catch (\Exception $e) {
                 // Log email error but don't fail the appointment creation
                 Log::warning('Failed to send appointment confirmation email: ' . $e->getMessage());

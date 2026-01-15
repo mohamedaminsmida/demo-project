@@ -52,10 +52,12 @@ class ServiceAppointment extends Model
 
     /**
      * Get all services for this appointment.
+     * Note: We select specific columns to avoid PostgreSQL JSON comparison issues with DISTINCT
      */
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'appointment_services')
+            ->select(['services.id', 'services.slug', 'services.name', 'services.category', 'services.description', 'services.image', 'services.estimated_duration', 'services.base_price', 'services.is_active', 'services.created_at', 'services.updated_at'])
             ->withPivot('price')
             ->withTimestamps();
     }
