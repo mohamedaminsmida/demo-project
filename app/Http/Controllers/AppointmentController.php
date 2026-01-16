@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class AppointmentController extends Controller
 {
@@ -20,6 +21,9 @@ class AppointmentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $existingCustomerId = Customer::where('phone', $request->input('customer.phone'))->value('id');
+        $existingVehicleId = Vehicle::where('vin', $request->input('vehicle.vin'))->value('id');
+
         $validator = Validator::make($request->all(), [
             'service_ids' => 'required|array|min:1',
             'service_ids.*' => 'required|integer|exists:services,id',
@@ -28,15 +32,24 @@ class AppointmentController extends Controller
             'vehicle.model' => 'required|string|max:100',
             'vehicle.year' => 'required|string|max:4',
             'vehicle.tire_size' => 'nullable|string|max:50',
-            'vehicle.vin' => 'nullable|string|max:17',
+            'vehicle.vin' => [
+                'required',
+                'string',
+                'max:17',
+                Rule::unique('vehicles', 'vin')->ignore($existingVehicleId),
+            ],
             'vehicle.notes' => 'nullable|string|max:1000',
             'service_options' => 'nullable|array',
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required|string',
             'customer.full_name' => 'required|string|max:255',
-            'customer.phone' => 'required|string|max:20',
+            'customer.phone' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('customers', 'phone')->ignore($existingCustomerId),
+            ],
             'customer.email' => 'required|email|max:255',
-            'customer.sms_updates' => 'boolean',
         ]);
 
         Log::info('Appointment request data:', $request->all());
@@ -88,8 +101,6 @@ class AppointmentController extends Controller
             // Calculate estimated price from selected services
             $serviceIds = $request->input('service_ids');
             $services = Service::whereIn('id', $serviceIds)->get();
-            $estimatedPrice = $services->sum('base_price');
-
             // Create the appointment for the customer
             $appointment = ServiceAppointment::create([
                 'customer_id' => $customer->id,
@@ -99,9 +110,7 @@ class AppointmentController extends Controller
                 'customer_name' => $customerData['full_name'],
                 'customer_phone' => $customerData['phone'],
                 'customer_email' => $customerData['email'],
-                'sms_updates' => $customerData['sms_updates'] ?? false,
-                'estimated_price' => $estimatedPrice,
-                'status' => 'pending',
+                'status' => 'scheduled',
             ]);
 
             // Attach services to the appointment with their per-service details
@@ -185,7 +194,6 @@ class AppointmentController extends Controller
                     'appointment_time' => $appointment->appointment_time,
                     'customer_name' => $appointment->customer_name,
                     'customer_email' => $appointment->customer_email,
-                    'estimated_price' => $appointment->estimated_price,
                     'status' => $appointment->status,
                     'services' => $services->pluck('name'),
                     'vehicle' => $vehicle->full_name,

@@ -9,12 +9,15 @@ use Filament\Infolists\Components as InfolistComponents;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action as TableAction;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
 use UnitEnum;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class ServiceAppointmentResource extends Resource
 {
@@ -82,8 +85,6 @@ class ServiceAppointmentResource extends Resource
                             ->email()
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\Toggle::make('sms_updates')
-                            ->label('SMS Updates'),
                     ])
                     ->columns(2),
 
@@ -164,21 +165,18 @@ class ServiceAppointmentResource extends Resource
 
                 Components\Section::make('Pricing & Status')
                     ->schema([
-                        Forms\Components\TextInput::make('estimated_price')
-                            ->numeric()
-                            ->prefix('$'),
                         Forms\Components\TextInput::make('final_price')
                             ->numeric()
                             ->prefix('$'),
                         Forms\Components\Select::make('status')
                             ->options([
-                                'pending' => 'Pending',
-                                'confirmed' => 'Confirmed',
+                                'scheduled' => 'Scheduled',
                                 'in_progress' => 'In Progress',
                                 'completed' => 'Completed',
                                 'cancelled' => 'Cancelled',
+                                'no_show' => 'No-show',
                             ])
-                            ->default('pending')
+                            ->default('scheduled')
                             ->required(),
                     ])
                     ->columns(3),
@@ -200,11 +198,11 @@ class ServiceAppointmentResource extends Resource
                                 InfolistComponents\TextEntry::make('status')
                                     ->badge()
                                     ->color(fn (string $state): string => match ($state) {
-                                        'pending' => 'warning',
-                                        'confirmed' => 'primary',
+                                        'scheduled' => 'primary',
                                         'in_progress' => 'info',
                                         'completed' => 'success',
                                         'cancelled' => 'danger',
+                                        'no_show' => 'danger',
                                         default => 'gray',
                                     }),
                                 InfolistComponents\TextEntry::make('appointment_date')
@@ -228,9 +226,6 @@ class ServiceAppointmentResource extends Resource
                                 InfolistComponents\TextEntry::make('customer_email')
                                     ->label('Email')
                                     ->icon('heroicon-o-envelope'),
-                                InfolistComponents\IconEntry::make('sms_updates')
-                                    ->label('SMS Updates')
-                                    ->boolean(),
                             ]),
                     ]),
 
@@ -335,10 +330,6 @@ class ServiceAppointmentResource extends Resource
                     ->schema([
                         Components\Grid::make(2)
                             ->schema([
-                                InfolistComponents\TextEntry::make('estimated_price')
-                                    ->label('Estimated Price')
-                                    ->money('USD')
-                                    ->placeholder('Not set'),
                                 InfolistComponents\TextEntry::make('final_price')
                                     ->label('Final Price')
                                     ->money('USD')
@@ -357,8 +348,8 @@ class ServiceAppointmentResource extends Resource
                                     ->label('Last Updated')
                                     ->dateTime(),
                             ]),
-                    ])
-                    
+                    ]),
+
             ]);
     }
 
@@ -386,15 +377,11 @@ class ServiceAppointmentResource extends Resource
                 Tables\Columns\TextColumn::make('appointment_time'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
-                        'warning' => 'pending',
-                        'primary' => 'confirmed',
+                        'primary' => 'scheduled',
                         'info' => 'in_progress',
                         'success' => 'completed',
-                        'danger' => 'cancelled',
+                        'danger' => ['cancelled', 'no_show'],
                     ]),
-                Tables\Columns\TextColumn::make('estimated_price')
-                    ->money('USD')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -403,24 +390,31 @@ class ServiceAppointmentResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'confirmed' => 'Confirmed',
+                        'scheduled' => 'Scheduled',
                         'in_progress' => 'In Progress',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
+                        'no_show' => 'No-show',
                     ]),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                TableAction::make('view')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->url(fn (ServiceAppointment $record) => static::getUrl('view', ['record' => $record]))
-                    ->openUrlInNewTab(),
-                TableAction::make('edit')
-                    ->icon('heroicon-o-pencil-square')
-                    ->url(fn (ServiceAppointment $record) => static::getUrl('edit', ['record' => $record]))
-                    ->color('primary'),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye')
+                        ->color('gray')
+                        ->url(fn (ServiceAppointment $record) => static::getUrl('view', ['record' => $record])),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil-square')
+                        ->url(fn (ServiceAppointment $record) => static::getUrl('edit', ['record' => $record]))
+                        ->color('primary'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Appointment')
+                        ->modalDescription('Are you sure you want to delete this appointment? This action cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete'),
+                ])
             ])
             ->bulkActions([
                 // Bulk actions configured here

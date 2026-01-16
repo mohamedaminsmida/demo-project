@@ -47,9 +47,6 @@ class AppointmentConfirmationNotification extends Notification
         $heroImage = config('mail.hero_image')
             ?? Vite::asset('resources/images/FIRST.jpg');
 
-        $estimatedPrice = $appointment->estimated_price
-            ? number_format($appointment->estimated_price, 2)
-            : null;
 
         $manageUrl = Route::has('filament.admin.resources.service-appointments.view')
             ? route('filament.admin.resources.service-appointments.view', ['record' => $appointment])
@@ -64,7 +61,6 @@ class AppointmentConfirmationNotification extends Notification
                 'appointmentDate' => $date,
                 'appointmentTime' => $time,
                 'vehicleInfo' => $vehicleInfo,
-                'estimatedPrice' => $estimatedPrice,
                 'supportPhone' => config('app.support_phone', '(555) 123-4567'),
                 'shopAddress' => config('app.shop_address', '123 Main Street, Your City, ST 00000'),
                 'manageUrl' => $manageUrl,

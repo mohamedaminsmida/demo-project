@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
         $services = Service::all();
         $vehicleTypes = ['car', 'suv', 'truck', 'van', 'light-truck', 'motorcycle', 'other'];
         $timeSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
-        $statuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
+        $statuses = ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'];
 
         foreach ($customers as $customer) {
             $vehicleCount = rand(1, 3);
@@ -71,7 +71,6 @@ class DatabaseSeeder extends Seeder
                         'customer_name' => $customer->name,
                         'customer_phone' => $customer->phone,
                         'customer_email' => $customer->email,
-                        'sms_updates' => $faker->boolean(60),
                         'status' => $faker->randomElement($statuses),
                     ]);
 
@@ -144,7 +143,6 @@ class DatabaseSeeder extends Seeder
                     }
 
                     $appointment->update([
-                        'estimated_price' => round($estimatedPrice, 2),
                         'final_price' => round($estimatedPrice * $faker->randomFloat(2, 0.9, 1.15), 2),
                     ]);
                 }

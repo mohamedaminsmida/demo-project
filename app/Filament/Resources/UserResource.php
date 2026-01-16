@@ -12,6 +12,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class UserResource extends Resource
 {
@@ -94,7 +98,18 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                // Actions configured in pages
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye'),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil-square'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete User')
+                        ->modalDescription('Are you sure you want to delete this admin user? This action cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete'),
+                ])
             ])
             ->bulkActions([
                 // Bulk actions configured here
@@ -113,6 +128,7 @@ class UserResource extends Resource
         return [
             'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
+            'view' => Pages\ViewUser::route('/{record}'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }

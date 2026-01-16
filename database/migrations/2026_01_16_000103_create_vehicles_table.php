@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('brand');
             $table->string('model');
             $table->string('year');
-            $table->string('vin')->nullable()->unique();
+            $table->string('vin')->unique();
             $table->string('tire_size')->nullable();
             $table->text('notes')->nullable();
             $table->boolean('is_primary')->default(false);

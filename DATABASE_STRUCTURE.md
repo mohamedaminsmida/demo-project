@@ -129,10 +129,8 @@ Main appointment/booking table.
 - `customer_name` - Contact name (can differ from user)
 - `customer_phone` - Contact phone
 - `customer_email` - Contact email
-- `sms_updates` - Boolean for SMS notifications
-- `estimated_price` - Total price estimate for all services
 - `final_price` - Total final charged amount
-- `status` - Enum: 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'
+- `status` - Enum: 'scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'
 - `created_at`, `updated_at`, `deleted_at`
 
 **Relationships:**

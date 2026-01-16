@@ -12,6 +12,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class CustomerResource extends Resource
 {
@@ -93,7 +97,18 @@ class CustomerResource extends Resource
                 //
             ])
             ->actions([
-                // Actions configured in pages
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye'),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil-square'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Customer')
+                        ->modalDescription('Are you sure you want to delete this customer? This will also delete all associated vehicles and appointments.')
+                        ->modalSubmitActionLabel('Yes, delete'),
+                ])
             ])
             ->bulkActions([
                 // Bulk actions configured here
@@ -112,6 +127,7 @@ class CustomerResource extends Resource
         return [
             'index' => Pages\ListCustomers::route('/'),
             'create' => Pages\CreateCustomer::route('/create'),
+            'view' => Pages\ViewCustomer::route('/{record}'),
             'edit' => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }

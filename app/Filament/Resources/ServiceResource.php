@@ -12,6 +12,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class ServiceResource extends Resource
 {
@@ -144,7 +148,18 @@ class ServiceResource extends Resource
                     ->label('Active'),
             ])
             ->actions([
-                // Actions configured in pages
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye'),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil-square'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Service')
+                        ->modalDescription('Are you sure you want to delete this service? This action cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete'),
+                ])
             ])
             ->bulkActions([
                 // Bulk actions configured here
@@ -163,6 +178,7 @@ class ServiceResource extends Resource
         return [
             'index' => Pages\ListServices::route('/'),
             'create' => Pages\CreateService::route('/create'),
+            'view' => Pages\ViewService::route('/{record}'),
             'edit' => Pages\EditService::route('/{record}/edit'),
         ];
     }

@@ -12,6 +12,10 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class VehicleResource extends Resource
 {
@@ -116,7 +120,18 @@ class VehicleResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                // Actions configured in pages
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->icon('heroicon-o-eye'),
+                    EditAction::make()
+                        ->icon('heroicon-o-pencil-square'),
+                    DeleteAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Vehicle')
+                        ->modalDescription('Are you sure you want to delete this vehicle? This will also delete all associated appointments.')
+                        ->modalSubmitActionLabel('Yes, delete'),
+                ])
             ])
             ->bulkActions([
                 // Bulk actions configured here
@@ -135,6 +150,7 @@ class VehicleResource extends Resource
         return [
             'index' => Pages\ListVehicles::route('/'),
             'create' => Pages\CreateVehicle::route('/create'),
+            'view' => Pages\ViewVehicle::route('/{record}'),
             'edit' => Pages\EditVehicle::route('/{record}/edit'),
         ];
     }

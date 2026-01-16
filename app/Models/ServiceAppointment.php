@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -21,17 +22,14 @@ class ServiceAppointment extends Model
         'customer_name',
         'customer_phone',
         'customer_email',
-        'sms_updates',
-        'estimated_price',
         'final_price',
         'status',
     ];
 
     protected $casts = [
         'appointment_date' => 'date',
-        'sms_updates' => 'boolean',
-        'estimated_price' => 'decimal:2',
         'final_price' => 'decimal:2',
+        'status' => AppointmentStatus::class,
     ];
 
     /**

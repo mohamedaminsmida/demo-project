@@ -20,10 +20,8 @@ return new class extends Migration
             $table->string('customer_name');
             $table->string('customer_phone');
             $table->string('customer_email');
-            $table->boolean('sms_updates')->default(false);
-            $table->decimal('estimated_price', 10, 2)->nullable();
             $table->decimal('final_price', 10, 2)->nullable();
-            $table->enum('status', ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'])->default('scheduled');
             $table->timestamps();
             $table->softDeletes();
         });
