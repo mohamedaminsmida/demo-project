@@ -13,7 +13,7 @@ class Vehicle extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'type',
         'brand',
         'model',
@@ -29,11 +29,11 @@ class Vehicle extends Model
     ];
 
     /**
-     * Get the user that owns the vehicle.
+     * Get the customer that owns the vehicle.
      */
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**

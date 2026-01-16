@@ -13,29 +13,22 @@ return new class extends Migration
     {
         Schema::create('service_appointment_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('appointment_service_id')->constrained()->onDelete('cascade');
-            
-            // Tire-related fields (for tire services: new-tires, used-tires, alignment, wheels, flat-repair)
+            $table->foreignId('appointment_service_id')->constrained()->cascadeOnDelete();
             $table->enum('tire_condition', ['new', 'used'])->nullable();
-            $table->integer('number_of_tires')->nullable(); // 1-4
+            $table->integer('number_of_tires')->nullable();
             $table->boolean('tpms_service')->nullable();
             $table->boolean('alignment_service')->nullable();
-            $table->string('wheel_type')->nullable(); // alloy, steel, chrome, etc.
-            
-            // Oil change fields (for oil-change service)
-            $table->enum('oil_type', ['conventional', 'synthetic'])->nullable();
+            $table->string('wheel_type')->nullable();
+            $table->enum('oil_type', ['conventional', 'synthetic', 'synthetic-blend', 'full-synthetic', 'high-mileage'])->nullable();
             $table->date('last_change_date')->nullable();
-            
-            // Brake service fields (for brakes service)
             $table->enum('brake_position', ['front', 'rear', 'both'])->nullable();
             $table->boolean('noise_or_vibration')->nullable();
             $table->boolean('warning_light')->nullable();
-            
-            // Repair services fields (for engine-repair, engine-replacement, transmission, lift-kit)
+            $table->string('symptom_type')->nullable();
+            $table->text('other_symptom_description')->nullable();
             $table->text('problem_description')->nullable();
             $table->enum('vehicle_drivable', ['yes', 'no'])->nullable();
-            $table->json('photo_paths')->nullable(); // Array of uploaded photo paths
-            
+            $table->json('photo_paths')->nullable();
             $table->timestamps();
         });
     }

@@ -29,8 +29,8 @@ class VehicleResource extends Resource
             ->schema([
                 Components\Section::make('Vehicle Information')
                     ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
+                        Forms\Components\Select::make('customer_id')
+                            ->relationship('customer', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -81,8 +81,8 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Owner')
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->label('Customer')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('full_name')

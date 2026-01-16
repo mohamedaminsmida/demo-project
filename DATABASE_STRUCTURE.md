@@ -8,20 +8,20 @@ This document describes the normalized database structure for the service bookin
 
 ## Tables
 
-### 1. **users** (Extended)
+### 1. **users** (Admins)
 
-Stores user account information.
+Stores admin account information (not customers).
 
 **Columns:**
 
 - `id` - Primary key
 - `name` - User's full name
 - `email` - Email (unique)
-- `phone` - Phone number
-- `address` - Street address
-- `city` - City
-- `state` - State
-- `zip_code` - ZIP/Postal code
+- `phone` - Phone number (optional)
+- `address` - Street address (optional)
+- `city` - City (optional)
+- `state` - State (optional)
+- `zip_code` - ZIP/Postal code (optional)
 - `password` - Hashed password
 - `sms_notifications` - Boolean for SMS preferences
 - `email_notifications` - Boolean for email preferences
@@ -31,32 +31,51 @@ Stores user account information.
 
 ---
 
-### 2. **vehicles**
+### 2. **customers**
 
-Stores vehicles owned by users.
+Stores customer information for bookings.
 
 **Columns:**
 
 - `id` - Primary key
-- `user_id` - Foreign key to users table
-- `type` - Enum: 'car', 'suv', 'truck', 'van'
+- `name` - Customer full name
+- `email` - Email (unique)
+- `phone` - Phone number
+- `address` - Street address (optional)
+- `city` - City (optional)
+- `state` - State (optional)
+- `zip_code` - ZIP/Postal code (optional)
+- `notes` - Notes (optional)
+- `created_at`, `updated_at`
+
+---
+
+### 3. **vehicles**
+
+Stores vehicles owned by customers.
+
+**Columns:**
+
+- `id` - Primary key
+- `customer_id` - Foreign key to customers table
+- `type` - Enum: 'car', 'suv', 'truck', 'van', 'light-truck', 'motorcycle', 'other'
 - `brand` - Vehicle brand (Toyota, Ford, Honda, etc.)
 - `model` - Vehicle model (Camry, F-150, Civic, etc.)
 - `year` - Manufacturing year
 - `vin` - VIN number (optional)
 - `tire_size` - Tire size (e.g., 225/65R17)
 - `notes` - Additional notes
-- `is_primary` - Boolean (user's primary vehicle)
+- `is_primary` - Boolean (customer's primary vehicle)
 - `created_at`, `updated_at`, `deleted_at`
 
 **Relationships:**
 
-- Belongs to: `users`
+- Belongs to: `customers`
 - Has many: `service_appointments`
 
 ---
 
-### 3. **services**
+### 4. **services**
 
 Service catalog (11 service types).
 
@@ -67,10 +86,12 @@ Service catalog (11 service types).
 - `name` - Service name (e.g., 'New Tires', 'Oil Change')
 - `category` - Enum: 'tires', 'maintenance', 'repairs'
 - `description` - Service description
+- `image` - Service image (optional)
+- `details` - JSONB details (optional)
 - `estimated_duration` - Duration estimate (e.g., '1-2 hours')
 - `base_price` - Base price (nullable)
 - `is_active` - Boolean (service availability)
-- `required_fields` - JSON array of field names to display in form (e.g., ['tire_condition', 'number_of_tires'])
+- `required_fields` - JSONB array of field names to display in form (e.g., ['tire_condition', 'number_of_tires'])
 - `created_at`, `updated_at`
 
 **Service List:**
@@ -94,14 +115,14 @@ Service catalog (11 service types).
 
 ---
 
-### 4. **service_appointments**
+### 5. **service_appointments**
 
 Main appointment/booking table.
 
 **Columns:**
 
 - `id` - Primary key
-- `user_id` - Foreign key to users table
+- `customer_id` - Foreign key to customers table
 - `vehicle_id` - Foreign key to vehicles table
 - `appointment_date` - Scheduled date
 - `appointment_time` - Scheduled time slot
@@ -116,13 +137,13 @@ Main appointment/booking table.
 
 **Relationships:**
 
-- Belongs to: `users`, `vehicles`
+- Belongs to: `customers`, `vehicles`
 - Has many: `appointment_services` (through pivot)
 - Has many: `services` (through `appointment_services`)
 
 ---
 
-### 5. **appointment_services** (Pivot Table)
+### 6. **appointment_services** (Pivot Table)
 
 Links appointments with multiple services (many-to-many relationship).
 
@@ -141,7 +162,7 @@ Links appointments with multiple services (many-to-many relationship).
 
 ---
 
-### 6. **service_appointment_details**
+### 7. **service_appointment_details**
 
 Service-specific details for each service in an appointment.
 
@@ -160,7 +181,7 @@ Service-specific details for each service in an appointment.
 
 **Oil Change Fields:**
 
-- `oil_type` - Enum: 'conventional', 'synthetic' (nullable)
+- `oil_type` - Enum: 'conventional', 'synthetic', 'synthetic-blend', 'full-synthetic', 'high-mileage' (nullable)
 - `last_change_date` - Date (nullable)
 
 **Brake Service Fields:**
@@ -173,6 +194,8 @@ Service-specific details for each service in an appointment.
 
 - `problem_description` - Text (nullable)
 - `vehicle_drivable` - Enum: 'yes', 'no' (nullable)
+- `symptom_type` - String (nullable)
+- `other_symptom_description` - Text (nullable)
 - `photo_paths` - JSON array of file paths (nullable)
 
 - `created_at`, `updated_at`
@@ -186,7 +209,7 @@ Service-specific details for each service in an appointment.
 ## Relationships Diagram
 
 ```
-users (1) ──────< (many) vehicles
+customers (1) ──────< (many) vehicles
   │
   │
   └──────< (many) service_appointments
@@ -250,12 +273,16 @@ users (1) ──────< (many) vehicles
 
 Run migrations in this order:
 
-1. `2026_01_13_000000_create_services_table.php`
-2. `2026_01_13_000001_create_vehicles_table.php`
-3. `2026_01_13_000002_create_service_appointments_table.php`
-4. `2026_01_13_000004_add_columns_to_users_table.php`
-5. `2026_01_13_000005_create_appointment_services_table.php` (pivot table)
-6. `2026_01_13_000003_create_service_appointment_details_table.php`
+1. `0001_01_01_000000_create_users_table.php`
+2. `0001_01_01_000001_create_cache_table.php`
+3. `0001_01_01_000002_create_jobs_table.php`
+4. `2026_01_16_000100_add_columns_to_users_table.php`
+5. `2026_01_16_000101_create_customers_table.php`
+6. `2026_01_16_000102_create_services_table.php`
+7. `2026_01_16_000103_create_vehicles_table.php`
+8. `2026_01_16_000104_create_service_appointments_table.php`
+9. `2026_01_16_000105_create_appointment_services_table.php`
+10. `2026_01_16_000106_create_service_appointment_details_table.php`
 
 ```bash
 php artisan migrate
@@ -269,7 +296,7 @@ php artisan migrate
 2. **Many-to-Many Relationship**: One appointment can have multiple services (e.g., tires + oil change + engine repair)
 3. **Pivot Table**: `appointment_services` links appointments with services and tracks individual service prices
 4. **Flexible Details**: Service-specific data in separate `service_appointment_details` table with nullable columns
-5. **User-Vehicle Relationship**: Users can have multiple vehicles
+5. **Customer-Vehicle Relationship**: Customers can have multiple vehicles
 6. **Service Catalog**: Services defined once, referenced by appointments
 7. **Soft Deletes**: Enabled on vehicles and appointments for data retention
 8. **Contact Flexibility**: Appointment contact info can differ from user account info

@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['car', 'suv', 'truck', 'van']);
-            $table->string('brand'); // Toyota, Ford, Honda
-            $table->string('model'); // Camry, F-150, Civic
-            $table->string('year'); // 2020, 2021, etc.
-            $table->string('vin')->nullable();
-            $table->string('tire_size')->nullable(); // e.g., 225/65R17
+            $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->enum('type', ['car', 'suv', 'truck', 'van', 'light-truck', 'motorcycle', 'other']);
+            $table->string('brand');
+            $table->string('model');
+            $table->string('year');
+            $table->string('vin')->nullable()->unique();
+            $table->string('tire_size')->nullable();
             $table->text('notes')->nullable();
-            $table->boolean('is_primary')->default(false); // User's primary vehicle
+            $table->boolean('is_primary')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

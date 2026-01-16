@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('city')->nullable()->after('address');
             $table->string('state')->nullable()->after('city');
             $table->string('zip_code')->nullable()->after('state');
-            $table->boolean('sms_notifications')->default(false)->after('zip_code');
+            $table->boolean('sms_notifications')->default(false)->after('remember_token');
             $table->boolean('email_notifications')->default(true)->after('sms_notifications');
         });
     }

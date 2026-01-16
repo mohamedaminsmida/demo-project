@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppointmentService;
+use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ServiceAppointment;
 use App\Models\Vehicle;
@@ -51,28 +52,47 @@ class AppointmentController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create the vehicle (user_id is null for guest bookings)
+            $customerData = $request->input('customer');
+            $customer = Customer::updateOrCreate([
+                'phone' => $customerData['phone'],
+            ], [
+                'name' => $customerData['full_name'],
+                'email' => $customerData['email'],
+            ]);
+
+            // Create the vehicle for the customer
             $vehicleData = $request->input('vehicle');
-            $vehicle = Vehicle::create([
-                'user_id' => auth()->id(), // Will be null for guest users
+            $vehicleVin = $vehicleData['vin'] ?? null;
+            $vehicleAttributes = [
+                'customer_id' => $customer->id,
                 'type' => $vehicleData['type'],
                 'brand' => $vehicleData['make'],
                 'model' => $vehicleData['model'],
                 'year' => $vehicleData['year'],
-                'vin' => $vehicleData['vin'] ?? null,
+                'vin' => $vehicleVin,
                 'tire_size' => $vehicleData['tire_size'] ?? null,
                 'notes' => $vehicleData['notes'] ?? null,
-            ]);
+            ];
+
+            if ($vehicleVin) {
+                $vehicle = Vehicle::firstOrCreate(['vin' => $vehicleVin], $vehicleAttributes);
+
+                if ($vehicle->customer_id !== $customer->id) {
+                    $vehicle->customer_id = $customer->id;
+                    $vehicle->save();
+                }
+            } else {
+                $vehicle = Vehicle::create($vehicleAttributes);
+            }
 
             // Calculate estimated price from selected services
             $serviceIds = $request->input('service_ids');
             $services = Service::whereIn('id', $serviceIds)->get();
             $estimatedPrice = $services->sum('base_price');
 
-            // Create the appointment (user_id is null for guest bookings)
-            $customerData = $request->input('customer');
+            // Create the appointment for the customer
             $appointment = ServiceAppointment::create([
-                'user_id' => auth()->id(), // Will be null for guest users
+                'customer_id' => $customer->id,
                 'vehicle_id' => $vehicle->id,
                 'appointment_date' => $request->input('date'),
                 'appointment_time' => $request->input('time'),

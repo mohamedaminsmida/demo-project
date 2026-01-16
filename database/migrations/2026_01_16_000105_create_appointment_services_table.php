@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Pivot table: links appointments with multiple services
         Schema::create('appointment_services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_appointment_id')->constrained()->onDelete('cascade');
-            $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->decimal('price', 10, 2)->nullable(); // Price for this specific service
+            $table->foreignId('service_appointment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            $table->decimal('price', 10, 2)->nullable();
             $table->timestamps();
-            
-            // Ensure unique combination
             $table->unique(['service_appointment_id', 'service_id']);
         });
     }

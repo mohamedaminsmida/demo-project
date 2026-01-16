@@ -11,21 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Services catalog table (11 service types)
         Schema::create('services', function (Blueprint $table) {
             $table->id();
-            $table->string('slug')->unique(); // e.g., 'new-tires', 'oil-change'
-            $table->string('name'); // e.g., 'New Tires', 'Oil Change'
+            $table->string('slug')->unique();
+            $table->string('name');
             $table->enum('category', ['tires', 'maintenance', 'repairs']);
             $table->text('description');
-            $table->string('estimated_duration'); // e.g., '1-2 hours'
+            $table->string('image')->nullable();
+            $table->jsonb('details')->nullable();
+            $table->string('estimated_duration');
             $table->decimal('base_price', 10, 2)->nullable();
             $table->boolean('is_active')->default(true);
-            
-            // Define which form fields this service requires (JSON array)
-            // e.g., ['tire_condition', 'number_of_tires', 'tpms_service', 'alignment_service']
-            $table->json('required_fields')->nullable();
-            
+            $table->jsonb('required_fields')->nullable();
             $table->timestamps();
         });
     }

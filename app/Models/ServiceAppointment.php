@@ -14,7 +14,7 @@ class ServiceAppointment extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'customer_id',
         'vehicle_id',
         'appointment_date',
         'appointment_time',
@@ -35,11 +35,11 @@ class ServiceAppointment extends Model
     ];
 
     /**
-     * Get the user that owns the appointment.
+     * Get the customer that owns the appointment.
      */
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**

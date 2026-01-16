@@ -39,8 +39,8 @@ class ServiceAppointmentResource extends Resource
             ->schema([
                 Components\Section::make('Appointment Details')
                     ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
+                        Forms\Components\Select::make('customer_id')
+                            ->relationship('customer', 'name')
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -368,6 +368,10 @@ class ServiceAppointmentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->label('Customer')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.brand')
                     ->label('Vehicle')

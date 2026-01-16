@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\UserResource\Pages;
-use App\Models\User;
+use App\Filament\Resources\CustomerResource\Pages;
+use App\Models\Customer;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components;
@@ -13,13 +13,13 @@ use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
 
-class UserResource extends Resource
+class CustomerResource extends Resource
 {
-    protected static ?string $model = User::class;
+    protected static ?string $model = Customer::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Admin';
+    protected static string|UnitEnum|null $navigationGroup = 'Customers';
 
     protected static ?int $navigationSort = 1;
 
@@ -27,7 +27,7 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Components\Section::make('Account Information')
+                Components\Section::make('Customer Information')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -37,19 +37,15 @@ class UserResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('password')
-                            ->password()
-                            ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (string $context): bool => $context === 'create'),
+                        Forms\Components\TextInput::make('phone')
+                            ->tel()
+                            ->required()
+                            ->maxLength(255),
                     ])
                     ->columns(2),
 
-                Components\Section::make('Contact Information')
+                Components\Section::make('Address')
                     ->schema([
-                        Forms\Components\TextInput::make('phone')
-                            ->tel()
-                            ->maxLength(255),
                         Forms\Components\TextInput::make('address')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('city')
@@ -61,15 +57,12 @@ class UserResource extends Resource
                     ])
                     ->columns(2),
 
-                Components\Section::make('Notification Preferences')
+                Components\Section::make('Notes')
                     ->schema([
-                        Forms\Components\Toggle::make('sms_notifications')
-                            ->label('SMS Notifications'),
-                        Forms\Components\Toggle::make('email_notifications')
-                            ->label('Email Notifications')
-                            ->default(true),
-                    ])
-                    ->columns(2),
+                        Forms\Components\Textarea::make('notes')
+                            ->rows(3)
+                            ->nullable(),
+                    ]),
             ]);
     }
 
@@ -85,6 +78,12 @@ class UserResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('vehicles_count')
+                    ->counts('vehicles')
+                    ->label('Vehicles'),
+                Tables\Columns\TextColumn::make('appointments_count')
+                    ->counts('appointments')
+                    ->label('Appointments'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -111,9 +110,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'index' => Pages\ListCustomers::route('/'),
+            'create' => Pages\CreateCustomer::route('/create'),
+            'edit' => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }
 }
