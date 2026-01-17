@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
@@ -20,13 +21,11 @@ class Service extends Model
         'estimated_duration',
         'base_price',
         'is_active',
-        'required_fields',
     ];
 
     protected $casts = [
         'base_price' => 'decimal:2',
         'is_active' => 'boolean',
-        'required_fields' => 'array',
         'details' => 'array',
     ];
 
@@ -38,5 +37,11 @@ class Service extends Model
         return $this->belongsToMany(ServiceAppointment::class, 'appointment_services')
             ->withPivot('price')
             ->withTimestamps();
+    }
+
+    public function requirements(): HasMany
+    {
+        return $this->hasMany(ServiceRequirement::class)
+            ->orderBy('sort_order');
     }
 }

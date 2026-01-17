@@ -7,7 +7,6 @@ use App\Models\Customer;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -56,7 +55,9 @@ class CustomerRelationManager extends RelationManager
                         ->url(fn (Customer $record) => CustomerResource::getUrl('edit', ['record' => $record])),
                     Action::make('delete')
                         ->icon('heroicon-o-trash')
+                        ->color('danger')
                         ->requiresConfirmation()
+                        ->action(fn (Customer $record) => $record->delete())
                         ->modalHeading('Delete Customer')
                         ->modalDescription('Are you sure you want to delete this customer? This will also delete all associated vehicles and appointments.')
                         ->modalSubmitActionLabel('Yes, delete'),

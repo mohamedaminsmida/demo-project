@@ -5,11 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ServiceResource\Pages;
 use App\Models\Service;
 use Filament\Forms;
+use Filament\Infolists\Components as InfolistComponents;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use UnitEnum;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
@@ -79,31 +81,6 @@ class ServiceResource extends Resource
                     ])
                     ->columns(2),
 
-                Components\Section::make('Required Form Fields')
-                    ->description('Select which fields users must fill out when booking this service')
-                    ->schema([
-                        Forms\Components\CheckboxList::make('required_fields')
-                            ->options([
-                                // Tire fields
-                                'tire_condition' => 'Tire Condition (New/Used)',
-                                'number_of_tires' => 'Number of Tires',
-                                'tpms_service' => 'TPMS Service',
-                                'alignment_service' => 'Alignment Service',
-                                'wheel_type' => 'Wheel Type',
-                                // Oil change fields
-                                'oil_type' => 'Oil Type',
-                                'last_change_date' => 'Last Change Date',
-                                // Brake fields
-                                'brake_position' => 'Brake Position',
-                                'noise_or_vibration' => 'Noise or Vibration',
-                                'warning_light' => 'Warning Light',
-                                // Repair fields
-                                'problem_description' => 'Problem Description',
-                                'vehicle_drivable' => 'Vehicle Drivable',
-                                'photo_paths' => 'Photo Upload',
-                            ])
-                            ->columns(3),
-                    ]),
             ]);
     }
 
@@ -166,10 +143,77 @@ class ServiceResource extends Resource
             ]);
     }
 
+    public static function infolist(Schema $infolist): Schema
+    {
+        return $infolist
+            ->schema([
+                Components\Section::make('Service Overview')
+                    ->schema([
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('name')
+                                    ->label('Name'),
+                                InfolistComponents\TextEntry::make('slug')
+                                    ->label('Slug'),
+                                InfolistComponents\TextEntry::make('category')
+                                    ->label('Category')
+                                    ->badge(),
+                                InfolistComponents\TextEntry::make('estimated_duration')
+                                    ->label('Estimated Duration'),
+                                InfolistComponents\TextEntry::make('base_price')
+                                    ->label('Base Price')
+                                    ->money('USD')
+                                    ->placeholder('Not set'),
+                                InfolistComponents\IconEntry::make('is_active')
+                                    ->label('Active')
+                                    ->boolean(),
+                            ]),
+                        InfolistComponents\TextEntry::make('description')
+                            ->label('Description')
+                            ->placeholder('No description.')
+                            ->columnSpanFull(),
+                    ]),
+                Components\Section::make('Service Details')
+                    ->schema([
+                        InfolistComponents\TextEntry::make('details')
+                            ->label('Details')
+                            ->formatStateUsing(function ($state): ?string {
+                                if (! is_array($state) || $state === []) {
+                                    return null;
+                                }
+
+                                return collect($state)
+                                    ->map(function ($value, $key): string {
+                                        $valueText = is_array($value)
+                                            ? json_encode($value)
+                                            : (string) $value;
+
+                                        return sprintf('%s: %s', $key, $valueText);
+                                    })
+                                    ->implode(' • ');
+                            })
+                            ->placeholder('No details provided.')
+                            ->columnSpanFull(),
+                    ]),
+                Components\Section::make('Timestamps')
+                    ->schema([
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('created_at')
+                                    ->label('Created')
+                                    ->dateTime('M d, Y g:i A'),
+                                InfolistComponents\TextEntry::make('updated_at')
+                                    ->label('Updated')
+                                    ->dateTime('M d, Y g:i A'),
+                            ]),
+                    ]),
+            ]);
+    }
+
     public static function getRelations(): array
     {
         return [
-            //
+            ServiceResource\RelationManagers\RequirementsRelationManager::class,
         ];
     }
 

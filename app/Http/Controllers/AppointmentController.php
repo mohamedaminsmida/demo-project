@@ -6,9 +6,12 @@ use App\Models\AppointmentService;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ServiceAppointment;
+use App\Models\ServiceRequirementValue;
 use App\Models\Vehicle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -39,7 +42,7 @@ class AppointmentController extends Controller
                 Rule::unique('vehicles', 'vin')->ignore($existingVehicleId),
             ],
             'vehicle.notes' => 'nullable|string|max:1000',
-            'service_options' => 'nullable|array',
+            'service_requirements' => 'nullable|array',
             'date' => 'required|date|after_or_equal:today',
             'time' => 'required|string',
             'customer.full_name' => 'required|string|max:255',
@@ -59,6 +62,21 @@ class AppointmentController extends Controller
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $serviceRequirementsPayload = $request->input('service_requirements', []);
+        $services = Service::with('requirements')
+            ->whereIn('id', $request->input('service_ids', []))
+            ->get();
+
+        $dynamicErrors = $this->validateServiceRequirements($services, $serviceRequirementsPayload);
+
+        if (! empty($dynamicErrors)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $dynamicErrors,
             ], 422);
         }
 
@@ -99,8 +117,6 @@ class AppointmentController extends Controller
             }
 
             // Calculate estimated price from selected services
-            $serviceIds = $request->input('service_ids');
-            $services = Service::whereIn('id', $serviceIds)->get();
             // Create the appointment for the customer
             $appointment = ServiceAppointment::create([
                 'customer_id' => $customer->id,
@@ -114,8 +130,6 @@ class AppointmentController extends Controller
             ]);
 
             // Attach services to the appointment with their per-service details
-            $serviceDetails = $request->input('service_details', []);
-            
             foreach ($services as $service) {
                 $appointmentService = AppointmentService::create([
                     'service_appointment_id' => $appointment->id,
@@ -123,53 +137,23 @@ class AppointmentController extends Controller
                     'price' => $service->base_price,
                 ]);
 
-                // Get details specific to this service
                 $serviceId = (string) $service->id;
-                $details = $serviceDetails[$serviceId] ?? null;
-                
-                if (!$details) {
-                    continue;
-                }
+                $serviceValues = is_array($serviceRequirementsPayload)
+                    ? ($serviceRequirementsPayload[$serviceId] ?? [])
+                    : [];
 
-                // Save service-specific details
-                $detailData = ['appointment_service_id' => $appointmentService->id];
-                
-                // Tire options
-                if (!empty($details['tire_options'])) {
-                    $tireOpts = $details['tire_options'];
-                    $detailData['tire_condition'] = $tireOpts['newOrUsed'] ?? null;
-                    $detailData['number_of_tires'] = $tireOpts['numberOfTires'] ?? null;
-                    $detailData['tpms_service'] = $tireOpts['tpms'] ?? false;
-                    $detailData['alignment_service'] = $tireOpts['alignment'] ?? false;
-                }
-                
-                // Oil options
-                if (!empty($details['oil_options'])) {
-                    $oilOpts = $details['oil_options'];
-                    $detailData['oil_type'] = $oilOpts['oilType'] ?? null;
-                    $detailData['last_change_date'] = $oilOpts['lastChangeDate'] ?? null;
-                }
-                
-                // Brake options
-                if (!empty($details['brake_options'])) {
-                    $brakeOpts = $details['brake_options'];
-                    $detailData['brake_position'] = $brakeOpts['position'] ?? null;
-                    $detailData['noise_or_vibration'] = $brakeOpts['noiseOrVibration'] ?? false;
-                    $detailData['warning_light'] = $brakeOpts['warningLight'] ?? false;
-                }
-                
-                // Repair options
-                if (!empty($details['repair_options'])) {
-                    $repairOpts = $details['repair_options'];
-                    $detailData['symptom_type'] = $repairOpts['symptom_type'] ?? null;
-                    $detailData['other_symptom_description'] = $repairOpts['other_symptom_description'] ?? null;
-                    $detailData['problem_description'] = $repairOpts['problem_description'] ?? null;
-                    $detailData['vehicle_drivable'] = $repairOpts['drivable'] ?? null;
-                }
-                
-                // Only create detail record if there's actual data beyond the ID
-                if (count($detailData) > 1) {
-                    \App\Models\ServiceAppointmentDetail::create($detailData);
+                $service->loadMissing('requirements');
+
+                foreach ($service->requirements as $requirement) {
+                    if (! array_key_exists($requirement->key, $serviceValues)) {
+                        continue;
+                    }
+
+                    ServiceRequirementValue::create([
+                        'appointment_service_id' => $appointmentService->id,
+                        'service_requirement_id' => $requirement->id,
+                        'value' => $serviceValues[$requirement->key],
+                    ]);
                 }
             }
 
@@ -210,5 +194,125 @@ class AppointmentController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    private function isRequirementValueEmpty(string $type, mixed $value): bool
+    {
+        if (in_array($type, ['checkbox', 'toggle'], true)) {
+            return ! filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($type === 'multiselect') {
+            if (! is_array($value)) {
+                return true;
+            }
+
+            return count(array_filter($value, fn ($item) => $item !== null && $item !== '')) === 0;
+        }
+
+        if (is_array($value)) {
+            return count($value) === 0;
+        }
+
+        return $value === null || $value === '';
+    }
+
+    private function validateServiceRequirements(Collection $services, array $payload): array
+    {
+        $errors = [];
+
+        foreach ($services as $service) {
+            $serviceValues = is_array($payload)
+                ? ($payload[(string) $service->id] ?? [])
+                : [];
+
+            foreach ($service->requirements as $requirement) {
+                $fieldKey = "service_requirements.{$service->id}.{$requirement->key}";
+                $hasValue = is_array($serviceValues) && array_key_exists($requirement->key, $serviceValues);
+                $value = $hasValue ? $serviceValues[$requirement->key] : null;
+
+                if ($requirement->is_required && $this->isRequirementValueEmpty($requirement->type, $value)) {
+                    $errors[$fieldKey][] = 'This field is required.';
+                    continue;
+                }
+
+                if (! $hasValue || $this->isRequirementValueEmpty($requirement->type, $value)) {
+                    continue;
+                }
+
+                $validations = is_array($requirement->validations) ? $requirement->validations : [];
+
+                switch ($requirement->type) {
+                    case 'text':
+                        if (! is_string($value)) {
+                            $errors[$fieldKey][] = 'Must be text.';
+                            break;
+                        }
+
+                        if (mb_strlen($value) > 50) {
+                            $errors[$fieldKey][] = 'Must not exceed 50 characters.';
+                        }
+                        break;
+                    case 'textarea':
+                        if (! is_string($value)) {
+                            $errors[$fieldKey][] = 'Must be text.';
+                            break;
+                        }
+
+                        if (mb_strlen($value) > 250) {
+                            $errors[$fieldKey][] = 'Must not exceed 250 characters.';
+                        }
+                        break;
+                    case 'number':
+                        if (! is_numeric($value)) {
+                            $errors[$fieldKey][] = 'Must be a number.';
+                            break;
+                        }
+
+                        $maxDigits = isset($validations['number_max_length'])
+                            ? (int) $validations['number_max_length']
+                            : null;
+
+                        if ($maxDigits) {
+                            $digits = preg_replace('/\D/', '', (string) $value);
+
+                            if (mb_strlen($digits) > $maxDigits) {
+                                $errors[$fieldKey][] = "Must not exceed {$maxDigits} digits.";
+                            }
+                        }
+                        break;
+                    case 'date':
+                        try {
+                            $date = Carbon::parse($value);
+                        } catch (\Exception $exception) {
+                            $errors[$fieldKey][] = 'Must be a valid date.';
+                            break;
+                        }
+
+                        if (! empty($validations['min_date'])) {
+                            $minDate = Carbon::parse($validations['min_date']);
+                            if ($date->lt($minDate)) {
+                                $errors[$fieldKey][] = 'Date must be on or after the minimum date.';
+                            }
+                        }
+
+                        if (! empty($validations['max_date'])) {
+                            $maxDate = Carbon::parse($validations['max_date']);
+                            if ($date->gt($maxDate)) {
+                                $errors[$fieldKey][] = 'Date must be on or before the maximum date.';
+                            }
+                        }
+                        break;
+                    case 'checkbox':
+                    case 'toggle':
+                        if (! in_array($value, [true, false, 0, 1, '0', '1', 'true', 'false'], true)) {
+                            $errors[$fieldKey][] = 'Must be true or false.';
+                        }
+                        break;
+                }
+            }
+        }
+
+        return $errors;
     }
 }

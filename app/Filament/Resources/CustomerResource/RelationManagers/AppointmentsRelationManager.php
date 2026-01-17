@@ -8,7 +8,6 @@ use App\Models\ServiceAppointment;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -69,9 +68,11 @@ class AppointmentsRelationManager extends RelationManager
                     Action::make('edit')
                         ->icon('heroicon-o-pencil-square')
                         ->url(fn (ServiceAppointment $record) => ServiceAppointmentResource::getUrl('edit', ['record' => $record])),
-                    DeleteAction::make()
+                    Action::make('delete')
                         ->icon('heroicon-o-trash')
+                        ->color('danger')
                         ->requiresConfirmation()
+                        ->action(fn (ServiceAppointment $record) => $record->delete())
                         ->modalHeading('Delete Appointment')
                         ->modalDescription('Are you sure you want to delete this appointment? This action cannot be undone.')
                         ->modalSubmitActionLabel('Yes, delete'),

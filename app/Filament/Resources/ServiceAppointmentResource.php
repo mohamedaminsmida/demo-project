@@ -114,49 +114,33 @@ class ServiceAppointmentResource extends Resource
                                 $details = [];
                                 foreach ($record->appointmentServices as $appointmentService) {
                                     $serviceName = $appointmentService->service->name ?? 'Unknown Service';
-                                    $detail = $appointmentService->details;
-                                    
-                                    if (!$detail) {
+
+                                    $appointmentService->loadMissing(['requirementValues.requirement']);
+
+                                    $requirements = $appointmentService->requirementValues
+                                        ->map(function ($value) {
+                                            $label = $value->requirement?->label
+                                                ?? $value->requirement?->key
+                                                ?? 'Requirement';
+                                            $rawValue = $value->value;
+                                            $formatted = match (true) {
+                                                is_array($rawValue) => implode(', ', array_filter($rawValue, fn ($item) => $item !== null && $item !== '')),
+                                                is_bool($rawValue) => $rawValue ? 'Yes' : 'No',
+                                                $rawValue === null || $rawValue === '' => 'Not provided',
+                                                default => (string) $rawValue,
+                                            };
+
+                                            return "• {$label}: {$formatted}";
+                                        })
+                                        ->filter(fn ($line) => $line !== null && $line !== '')
+                                        ->values();
+
+                                    if ($requirements->isEmpty()) {
                                         $details[] = "<strong>{$serviceName}</strong>: No additional details provided.";
                                         continue;
                                     }
-                                    
-                                    $info = ["<strong>{$serviceName}</strong>:"];
-                                    
-                                    // Tire details
-                                    if ($detail->tire_condition) $info[] = "• Tire Condition: {$detail->tire_condition}";
-                                    if ($detail->number_of_tires) $info[] = "• Number of Tires: {$detail->number_of_tires}";
-                                    if ($detail->tpms_service) $info[] = "• TPMS Service: Yes";
-                                    if ($detail->alignment_service) $info[] = "• Alignment Service: Yes";
-                                    
-                                    // Oil details
-                                    if ($detail->oil_type) $info[] = "• Oil Type: {$detail->oil_type}";
-                                    if ($detail->last_change_date) $info[] = "• Last Change Date: " . $detail->last_change_date->format('M d, Y');
-                                    
-                                    // Brake details
-                                    if ($detail->brake_position) $info[] = "• Brake Position: {$detail->brake_position}";
-                                    if ($detail->noise_or_vibration) $info[] = "• Noise/Vibration: Yes";
-                                    if ($detail->warning_light) $info[] = "• Warning Light: Yes";
-                                    
-                                    // Repair details
-                                    if ($detail->symptom_type) {
-                                        $symptomLabels = [
-                                            'noise' => 'Unusual noise',
-                                            'vibration' => 'Vibration or shaking',
-                                            'warning_light' => 'Warning light on dashboard',
-                                            'performance' => 'Performance issue',
-                                            'leak' => 'Fluid leak',
-                                            'electrical' => 'Electrical problem',
-                                            'other' => 'Other',
-                                        ];
-                                        $symptomLabel = $symptomLabels[$detail->symptom_type] ?? $detail->symptom_type;
-                                        $info[] = "• Symptom Type: {$symptomLabel}";
-                                    }
-                                    if ($detail->other_symptom_description) $info[] = "• Other Symptom: {$detail->other_symptom_description}";
-                                    if ($detail->problem_description) $info[] = "• Problem: {$detail->problem_description}";
-                                    if ($detail->vehicle_drivable) $info[] = "• Vehicle Drivable: {$detail->vehicle_drivable}";
-                                    
-                                    $details[] = implode('<br>', $info);
+
+                                    $details[] = "<strong>{$serviceName}</strong>:<br>" . implode('<br>', $requirements->all());
                                 }
                                 
                                 return new \Illuminate\Support\HtmlString(implode('<br><br>', $details) ?: 'No service details available.');
@@ -272,52 +256,33 @@ class ServiceAppointmentResource extends Resource
                                 foreach ($record->appointmentServices as $appointmentService) {
                                     $serviceName = $appointmentService->service->name ?? 'Unknown Service';
                                     $servicePrice = $appointmentService->price ? '-$' . number_format($appointmentService->price, 2) : '-$100.00';
-                                    $detail = $appointmentService->details;
-                                    
-                                    if (!$detail) {
+
+                                    $appointmentService->loadMissing(['requirementValues.requirement']);
+                                    $requirements = $appointmentService->requirementValues
+                                        ->map(function ($value) {
+                                            $label = $value->requirement?->label
+                                                ?? $value->requirement?->key
+                                                ?? 'Requirement';
+                                            $rawValue = $value->value;
+                                            $formatted = match (true) {
+                                                is_array($rawValue) => implode(', ', array_filter($rawValue, fn ($item) => $item !== null && $item !== '')),
+                                                is_bool($rawValue) => $rawValue ? 'Yes' : 'No',
+                                                $rawValue === null || $rawValue === '' => 'Not provided',
+                                                default => (string) $rawValue,
+                                            };
+
+                                            return "<li>• {$label}: <span class='font-medium'>{$formatted}</span></li>";
+                                        })
+                                        ->filter(fn ($line) => $line !== null && $line !== '')
+                                        ->values();
+
+                                    if ($requirements->isEmpty()) {
                                         $details[] = "<div class='mb-8 pb-6 border-b-2 border-gray-300 last:border-0'><div class='flex justify-between items-start mb-4'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-base font-bold text-green-600 ml-4'>{$servicePrice}</span></div><p class='text-gray-500'>No additional details provided.</p></div>";
                                         continue;
                                     }
-                                    
+
                                     $info = ["<div class='mb-8 pb-6 border-b-2 border-gray-300 last:border-0'><div class='flex justify-between items-start mb-4'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-base font-bold text-green-600 ml-4 whitespace-nowrap'>{$servicePrice}</span></div><ul class='mt-2 space-y-1.5'>"];
-                                    
-                                    // Tire details
-                                    if ($detail->tire_condition) $info[] = "<li>• Tire Condition: <span class='font-medium'>{$detail->tire_condition}</span></li>";
-                                    if ($detail->number_of_tires) $info[] = "<li>• Number of Tires: <span class='font-medium'>{$detail->number_of_tires}</span></li>";
-                                    if ($detail->tpms_service) $info[] = "<li>• TPMS Service: <span class='font-medium text-green-600'>Yes</span></li>";
-                                    if ($detail->alignment_service) $info[] = "<li>• Alignment Service: <span class='font-medium text-green-600'>Yes</span></li>";
-                                    
-                                    // Oil details
-                                    if ($detail->oil_type) $info[] = "<li>• Oil Type: <span class='font-medium'>{$detail->oil_type}</span></li>";
-                                    if ($detail->last_change_date) $info[] = "<li>• Last Change Date: <span class='font-medium'>" . $detail->last_change_date->format('M d, Y') . "</span></li>";
-                                    
-                                    // Brake details
-                                    if ($detail->brake_position) $info[] = "<li>• Brake Position: <span class='font-medium'>{$detail->brake_position}</span></li>";
-                                    if ($detail->noise_or_vibration) $info[] = "<li>• Noise/Vibration: <span class='font-medium text-yellow-600'>Yes</span></li>";
-                                    if ($detail->warning_light) $info[] = "<li>• Warning Light: <span class='font-medium text-red-600'>Yes</span></li>";
-                                    
-                                    // Repair details
-                                    if ($detail->symptom_type) {
-                                        $symptomLabels = [
-                                            'noise' => 'Unusual noise',
-                                            'vibration' => 'Vibration or shaking',
-                                            'warning_light' => 'Warning light on dashboard',
-                                            'performance' => 'Performance issue',
-                                            'leak' => 'Fluid leak',
-                                            'electrical' => 'Electrical problem',
-                                            'other' => 'Other',
-                                        ];
-                                        $symptomLabel = $symptomLabels[$detail->symptom_type] ?? $detail->symptom_type;
-                                        $info[] = "<li>• Symptom Type: <span class='font-medium'>{$symptomLabel}</span></li>";
-                                    }
-                                    if ($detail->other_symptom_description) $info[] = "<li>• Other Symptom: <span class='font-medium'>{$detail->other_symptom_description}</span></li>";
-                                    if ($detail->problem_description) $info[] = "<li>• Problem Description: <span class='font-medium'>{$detail->problem_description}</span></li>";
-                                    if ($detail->vehicle_drivable) {
-                                        $drivableClass = $detail->vehicle_drivable === 'yes' ? 'text-green-600' : 'text-red-600';
-                                        $drivableText = $detail->vehicle_drivable === 'yes' ? 'Yes' : 'No (needs towing)';
-                                        $info[] = "<li>• Vehicle Drivable: <span class='font-medium {$drivableClass}'>{$drivableText}</span></li>";
-                                    }
-                                    
+                                    $info[] = implode('', $requirements->all());
                                     $info[] = "</ul></div>";
                                     $details[] = implode('', $info);
                                 }

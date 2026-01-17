@@ -1,11 +1,33 @@
 export type ServiceCategory = 'tires' | 'maintenance' | 'repairs';
 
-export type RequiredField =
-    | 'vehicleInfo'
-    | 'tireOptions'
-    | 'oilOptions'
-    | 'brakeOptions'
-    | 'repairOptions';
+export type ServiceRequirementType =
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'select'
+    | 'multiselect'
+    | 'radio'
+    | 'checkbox'
+    | 'toggle'
+    | 'date';
+
+export interface ServiceRequirementOption {
+    label: string;
+    value: string;
+}
+
+export interface ServiceRequirement {
+    id: number;
+    label: string;
+    key: string;
+    type: ServiceRequirementType;
+    options?: ServiceRequirementOption[] | null;
+    isRequired?: boolean;
+    validations?: Record<string, string | number | boolean> | null;
+    placeholder?: string | null;
+    helpText?: string | null;
+    sortOrder?: number;
+}
 
 export interface ServiceDetails {
     includes?: string[];
@@ -24,7 +46,7 @@ export interface ServiceConfig {
     image?: string | null;
     estimatedDuration: string;
     basePrice?: number;
-    requiredFields: RequiredField[];
+    requirements?: ServiceRequirement[];
 }
 
 export const services: ServiceConfig[] = [
@@ -36,7 +58,7 @@ export const services: ServiceConfig[] = [
         category: 'tires',
         description: 'High-quality new tires from trusted brands, installed and balanced on-site. Wide selection of brands & sizes with professional mounting & balancing.',
         estimatedDuration: '1-2 hours',
-        requiredFields: ['vehicleInfo', 'tireOptions'],
+        requirements: [],
     },
     {
         id: 'used-tires',
@@ -45,7 +67,7 @@ export const services: ServiceConfig[] = [
         category: 'tires',
         description: 'Budget-friendly, safety-checked used tires that deliver performance and value. Includes inspection before sale, mounting & balancing.',
         estimatedDuration: '1-2 hours',
-        requiredFields: ['vehicleInfo', 'tireOptions'],
+        requirements: [],
     },
     {
         id: 'alignment',
@@ -55,7 +77,7 @@ export const services: ServiceConfig[] = [
         description: 'Precision wheel alignment to improve safety, handling, and tire lifespan. Includes front or four-wheel alignment with steering & suspension check.',
         estimatedDuration: '45 min - 1 hour',
         basePrice: 120,
-        requiredFields: ['vehicleInfo'],
+        requirements: [],
     },
     {
         id: 'wheels',
@@ -64,7 +86,7 @@ export const services: ServiceConfig[] = [
         category: 'tires',
         description: 'Wheel installation, replacement, and upgrades for aesthetics and performance. Includes wheel mounting, balancing, and fitment assistance.',
         estimatedDuration: '1-2 hours',
-        requiredFields: ['vehicleInfo'],
+        requirements: [],
     },
     {
         id: 'flat-repair',
@@ -74,7 +96,7 @@ export const services: ServiceConfig[] = [
         description: 'Quick and reliable flat tire repair service. We patch or plug your tire to get you back on the road safely.',
         estimatedDuration: '30-45 min',
         basePrice: 30,
-        requiredFields: ['vehicleInfo', 'tireOptions'],
+        requirements: [],
     },
 
     // Maintenance category
@@ -86,7 +108,7 @@ export const services: ServiceConfig[] = [
         description: 'Quick, clean oil changes to protect your engine and improve performance. Includes filter replacement and multi-point check.',
         estimatedDuration: '30-45 min',
         basePrice: 45,
-        requiredFields: ['vehicleInfo', 'oilOptions'],
+        requirements: [],
     },
     {
         id: 'brakes',
@@ -95,7 +117,7 @@ export const services: ServiceConfig[] = [
         category: 'maintenance',
         description: 'Reliable brake inspections and repairs to keep you safe on the road. Includes pad and rotor replacements, caliper diagnostics, and fluid service.',
         estimatedDuration: '1-3 hours',
-        requiredFields: ['vehicleInfo', 'brakeOptions'],
+        requirements: [],
     },
 
     // Repairs category
@@ -106,7 +128,7 @@ export const services: ServiceConfig[] = [
         category: 'repairs',
         description: 'Complete engine diagnostics and repair services. From minor fixes to major overhauls, we handle all engine issues.',
         estimatedDuration: 'Varies',
-        requiredFields: ['vehicleInfo', 'repairOptions'],
+        requirements: [],
     },
     {
         id: 'engine-replacement',
@@ -115,7 +137,7 @@ export const services: ServiceConfig[] = [
         category: 'repairs',
         description: 'Complete engine replacement performed with precision and high-quality parts. Includes engine sourcing, installation, and final testing.',
         estimatedDuration: '2-4 days',
-        requiredFields: ['vehicleInfo', 'repairOptions'],
+        requirements: [],
     },
     {
         id: 'transmission',
@@ -124,7 +146,7 @@ export const services: ServiceConfig[] = [
         category: 'repairs',
         description: 'Professional transmission diagnostics, service, and replacement. Includes fluid service, transmission repair, and full rebuild options.',
         estimatedDuration: 'Varies',
-        requiredFields: ['vehicleInfo', 'repairOptions'],
+        requirements: [],
     },
     {
         id: 'lift-kit',
@@ -133,7 +155,7 @@ export const services: ServiceConfig[] = [
         category: 'repairs',
         description: 'Upgrade height and suspension with professional lift kit installation. Includes alignment after installation and safety inspection.',
         estimatedDuration: '4-8 hours',
-        requiredFields: ['vehicleInfo', 'repairOptions'],
+        requirements: [],
     },
 ];
 
@@ -145,18 +167,3 @@ export function getServicesByCategory(category: ServiceCategory): ServiceConfig[
     return services.filter((service) => service.category === category);
 }
 
-export function isTireService(service: ServiceConfig): boolean {
-    return service.category === 'tires' || service.requiredFields.includes('tireOptions');
-}
-
-export function isOilService(service: ServiceConfig): boolean {
-    return service.requiredFields.includes('oilOptions');
-}
-
-export function isBrakeService(service: ServiceConfig): boolean {
-    return service.requiredFields.includes('brakeOptions');
-}
-
-export function isRepairService(service: ServiceConfig): boolean {
-    return service.requiredFields.includes('repairOptions');
-}

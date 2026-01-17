@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AppointmentService extends Model
 {
@@ -38,10 +38,10 @@ class AppointmentService extends Model
     }
 
     /**
-     * Get the service-specific details.
+     * Get the service requirement values.
      */
-    public function details(): HasOne
+    public function requirementValues(): HasMany
     {
-        return $this->hasOne(ServiceAppointmentDetail::class);
+        return $this->hasMany(ServiceRequirementValue::class);
     }
 }

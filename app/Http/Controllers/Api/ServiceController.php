@@ -14,6 +14,7 @@ class ServiceController extends Controller
     public function index(): JsonResponse
     {
         $services = Service::where('is_active', true)
+            ->with('requirements')
             ->orderBy('category')
             ->orderBy('name')
             ->get()
@@ -28,7 +29,20 @@ class ServiceController extends Controller
                     'image' => $service->image ? asset('storage/' . $service->image) : null,
                     'estimatedDuration' => $service->estimated_duration,
                     'basePrice' => $service->base_price ? (float) $service->base_price : null,
-                    'requiredFields' => $service->required_fields ?? [],
+                    'requirements' => $service->requirements->map(function ($requirement) {
+                        return [
+                            'id' => $requirement->id,
+                            'label' => $requirement->label,
+                            'key' => $requirement->key,
+                            'type' => $requirement->type,
+                            'options' => $requirement->options,
+                            'isRequired' => $requirement->is_required,
+                            'validations' => $requirement->validations,
+                            'placeholder' => $requirement->placeholder,
+                            'helpText' => $requirement->help_text,
+                            'sortOrder' => $requirement->sort_order,
+                        ];
+                    })->values(),
                 ];
             });
 
@@ -44,6 +58,7 @@ class ServiceController extends Controller
     {
         $service = Service::where('slug', $slug)
             ->where('is_active', true)
+            ->with('requirements')
             ->first();
 
         if (!$service) {
@@ -63,7 +78,20 @@ class ServiceController extends Controller
                 'image' => $service->image ? asset('storage/' . $service->image) : null,
                 'estimatedDuration' => $service->estimated_duration,
                 'basePrice' => $service->base_price ? (float) $service->base_price : null,
-                'requiredFields' => $service->required_fields ?? [],
+                'requirements' => $service->requirements->map(function ($requirement) {
+                    return [
+                        'id' => $requirement->id,
+                        'label' => $requirement->label,
+                        'key' => $requirement->key,
+                        'type' => $requirement->type,
+                        'options' => $requirement->options,
+                        'isRequired' => $requirement->is_required,
+                        'validations' => $requirement->validations,
+                        'placeholder' => $requirement->placeholder,
+                        'helpText' => $requirement->help_text,
+                        'sortOrder' => $requirement->sort_order,
+                    ];
+                })->values(),
             ],
         ]);
     }

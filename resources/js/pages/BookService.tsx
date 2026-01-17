@@ -7,21 +7,11 @@ import CheckIcon from '../../images/svg/check.svg';
 
 import AppointmentDatePicker from '../components/booking/AppointmentDatePicker';
 import BookingWizard from '../components/booking/BookingWizard';
-import {
-    BrakeOptions as BrakeOptionsForm,
-    OilOptions as OilOptionsForm,
-    RepairOptions as RepairOptionsForm,
-    TireOptions as TireOptionsForm,
-    type BrakeOptionsData,
-    type OilOptionsData,
-    type RepairOptionsData,
-    type TireOptionsData,
-} from '../components/booking/service-options';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
-import { Checkbox, Input, Select, TextArea } from '../components/ui';
-import { getServiceBySlug, isBrakeService, isOilService, isRepairService, isTireService, type ServiceConfig } from '../config/services';
+import { Checkbox, FormField, Input, Select, TextArea } from '../components/ui';
+import { getServiceBySlug, type ServiceConfig, type ServiceRequirement } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
 
@@ -95,12 +85,6 @@ function buildServicePreview(service: ServiceConfig): ServicePreviewData {
     };
 }
 
-// Use types from service option components
-type TireOptions = TireOptionsData;
-type OilOptions = OilOptionsData;
-type BrakeOptions = BrakeOptionsData;
-type RepairOptions = RepairOptionsData;
-
 interface AppointmentInfo {
     date: string;
     time: string;
@@ -113,23 +97,9 @@ interface CustomerInfo {
     smsUpdates: boolean;
 }
 
-// Service-specific details stored per service ID
-interface ServiceDetails {
-    tireOptions: TireOptions;
-    oilOptions: OilOptions;
-    brakeOptions: BrakeOptions;
-    repairOptions: RepairOptions;
-}
-
 interface BookingState {
     vehicle: VehicleInfo;
-    // Legacy single-service options (kept for backward compatibility)
-    tireOptions: TireOptions;
-    oilOptions: OilOptions;
-    brakeOptions: BrakeOptions;
-    repairOptions: RepairOptions;
-    // Per-service details keyed by service ID
-    serviceDetails: Record<string, ServiceDetails>;
+    serviceRequirements: Record<string, Record<string, any>>;
     appointment: AppointmentInfo;
     customer: CustomerInfo;
 }
@@ -223,38 +193,7 @@ const initialState: BookingState = {
         vin: '',
         notes: '',
     },
-    tireOptions: {
-        newOrUsed: '',
-        numberOfTires: 4,
-        tpms: false,
-        alignment: false,
-        flatRepair: false,
-    },
-    oilOptions: {
-        oilType: '',
-        lastChangeDate: '',
-    },
-    brakeOptions: {
-        position: '',
-        noiseOrVibration: false,
-        warningLight: false,
-    },
-    repairOptions: {
-        symptoms: {
-            noise: false,
-            vibration: false,
-            warning_light: false,
-            performance: false,
-            leak: false,
-            electrical: false,
-            other: false,
-        },
-        otherSymptomDescription: '',
-        problemDescription: '',
-        drivable: '',
-        photos: [],
-    },
-    serviceDetails: {},
+    serviceRequirements: {},
     appointment: {
         date: '',
         time: '',
@@ -302,18 +241,6 @@ function StepIndicator({ currentStep, className = '' }: { currentStep: number; c
                     </span>
                 </div>
             ))}
-        </div>
-    );
-}
-
-function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
-    return (
-        <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-                {label}
-                {required && <span className="ml-1 text-red-500">*</span>}
-            </label>
-            {children}
         </div>
     );
 }
@@ -433,90 +360,111 @@ function Step2VehicleInfo({
     );
 }
 
-// Helper to check if service has specific required fields from database
-function serviceHasField(service: ServiceConfig, fieldName: string): boolean {
-    return Array.isArray(service.requiredFields) && service.requiredFields.includes(fieldName as any);
+function getServiceRequirements(service: ServiceConfig): ServiceRequirement[] {
+    return [...(service.requirements ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 }
 
-// Check if service has any tire-related fields
-function hasTireFields(service: ServiceConfig): boolean {
-    return (
-        serviceHasField(service, 'tire_condition') ||
-        serviceHasField(service, 'number_of_tires') ||
-        serviceHasField(service, 'tpms_service') ||
-        serviceHasField(service, 'alignment_service') ||
-        serviceHasField(service, 'wheel_type') ||
-        isTireService(service)
-    );
+function getRequirementValue(state: BookingState, serviceId: string, key: string) {
+    return state.serviceRequirements[serviceId]?.[key];
 }
 
-// Check if service has any oil-related fields
-function hasOilFields(service: ServiceConfig): boolean {
-    return serviceHasField(service, 'oil_type') || serviceHasField(service, 'last_change_date') || isOilService(service);
-}
-
-// Check if service has any brake-related fields
-function hasBrakeFields(service: ServiceConfig): boolean {
-    return (
-        serviceHasField(service, 'brake_position') ||
-        serviceHasField(service, 'noise_or_vibration') ||
-        serviceHasField(service, 'warning_light') ||
-        isBrakeService(service)
-    );
-}
-
-// Check if service has any repair-related fields
-function hasRepairFields(service: ServiceConfig): boolean {
-    return (
-        serviceHasField(service, 'problem_description') ||
-        serviceHasField(service, 'vehicle_drivable') ||
-        serviceHasField(service, 'photo_paths') ||
-        isRepairService(service)
-    );
-}
-
-// Check if service has any required fields at all
-function hasAnyRequiredFields(service: ServiceConfig): boolean {
-    return hasTireFields(service) || hasOilFields(service) || hasBrakeFields(service) || hasRepairFields(service);
-}
-
-// Default empty service details
-const emptyServiceDetails: ServiceDetails = {
-    tireOptions: { newOrUsed: '', numberOfTires: 4, tpms: false, alignment: false, flatRepair: false },
-    oilOptions: { oilType: '', lastChangeDate: '' },
-    brakeOptions: { position: '', noiseOrVibration: false, warningLight: false },
-    repairOptions: {
-        symptoms: {
-            noise: false,
-            vibration: false,
-            warning_light: false,
-            performance: false,
-            leak: false,
-            electrical: false,
-            other: false,
-        },
-        otherSymptomDescription: '',
-        problemDescription: '',
-        drivable: '',
-        photos: [],
-    },
-};
-
-// Get service details for a specific service, creating default if not exists
-function getServiceDetails(state: BookingState, serviceId: string): ServiceDetails {
-    return state.serviceDetails[serviceId] || emptyServiceDetails;
-}
-
-// Update service details for a specific service
-function updateServiceDetails(state: BookingState, serviceId: string, updates: Partial<ServiceDetails>): BookingState {
-    const currentDetails = getServiceDetails(state, serviceId);
+function updateRequirementValue(state: BookingState, serviceId: string, key: string, value: any): BookingState {
+    const serviceValues = state.serviceRequirements[serviceId] ?? {};
     return {
         ...state,
-        serviceDetails: {
-            ...state.serviceDetails,
-            [serviceId]: { ...currentDetails, ...updates },
+        serviceRequirements: {
+            ...state.serviceRequirements,
+            [serviceId]: {
+                ...serviceValues,
+                [key]: value,
+            },
         },
     };
+}
+
+function isRequirementValueEmpty(requirement: ServiceRequirement, value: any): boolean {
+    if (requirement.type === 'toggle' || requirement.type === 'checkbox') {
+        return !value;
+    }
+
+    if (requirement.type === 'multiselect') {
+        return !Array.isArray(value) || value.length === 0;
+    }
+
+    return value === undefined || value === null || value === '';
+}
+
+function validateRequirementValue(requirement: ServiceRequirement, value: any): string | null {
+    if (isRequirementValueEmpty(requirement, value)) {
+        return null;
+    }
+
+    const validations = requirement.validations ?? {};
+
+    switch (requirement.type) {
+        case 'text':
+            if (typeof value !== 'string') {
+                return 'Must be text.';
+            }
+
+            if (value.length > 50) {
+                return 'Must not exceed 50 characters.';
+            }
+            return null;
+        case 'textarea':
+            if (typeof value !== 'string') {
+                return 'Must be text.';
+            }
+
+            if (value.length > 250) {
+                return 'Must not exceed 250 characters.';
+            }
+            return null;
+        case 'number':
+            if (value === '' || Number.isNaN(Number(value))) {
+                return 'Must be a number.';
+            }
+
+            if (validations.number_max_length) {
+                const digits = String(value).replace(/\D/g, '');
+                const maxDigits = Number(validations.number_max_length);
+                if (digits.length > maxDigits) {
+                    return `Must not exceed ${maxDigits} digits.`;
+                }
+            }
+            return null;
+        case 'date': {
+            const dateValue = new Date(value);
+            if (Number.isNaN(dateValue.getTime())) {
+                return 'Must be a valid date.';
+            }
+
+            if (typeof validations.min_date === 'string') {
+                const minDate = new Date(validations.min_date);
+                if (!Number.isNaN(minDate.getTime()) && dateValue < minDate) {
+                    return 'Date must be on or after the minimum date.';
+                }
+            }
+
+            if (typeof validations.max_date === 'string') {
+                const maxDate = new Date(validations.max_date);
+                if (!Number.isNaN(maxDate.getTime()) && dateValue > maxDate) {
+                    return 'Date must be on or before the maximum date.';
+                }
+            }
+            return null;
+        }
+        default:
+            return null;
+    }
+}
+
+function serviceNeedsTireSize(service?: ServiceConfig | null): boolean {
+    if (!service) {
+        return false;
+    }
+
+    return (service.requirements ?? []).some((requirement) => requirement.key === 'tire_size');
 }
 
 function Step3ServiceDetails({
@@ -563,8 +511,8 @@ function Step3ServiceDetails({
             <div className="space-y-4">
                 {services.map((service) => {
                     const serviceId = service.id.toString();
-                    const hasOptions = hasAnyRequiredFields(service);
-                    const details = getServiceDetails(state, serviceId);
+                    const requirements = getServiceRequirements(service);
+                    const hasOptions = requirements.length > 0;
 
                     return (
                         <div
@@ -588,37 +536,152 @@ function Step3ServiceDetails({
 
                             {/* Service Options */}
                             <div className="p-5">
-                                {hasTireFields(service) && (
-                                    <TireOptionsForm
-                                        options={details.tireOptions}
-                                        onChange={(tireOptions) => onChange(updateServiceDetails(state, serviceId, { tireOptions }))}
-                                        serviceId={serviceId}
-                                    />
-                                )}
+                                {requirements.map((requirement) => {
+                                    const value = getRequirementValue(state, serviceId, requirement.key);
+                                    const isRequired = requirement.isRequired ?? false;
+                                    const requiredError =
+                                        isRequired && isRequirementValueEmpty(requirement, value) ? 'This field is required.' : null;
+                                    const validationError = validateRequirementValue(requirement, value);
+                                    const errorMessage = requiredError ?? validationError;
+                                    if (requirement.type === 'textarea') {
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <TextArea
+                                                    value={value ?? ''}
+                                                    onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
+                                                    placeholder={requirement.placeholder ?? undefined}
+                                                    rows={3}
+                                                    maxLength={250}
+                                                    error={errorMessage ?? undefined}
+                                                />
+                                            </FormField>
+                                        );
+                                    }
 
-                                {hasOilFields(service) && (
-                                    <OilOptionsForm
-                                        options={details.oilOptions}
-                                        onChange={(oilOptions) => onChange(updateServiceDetails(state, serviceId, { oilOptions }))}
-                                        serviceId={serviceId}
-                                    />
-                                )}
+                                    if (requirement.type === 'number') {
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <Input
+                                                    type="number"
+                                                    value={value ?? ''}
+                                                    onChange={(v) =>
+                                                        onChange(updateRequirementValue(state, serviceId, requirement.key, v === '' ? '' : Number(v)))
+                                                    }
+                                                    placeholder={requirement.placeholder ?? undefined}
+                                                    error={errorMessage ?? undefined}
+                                                />
+                                            </FormField>
+                                        );
+                                    }
 
-                                {hasBrakeFields(service) && (
-                                    <BrakeOptionsForm
-                                        options={details.brakeOptions}
-                                        onChange={(brakeOptions) => onChange(updateServiceDetails(state, serviceId, { brakeOptions }))}
-                                        serviceId={serviceId}
-                                    />
-                                )}
+                                    if (requirement.type === 'select') {
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <div className="space-y-2">
+                                                    <Select
+                                                        value={value ?? ''}
+                                                        onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
+                                                        options={(requirement.options ?? []).map((option) => ({
+                                                            value: option.value,
+                                                            label: option.label,
+                                                        }))}
+                                                        placeholder={requirement.placeholder ?? 'Select option'}
+                                                    />
+                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
+                                                </div>
+                                            </FormField>
+                                        );
+                                    }
 
-                                {hasRepairFields(service) && (
-                                    <RepairOptionsForm
-                                        options={details.repairOptions}
-                                        onChange={(repairOptions) => onChange(updateServiceDetails(state, serviceId, { repairOptions }))}
-                                        serviceId={serviceId}
-                                    />
-                                )}
+                                    if (requirement.type === 'multiselect') {
+                                        const selectedValues = Array.isArray(value) ? value : [];
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <div className="space-y-2">
+                                                    {(requirement.options ?? []).map((option) => (
+                                                        <Checkbox
+                                                            key={option.value}
+                                                            label={option.label}
+                                                            isSelected={selectedValues.includes(option.value)}
+                                                            onChange={(checked) => {
+                                                                const next = checked
+                                                                    ? [...selectedValues, option.value]
+                                                                    : selectedValues.filter((item) => item !== option.value);
+                                                                onChange(updateRequirementValue(state, serviceId, requirement.key, next));
+                                                            }}
+                                                        />
+                                                    ))}
+                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
+                                                </div>
+                                            </FormField>
+                                        );
+                                    }
+
+                                    if (requirement.type === 'radio') {
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <div className="space-y-2">
+                                                    {(requirement.options ?? []).map((option) => (
+                                                        <label key={option.value} className="flex items-center gap-2 text-sm text-gray-700">
+                                                            <input
+                                                                type="radio"
+                                                                name={`${serviceId}-${requirement.key}`}
+                                                                value={option.value}
+                                                                checked={value === option.value}
+                                                                onChange={() =>
+                                                                    onChange(updateRequirementValue(state, serviceId, requirement.key, option.value))
+                                                                }
+                                                                className="h-4 w-4 accent-green-600"
+                                                            />
+                                                            {option.label}
+                                                        </label>
+                                                    ))}
+                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
+                                                </div>
+                                            </FormField>
+                                        );
+                                    }
+
+                                    if (requirement.type === 'checkbox' || requirement.type === 'toggle') {
+                                        return (
+                                            <div key={requirement.key} className="space-y-2 pt-1">
+                                                <Checkbox
+                                                    label={requirement.label}
+                                                    isSelected={Boolean(value)}
+                                                    onChange={(checked) =>
+                                                        onChange(updateRequirementValue(state, serviceId, requirement.key, checked))
+                                                    }
+                                                />
+                                                {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
+                                            </div>
+                                        );
+                                    }
+
+                                    if (requirement.type === 'date') {
+                                        return (
+                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                                <Input
+                                                    type="date"
+                                                    value={value ?? ''}
+                                                    onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
+                                                    error={errorMessage ?? undefined}
+                                                />
+                                            </FormField>
+                                        );
+                                    }
+
+                                    return (
+                                        <FormField key={requirement.key} label={requirement.label} required={isRequired}>
+                                            <Input
+                                                value={value ?? ''}
+                                                onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
+                                                placeholder={requirement.placeholder ?? undefined}
+                                                maxLength={50}
+                                                error={errorMessage ?? undefined}
+                                            />
+                                        </FormField>
+                                    );
+                                })}
 
                                 {!hasOptions && (
                                     <div className="flex items-center gap-3 rounded-lg bg-green-50 px-4 py-3">
@@ -710,21 +773,20 @@ function Step6Review({ service, state, selectedServices }: { service: ServiceCon
         });
     };
 
-    // Get selected symptoms as readable list
-    const getSelectedSymptoms = () => {
-        if (!state.repairOptions.symptoms) return [];
-        const symptomLabels: Record<string, string> = {
-            noise: 'Unusual noise (clicking, grinding, squealing)',
-            vibration: 'Vibration or shaking',
-            warning_light: 'Warning light on dashboard',
-            performance: 'Performance issue (power loss, stalling)',
-            leak: 'Fluid leak',
-            electrical: 'Electrical problem',
-            other: 'Other',
-        };
-        return Object.entries(state.repairOptions.symptoms)
-            .filter(([, selected]) => selected)
-            .map(([key]) => symptomLabels[key] || key);
+    const formatRequirementValue = (value: any) => {
+        if (Array.isArray(value)) {
+            return value.length > 0 ? value.join(', ') : 'Not provided';
+        }
+
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+
+        if (value === null || value === undefined || value === '') {
+            return 'Not provided';
+        }
+
+        return String(value);
     };
 
     // Helper to render a detail row
@@ -762,6 +824,31 @@ function Step6Review({ service, state, selectedServices }: { service: ServiceCon
                     )}
                 </div>
 
+                {/* Service Requirements */}
+                {selectedServices.map((selectedService) => {
+                    const requirements = getServiceRequirements(selectedService);
+                    if (requirements.length === 0) {
+                        return null;
+                    }
+
+                    const serviceId = selectedService.id.toString();
+                    const values = state.serviceRequirements[serviceId] ?? {};
+                    const filledRequirements = requirements.filter((requirement) => !isRequirementValueEmpty(requirement, values[requirement.key]));
+
+                    if (filledRequirements.length === 0) {
+                        return null;
+                    }
+
+                    return (
+                        <div key={`requirements-${selectedService.id}`} className="rounded-lg border border-gray-200 p-4">
+                            <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">{selectedService.name} Details</h4>
+                            {filledRequirements.map((requirement) => (
+                                <DetailRow key={requirement.key} label={requirement.label} value={formatRequirementValue(values[requirement.key])} />
+                            ))}
+                        </div>
+                    );
+                })}
+
                 {/* Vehicle */}
                 <div className="rounded-lg border border-gray-200 p-4">
                     <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Vehicle Information</h4>
@@ -771,77 +858,6 @@ function Step6Review({ service, state, selectedServices }: { service: ServiceCon
                     {state.vehicle.vin && <DetailRow label="VIN" value={state.vehicle.vin} />}
                     {state.vehicle.notes && <DetailRow label="Notes" value={state.vehicle.notes} />}
                 </div>
-
-                {/* Tire Service Options */}
-                {isTireService(service) && state.tireOptions.newOrUsed && (
-                    <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Tire Service Details</h4>
-                        <DetailRow label="Tire Condition" value={<span className="capitalize">{state.tireOptions.newOrUsed} Tires</span>} />
-                        <DetailRow label="Number of Tires" value={`${state.tireOptions.numberOfTires} tire(s)`} />
-                        <DetailRow label="TPMS Service" value={state.tireOptions.tpms ? 'Yes' : 'No'} />
-                        <DetailRow label="Wheel Alignment" value={state.tireOptions.alignment ? 'Yes' : 'No'} />
-                        <DetailRow label="Flat Repair" value={state.tireOptions.flatRepair ? 'Yes' : 'No'} />
-                    </div>
-                )}
-
-                {/* Oil Change Options */}
-                {isOilService(service) && state.oilOptions.oilType && (
-                    <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Oil Change Details</h4>
-                        <DetailRow label="Oil Type" value={<span className="capitalize">{state.oilOptions.oilType.replace(/-/g, ' ')}</span>} />
-                        {state.oilOptions.lastChangeDate && <DetailRow label="Last Oil Change" value={state.oilOptions.lastChangeDate} />}
-                    </div>
-                )}
-
-                {/* Brake Service Options */}
-                {isBrakeService(service) && state.brakeOptions.position && (
-                    <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Brake Service Details</h4>
-                        <DetailRow label="Brake Position" value={<span className="capitalize">{state.brakeOptions.position} Brakes</span>} />
-                        <DetailRow label="Noise or Vibration" value={state.brakeOptions.noiseOrVibration ? 'Yes' : 'No'} />
-                        <DetailRow label="Warning Light On" value={state.brakeOptions.warningLight ? 'Yes' : 'No'} />
-                    </div>
-                )}
-
-                {/* Repair Service Options */}
-                {isRepairService(service) && state.repairOptions.problemDescription && (
-                    <div className="rounded-lg border border-gray-200 p-4">
-                        <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Repair Details</h4>
-
-                        {/* Symptoms */}
-                        {getSelectedSymptoms().length > 0 && (
-                            <div className="border-b border-gray-100 py-2">
-                                <span className="mb-2 block text-gray-500">Symptoms Reported</span>
-                                <ul className="list-inside list-disc space-y-1">
-                                    {getSelectedSymptoms().map((symptom) => (
-                                        <li key={symptom} className="text-sm text-gray-900">
-                                            {symptom}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {/* Other symptom description */}
-                        {state.repairOptions.symptoms?.other && state.repairOptions.otherSymptomDescription && (
-                            <div className="border-b border-gray-100 py-2">
-                                <span className="mb-1 block text-gray-500">Other Symptom Description</span>
-                                <p className="text-sm text-gray-900">{state.repairOptions.otherSymptomDescription}</p>
-                            </div>
-                        )}
-
-                        {/* Problem description */}
-                        <div className="border-b border-gray-100 py-2">
-                            <span className="mb-1 block text-gray-500">Problem Description</span>
-                            <p className="text-sm text-gray-900">{state.repairOptions.problemDescription}</p>
-                        </div>
-
-                        <DetailRow
-                            label="Vehicle Drivable"
-                            value={state.repairOptions.drivable === 'yes' ? 'Yes, can be driven' : 'No, needs towing'}
-                        />
-                    </div>
-                )}
 
                 {/* Appointment */}
                 <div className="rounded-lg border border-gray-200 p-4">
@@ -931,7 +947,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 // Vehicle Info
                 const v = state.vehicle;
                 const baseValid = v.vehicleType && v.make && v.model && v.year;
-                if (service && isTireService(service)) {
+                if (service && serviceNeedsTireSize(service)) {
                     return !!(baseValid && v.tireSize);
                 }
                 return !!baseValid;
@@ -942,40 +958,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 // Check each selected service has required fields filled
                 for (const selectedService of selectedServices) {
                     const serviceId = selectedService.id.toString();
-                    const details = state.serviceDetails[serviceId];
+                    const requirements = getServiceRequirements(selectedService);
 
-                    // If no details exist for this service, check if it needs any
-                    if (!details) {
-                        if (hasAnyRequiredFields(selectedService)) {
+                    for (const requirement of requirements) {
+                        if (!requirement.isRequired) {
+                            continue;
+                        }
+
+                        const value = getRequirementValue(state, serviceId, requirement.key);
+
+                        if (isRequirementValueEmpty(requirement, value)) {
                             return false;
                         }
-                        continue;
-                    }
-
-                    // Check tire service requirements
-                    if (hasTireFields(selectedService)) {
-                        if (!details.tireOptions.newOrUsed) return false;
-                    }
-
-                    // Check oil service requirements
-                    if (hasOilFields(selectedService)) {
-                        if (!details.oilOptions.oilType) return false;
-                    }
-
-                    // Check brake service requirements
-                    if (hasBrakeFields(selectedService)) {
-                        if (!details.brakeOptions.position) return false;
-                    }
-
-                    // Check repair service requirements
-                    if (hasRepairFields(selectedService)) {
-                        // At least one symptom must be selected
-                        const hasAnySymptom = details.repairOptions.symptoms && Object.values(details.repairOptions.symptoms).some(Boolean);
-                        if (!hasAnySymptom) return false;
-                        // If "other" is selected, description is required
-                        if (details.repairOptions.symptoms?.other && !details.repairOptions.otherSymptomDescription) return false;
-                        if (!details.repairOptions.problemDescription) return false;
-                        if (!details.repairOptions.drivable) return false;
                     }
                 }
 
@@ -1021,46 +1015,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 .map((id) => (typeof id === 'string' ? parseInt(id, 10) : id)),
         ].filter((id) => !isNaN(id));
 
-        // Build per-service details
-        const serviceDetailsPayload: Record<string, any> = {};
-        selectedServiceIds.forEach((serviceId) => {
-            const details = state.serviceDetails[serviceId];
-            if (details) {
-                serviceDetailsPayload[serviceId] = {
-                    tire_options: details.tireOptions.newOrUsed
-                        ? {
-                              newOrUsed: details.tireOptions.newOrUsed,
-                              numberOfTires: details.tireOptions.numberOfTires,
-                              tpms: details.tireOptions.tpms,
-                              alignment: details.tireOptions.alignment,
-                              flatRepair: details.tireOptions.flatRepair,
-                          }
-                        : null,
-                    oil_options: details.oilOptions.oilType
-                        ? {
-                              oilType: details.oilOptions.oilType,
-                              lastChangeDate: details.oilOptions.lastChangeDate,
-                          }
-                        : null,
-                    brake_options: details.brakeOptions.position
-                        ? {
-                              position: details.brakeOptions.position,
-                              noiseOrVibration: details.brakeOptions.noiseOrVibration,
-                              warningLight: details.brakeOptions.warningLight,
-                          }
-                        : null,
-                    repair_options:
-                        details.repairOptions.symptoms && Object.values(details.repairOptions.symptoms).some(Boolean)
-                            ? {
-                                  symptoms: details.repairOptions.symptoms,
-                                  other_symptom_description: details.repairOptions.otherSymptomDescription || null,
-                                  problem_description: details.repairOptions.problemDescription,
-                                  drivable: details.repairOptions.drivable,
-                              }
-                            : null,
-                };
-            }
-        });
+        const serviceRequirementsPayload = state.serviceRequirements;
 
         const payload = {
             service_ids: allServiceIds,
@@ -1073,7 +1028,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 vin: state.vehicle.vin || null,
                 notes: state.vehicle.notes || null,
             },
-            service_details: serviceDetailsPayload,
+            service_requirements: serviceRequirementsPayload,
             date: state.appointment.date,
             time: state.appointment.time,
             customer: {
@@ -1240,7 +1195,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 <Step2VehicleInfo
                     vehicle={state.vehicle}
                     onChange={(vehicle) => setState({ ...state, vehicle })}
-                    showTireSize={isTireService(service)}
+                    showTireSize={serviceNeedsTireSize(service)}
                 />
                 <Step3ServiceDetails
                     services={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
