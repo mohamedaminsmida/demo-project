@@ -702,7 +702,15 @@ function Step3ServiceDetails({
     );
 }
 
-function Step4Appointment({ appointment, onChange }: { appointment: AppointmentInfo; onChange: (appointment: AppointmentInfo) => void }) {
+function Step4Appointment({
+    appointment,
+    onChange,
+    selectedServiceIds,
+}: {
+    appointment: AppointmentInfo;
+    onChange: (appointment: AppointmentInfo) => void;
+    selectedServiceIds: number[];
+}) {
     const handleDateChange = useCallback(
         (date: string) => {
             onChange({ ...appointment, date });
@@ -723,6 +731,7 @@ function Step4Appointment({ appointment, onChange }: { appointment: AppointmentI
             <AppointmentDatePicker
                 selectedDate={appointment.date}
                 selectedTime={appointment.time}
+                serviceIds={selectedServiceIds}
                 onDateChange={handleDateChange}
                 onTimeChange={handleTimeChange}
             />
@@ -917,6 +926,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
+    const allServiceIds = useMemo(() => {
+        if (!service) return [] as number[];
+
+        const mainServiceId = typeof service.id === 'string' ? parseInt(service.id, 10) : service.id;
+        return [
+            mainServiceId,
+            ...selectedServiceIds
+                .filter((id) => id !== service.id.toString() && id !== service.id)
+                .map((id) => (typeof id === 'string' ? parseInt(id, 10) : id)),
+        ].filter((id) => !isNaN(id));
+    }, [service, selectedServiceIds]);
+
     // Pre-select service from URL query parameter when services are loaded
     useEffect(() => {
         if (!servicesLoading && dbServices.length > 0 && slug) {
@@ -1004,16 +1025,6 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
 
         setIsSubmitting(true);
         setSubmitError(null);
-
-        // Combine the main service with any additional selected services
-        // Ensure IDs are numbers for the backend validation
-        const mainServiceId = typeof service.id === 'string' ? parseInt(service.id, 10) : service.id;
-        const allServiceIds = [
-            mainServiceId,
-            ...selectedServiceIds
-                .filter((id) => id !== service.id.toString() && id !== service.id)
-                .map((id) => (typeof id === 'string' ? parseInt(id, 10) : id)),
-        ].filter((id) => !isNaN(id));
 
         const serviceRequirementsPayload = state.serviceRequirements;
 
@@ -1191,7 +1202,11 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     </div>
                 </div>
 
-                <Step4Appointment appointment={state.appointment} onChange={(appointment) => setState((prev) => ({ ...prev, appointment }))} />
+                <Step4Appointment
+                    appointment={state.appointment}
+                    onChange={(appointment) => setState((prev) => ({ ...prev, appointment }))}
+                    selectedServiceIds={allServiceIds}
+                />
                 <Step2VehicleInfo
                     vehicle={state.vehicle}
                     onChange={(vehicle) => setState({ ...state, vehicle })}

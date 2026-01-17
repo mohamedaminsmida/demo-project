@@ -5,6 +5,7 @@ import CheckIcon from '../../../images/svg/check.svg';
 interface AppointmentDatePickerProps {
     selectedDate: string;
     selectedTime: string;
+    serviceIds?: number[];
     onDateChange: (date: string) => void;
     onTimeChange: (time: string) => void;
 }
@@ -12,12 +13,19 @@ interface AppointmentDatePickerProps {
 type AvailabilityState = {
     availableHours: string[];
     bookedTimes: string[];
+    unavailableHours: string[];
     serverTime: string;
+};
+
+type WorkingHourEntry = {
+    day: string;
+    is_day_off?: boolean;
 };
 
 export default function AppointmentDatePicker({
     selectedDate: initialDate,
     selectedTime: initialTime,
+    serviceIds = [],
     onDateChange,
     onTimeChange,
 }: AppointmentDatePickerProps) {
@@ -38,6 +46,7 @@ export default function AppointmentDatePicker({
     const [availability, setAvailability] = useState<AvailabilityState | null>(null);
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
     const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+    const [dayOffSet, setDayOffSet] = useState<Set<number>>(new Set());
 
     // Sync with parent when values change
     useEffect(() => {
@@ -63,7 +72,10 @@ export default function AppointmentDatePicker({
         setAvailabilityLoading(true);
         setAvailabilityError(null);
 
-        fetch(`/api/appointments/availability?date=${selectedDate}`, { signal: controller.signal })
+        const params = new URLSearchParams({ date: selectedDate });
+        serviceIds.forEach((id) => params.append('service_ids[]', String(id)));
+
+        fetch(`/api/appointments/availability?${params.toString()}`, { signal: controller.signal })
             .then(async (response) => {
                 if (!response.ok) {
                     const payload = await response.json().catch(() => null);
@@ -77,7 +89,15 @@ export default function AppointmentDatePicker({
                 setAvailability({
                     availableHours: Array.isArray(data.available_hours) ? data.available_hours : [],
                     bookedTimes: Array.isArray(data.booked_times) ? data.booked_times : [],
+                    unavailableHours: Array.isArray(data.unavailable_hours) ? data.unavailable_hours : [],
                     serverTime: data.server_time ?? '',
+                });
+                console.log('[AppointmentDatePicker] Availability payload:', {
+                    date: selectedDate,
+                    serviceIds,
+                    availableHours: data.available_hours ?? [],
+                    bookedTimes: data.booked_times ?? [],
+                    unavailableHours: data.unavailable_hours ?? [],
                 });
             })
             .catch((error) => {
@@ -92,7 +112,53 @@ export default function AppointmentDatePicker({
             });
 
         return () => controller.abort();
-    }, [selectedDate]);
+    }, [selectedDate, serviceIds]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        fetch('/api/settings', { signal: controller.signal })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => null);
+                    const message = payload?.message ?? 'Failed to load settings';
+                    throw new Error(message);
+                }
+                return response.json();
+            })
+            .then((payload) => {
+                const entries = Array.isArray(payload?.settings?.working_hours) ? (payload.settings.working_hours as WorkingHourEntry[]) : [];
+                const dayIndexMap: Record<string, number> = {
+                    sunday: 0,
+                    monday: 1,
+                    tuesday: 2,
+                    wednesday: 3,
+                    thursday: 4,
+                    friday: 5,
+                    saturday: 6,
+                };
+
+                const offDays = new Set<number>([0, 1, 2, 3, 4, 5, 6]);
+                entries.forEach((entry) => {
+                    if (!entry?.day || dayIndexMap[entry.day] === undefined) {
+                        return;
+                    }
+
+                    const index = dayIndexMap[entry.day];
+                    if (entry.is_day_off) {
+                        offDays.add(index);
+                    } else {
+                        offDays.delete(index);
+                    }
+                });
+                setDayOffSet(offDays);
+            })
+            .catch(() => {
+                // Ignore settings fetch errors; show all days by default.
+            });
+
+        return () => controller.abort();
+    }, []);
 
     // Generate available months (current + next 11 months = 12 months total)
     const availableMonths = useMemo(() => {
@@ -122,7 +188,7 @@ export default function AppointmentDatePicker({
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const date = new Date(year, month - 1, day);
             // Skip past dates
-            if (date >= startOfToday) {
+            if (date >= startOfToday && !dayOffSet.has(date.getDay())) {
                 const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const label = date.toLocaleDateString('en-US', {
                     weekday: 'short',
@@ -133,7 +199,7 @@ export default function AppointmentDatePicker({
             }
         }
         return dates;
-    }, [selectedMonth]);
+    }, [selectedMonth, dayOffSet]);
 
     const nowReference = useMemo(() => {
         return availability?.serverTime ? new Date(availability.serverTime) : new Date();
@@ -168,15 +234,17 @@ export default function AppointmentDatePicker({
             return [] as { value: string; label: string; disabled: boolean }[];
         }
 
+        const unavailable = new Set((availability?.unavailableHours ?? []).map((hour) => normalizeTimeLabel(hour)));
+
         return availability.availableHours.map((hour) => {
             const normalizedHour = normalizeTimeLabel(hour);
             return {
                 value: normalizedHour,
                 label: normalizedHour,
-                disabled: false,
+                disabled: unavailable.has(normalizedHour),
             };
         });
-    }, [availability?.availableHours]);
+    }, [availability?.availableHours, availability?.unavailableHours]);
 
     const handleMonthSelect = (monthValue: string) => {
         setSelectedMonth(monthValue);
@@ -195,6 +263,15 @@ export default function AppointmentDatePicker({
     };
 
     const handleHourSelect = (hourValue: string) => {
+        if (availability) {
+            console.log('[AppointmentDatePicker] Hour selected:', {
+                date: selectedDate,
+                hour: hourValue,
+                serviceIds,
+                unavailableHours: availability.unavailableHours,
+                availableHours: availability.availableHours,
+            });
+        }
         setSelectedHour(hourValue);
         setSelectedTime(hourValue);
     };

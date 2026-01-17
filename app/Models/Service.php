@@ -19,6 +19,7 @@ class Service extends Model
         'details',
         'image',
         'estimated_duration',
+        'max_concurrent_bookings',
         'base_price',
         'is_active',
     ];
@@ -27,6 +28,7 @@ class Service extends Model
         'base_price' => 'decimal:2',
         'is_active' => 'boolean',
         'details' => 'array',
+        'max_concurrent_bookings' => 'integer',
     ];
 
     /**

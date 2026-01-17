@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ServiceAppointment;
 use App\Models\ServiceRequirementValue;
+use App\Models\Setting;
 use App\Models\Vehicle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,8 @@ class AppointmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'date' => 'required|date',
+            'service_ids' => 'sometimes|array',
+            'service_ids.*' => 'integer|exists:services,id',
         ]);
 
         if ($validator->fails()) {
@@ -52,24 +55,105 @@ class AppointmentController extends Controller
 
         $date = $request->input('date');
 
+        $serviceIds = collect($request->input('service_ids', []))
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $services = $serviceIds->isEmpty()
+            ? collect()
+            : Service::query()->whereIn('id', $serviceIds)->get();
+
+        $activeStatuses = [
+            AppointmentStatus::Scheduled->value,
+            AppointmentStatus::InProgress->value,
+        ];
+
+        $settings = Setting::query()->first();
+
+        $availableHours = self::AVAILABLE_HOURS;
+        if (is_array($settings?->working_hours)) {
+            $dayKey = strtolower(Carbon::parse($date)->format('l'));
+            $entry = collect($settings->working_hours)
+                ->first(fn ($item) => strtolower($item['day'] ?? '') === $dayKey);
+
+            if (! $entry || ($entry['is_day_off'] ?? false)) {
+                $availableHours = [];
+            } else {
+                $open = $entry['open'] ?? null;
+                $close = $entry['close'] ?? null;
+
+                if (! $open || ! $close) {
+                    $availableHours = [];
+                } else {
+                    $start = Carbon::parse(sprintf('%s %s', $date, $open));
+                    $end = Carbon::parse(sprintf('%s %s', $date, $close));
+
+                    if ($end->lessThan($start)) {
+                        $availableHours = [];
+                    } else {
+                        $availableHours = [];
+                        $slot = $start->copy();
+                        while ($slot->lessThanOrEqualTo($end)) {
+                            $availableHours[] = $slot->format('g:i A');
+                            $slot->addHour();
+                        }
+                    }
+                }
+            }
+        }
+
         $bookedTimes = ServiceAppointment::query()
             ->whereDate('appointment_date', $date)
-            ->whereIn('status', [
-                AppointmentStatus::Scheduled->value,
-                AppointmentStatus::InProgress->value,
-            ])
+            ->whereIn('status', $activeStatuses)
             ->orderBy('appointment_time')
             ->pluck('appointment_time')
             ->unique()
             ->map(fn ($time) => Carbon::parse($time)->format('g:i A'))
             ->values();
 
+        $unavailableHours = collect($availableHours)
+            ->filter(function (string $hour) use ($date, $activeStatuses, $settings, $services) {
+                $totalCount = ServiceAppointment::query()
+                    ->whereDate('appointment_date', $date)
+                    ->where('appointment_time', $hour)
+                    ->whereIn('status', $activeStatuses)
+                    ->count();
+
+                if ($settings?->total_capacity && $totalCount >= $settings->total_capacity) {
+                    return true;
+                }
+
+                foreach ($services as $service) {
+                    if (! $service->max_concurrent_bookings) {
+                        continue;
+                    }
+
+                    $serviceCount = ServiceAppointment::query()
+                        ->whereDate('appointment_date', $date)
+                        ->where('appointment_time', $hour)
+                        ->whereIn('status', $activeStatuses)
+                        ->whereHas('services', function ($query) use ($service) {
+                            $query->where('services.id', $service->id);
+                        })
+                        ->count();
+
+                    if ($serviceCount >= $service->max_concurrent_bookings) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
+            ->values();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'date' => $date,
-                'available_hours' => self::AVAILABLE_HOURS,
+                'available_hours' => $availableHours,
                 'booked_times' => $bookedTimes,
+                'unavailable_hours' => $unavailableHours,
                 'server_time' => Carbon::now()->toIso8601String(),
             ],
         ]);
@@ -134,6 +218,54 @@ class AppointmentController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $dynamicErrors,
             ], 422);
+        }
+
+        $appointmentDate = $request->input('date');
+        $appointmentTime = $request->input('time');
+
+        $activeStatuses = [
+            AppointmentStatus::Scheduled->value,
+            AppointmentStatus::InProgress->value,
+        ];
+
+        $settings = Setting::query()->first();
+        if ($settings?->total_capacity) {
+            $activeCount = ServiceAppointment::query()
+                ->whereDate('appointment_date', $appointmentDate)
+                ->where('appointment_time', $appointmentTime)
+                ->whereIn('status', $activeStatuses)
+                ->count();
+
+            if ($activeCount >= $settings->total_capacity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No capacity available for the selected time.',
+                    'errors' => ['time' => ['Garage capacity reached for this time slot.']],
+                ], 422);
+            }
+        }
+
+        foreach ($services as $service) {
+            if (! $service->max_concurrent_bookings) {
+                continue;
+            }
+
+            $serviceCount = ServiceAppointment::query()
+                ->whereDate('appointment_date', $appointmentDate)
+                ->where('appointment_time', $appointmentTime)
+                ->whereIn('status', $activeStatuses)
+                ->whereHas('services', function ($query) use ($service) {
+                    $query->where('services.id', $service->id);
+                })
+                ->count();
+
+            if ($serviceCount >= $service->max_concurrent_bookings) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Service capacity reached for the selected time.',
+                    'errors' => ['time' => ['Service capacity reached for this time slot.']],
+                ], 422);
+            }
         }
 
         try {

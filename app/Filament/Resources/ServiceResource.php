@@ -72,6 +72,11 @@ class ServiceResource extends Resource
                         Forms\Components\TextInput::make('estimated_duration')
                             ->required()
                             ->placeholder('e.g., 1-2 hours'),
+                        Forms\Components\TextInput::make('max_concurrent_bookings')
+                            ->label('Max Concurrent Bookings')
+                            ->numeric()
+                            ->minValue(1)
+                            ->placeholder('Leave empty for no limit'),
                         Forms\Components\TextInput::make('base_price')
                             ->numeric()
                             ->prefix('$')
@@ -107,6 +112,9 @@ class ServiceResource extends Resource
                     ->money('USD')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('estimated_duration'),
+                Tables\Columns\TextColumn::make('max_concurrent_bookings')
+                    ->label('Max Concurrent')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -160,6 +168,9 @@ class ServiceResource extends Resource
                                     ->badge(),
                                 InfolistComponents\TextEntry::make('estimated_duration')
                                     ->label('Estimated Duration'),
+                                InfolistComponents\TextEntry::make('max_concurrent_bookings')
+                                    ->label('Max Concurrent Bookings')
+                                    ->placeholder('No limit'),
                                 InfolistComponents\TextEntry::make('base_price')
                                     ->label('Base Price')
                                     ->money('USD')
