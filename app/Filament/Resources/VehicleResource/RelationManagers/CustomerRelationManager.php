@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\VehicleResource\RelationManagers;
 
+use App\Filament\Resources\CustomerResource;
 use App\Models\Customer;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -46,13 +46,15 @@ class CustomerRelationManager extends RelationManager
                     ->dateTime('M d, Y g:i A')
                     ->sortable(),
             ])
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
-                    ViewAction::make()
-                        ->icon('heroicon-o-eye'),
-                    EditAction::make()
-                        ->icon('heroicon-o-pencil-square'),
-                    DeleteAction::make()
+                    Action::make('view')
+                        ->icon('heroicon-o-eye')
+                        ->url(fn (Customer $record) => CustomerResource::getUrl('view', ['record' => $record])),
+                    Action::make('edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->url(fn (Customer $record) => CustomerResource::getUrl('edit', ['record' => $record])),
+                    Action::make('delete')
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation()
                         ->modalHeading('Delete Customer')

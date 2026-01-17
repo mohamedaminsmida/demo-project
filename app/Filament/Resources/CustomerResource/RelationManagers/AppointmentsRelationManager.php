@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\CustomerResource\RelationManagers;
 
 use App\Enums\AppointmentStatus;
+use App\Filament\Resources\ServiceAppointmentResource;
 use App\Models\ServiceAppointment;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -61,12 +61,14 @@ class AppointmentsRelationManager extends RelationManager
                     ->dateTime('M d, Y g:i A')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
-                    ViewAction::make()
-                        ->icon('heroicon-o-eye'),
-                    EditAction::make()
-                        ->icon('heroicon-o-pencil-square'),
+                    Action::make('view')
+                        ->icon('heroicon-o-eye')
+                        ->url(fn (ServiceAppointment $record) => ServiceAppointmentResource::getUrl('view', ['record' => $record])),
+                    Action::make('edit')
+                        ->icon('heroicon-o-pencil-square')
+                        ->url(fn (ServiceAppointment $record) => ServiceAppointmentResource::getUrl('edit', ['record' => $record])),
                     DeleteAction::make()
                         ->icon('heroicon-o-trash')
                         ->requiresConfirmation()
