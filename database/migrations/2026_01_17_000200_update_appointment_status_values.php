@@ -12,6 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
         if (Schema::hasColumn('service_appointments', 'sms_updates')) {
             Schema::table('service_appointments', function (Blueprint $table) {
                 $table->dropColumn('sms_updates');
@@ -24,13 +26,17 @@ return new class extends Migration
             });
         }
 
-        DB::statement('ALTER TABLE service_appointments DROP CONSTRAINT IF EXISTS service_appointments_status_check');
+        if (! $isSqlite) {
+            DB::statement('ALTER TABLE service_appointments DROP CONSTRAINT IF EXISTS service_appointments_status_check');
+        }
 
         DB::table('service_appointments')
             ->whereIn('status', ['pending', 'confirmed'])
             ->update(['status' => 'scheduled']);
 
-        DB::statement("ALTER TABLE service_appointments ADD CONSTRAINT service_appointments_status_check CHECK (status IN ('scheduled','in_progress','completed','cancelled','no_show'))");
+        if (! $isSqlite) {
+            DB::statement("ALTER TABLE service_appointments ADD CONSTRAINT service_appointments_status_check CHECK (status IN ('scheduled','in_progress','completed','cancelled','no_show'))");
+        }
     }
 
     /**
@@ -38,13 +44,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE service_appointments DROP CONSTRAINT IF EXISTS service_appointments_status_check');
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
+        if (! $isSqlite) {
+            DB::statement('ALTER TABLE service_appointments DROP CONSTRAINT IF EXISTS service_appointments_status_check');
+        }
 
         DB::table('service_appointments')
             ->where('status', 'scheduled')
             ->update(['status' => 'pending']);
 
-        DB::statement("ALTER TABLE service_appointments ADD CONSTRAINT service_appointments_status_check CHECK (status IN ('pending','confirmed','in_progress','completed','cancelled'))");
+        if (! $isSqlite) {
+            DB::statement("ALTER TABLE service_appointments ADD CONSTRAINT service_appointments_status_check CHECK (status IN ('pending','confirmed','in_progress','completed','cancelled'))");
+        }
 
         Schema::table('service_appointments', function (Blueprint $table) {
             if (! Schema::hasColumn('service_appointments', 'sms_updates')) {
