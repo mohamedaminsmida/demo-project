@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VehicleResource\Pages;
 use App\Models\Vehicle;
 use Filament\Forms;
+use Filament\Infolists\Components as InfolistComponents;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components;
 use Filament\Schemas\Schema;
@@ -135,6 +136,56 @@ class VehicleResource extends Resource
             ])
             ->bulkActions([
                 // Bulk actions configured here
+            ]);
+    }
+
+    public static function infolist(Schema $infolist): Schema
+    {
+        return $infolist
+            ->schema([
+                Components\Section::make('Vehicle')
+                    ->schema([
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('customer.name')
+                                    ->label('Customer'),
+                                InfolistComponents\TextEntry::make('type')
+                                    ->label('Type')
+                                    ->badge(),
+                                InfolistComponents\TextEntry::make('brand')
+                                    ->label('Brand'),
+                                InfolistComponents\TextEntry::make('model')
+                                    ->label('Model'),
+                                InfolistComponents\TextEntry::make('year')
+                                    ->label('Year'),
+                                InfolistComponents\TextEntry::make('vin')
+                                    ->label('VIN')
+                                    ->placeholder('Not provided'),
+                                InfolistComponents\TextEntry::make('tire_size')
+                                    ->label('Tire Size')
+                                    ->placeholder('Not specified'),
+                                InfolistComponents\IconEntry::make('is_primary')
+                                    ->label('Primary Vehicle')
+                                    ->boolean(),
+                            ]),
+                    ]),
+
+                Components\Section::make('Notes & Timestamps')
+                    ->schema([
+                        InfolistComponents\TextEntry::make('notes')
+                            ->label('Notes')
+                            ->placeholder('No notes provided.')
+                            ->columnSpanFull(),
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('created_at')
+                                    ->label('Created')
+                                    ->dateTime('M d, Y g:i A'),
+                                InfolistComponents\TextEntry::make('updated_at')
+                                    ->label('Updated')
+                                    ->dateTime('M d, Y g:i A'),
+                            ]),
+                    ]),
             ]);
     }
 

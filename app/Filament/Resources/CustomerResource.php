@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
 use Filament\Forms;
+use Filament\Infolists\Components as InfolistComponents;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components;
 use Filament\Schemas\Schema;
@@ -112,6 +113,66 @@ class CustomerResource extends Resource
             ])
             ->bulkActions([
                 // Bulk actions configured here
+            ]);
+    }
+
+    public static function infolist(Schema $infolist): Schema
+    {
+        return $infolist
+            ->schema([
+                Components\Section::make('Customer')
+                    ->schema([
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('name')
+                                    ->label('Full Name'),
+                                InfolistComponents\TextEntry::make('email')
+                                    ->label('Email')
+                                    ->icon('heroicon-o-envelope'),
+                                InfolistComponents\TextEntry::make('phone')
+                                    ->label('Phone')
+                                    ->icon('heroicon-o-phone'),
+                                InfolistComponents\TextEntry::make('created_at')
+                                    ->label('Created')
+                                    ->dateTime('M d, Y g:i A'),
+                            ]),
+                    ]),
+
+                Components\Section::make('Address & Notes')
+                    ->schema([
+                        Components\Grid::make(2)
+                            ->schema([
+                                InfolistComponents\TextEntry::make('address')
+                                    ->label('Address')
+                                    ->placeholder('N/A'),
+                                InfolistComponents\TextEntry::make('city')
+                                    ->label('City')
+                                    ->placeholder('N/A'),
+                                InfolistComponents\TextEntry::make('state')
+                                    ->label('State')
+                                    ->placeholder('N/A'),
+                                InfolistComponents\TextEntry::make('zip_code')
+                                    ->label('ZIP Code')
+                                    ->placeholder('N/A'),
+                            ]),
+                        InfolistComponents\TextEntry::make('notes')
+                            ->label('Notes')
+                            ->placeholder('No notes provided.')
+                            ->columnSpanFull(),
+                    ]),
+
+                Components\Section::make('Related Data')
+                    ->schema([
+                        InfolistComponents\TextEntry::make('vehicles_count')
+                            ->label('Vehicles')
+                            ->counts('vehicles')
+                            ->badge(),
+                        InfolistComponents\TextEntry::make('appointments_count')
+                            ->label('Appointments')
+                            ->counts('appointments')
+                            ->badge(),
+                    ])
+                    ->columns(2),
             ]);
     }
 

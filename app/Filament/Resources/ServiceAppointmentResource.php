@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\AppointmentStatus;
 use App\Filament\Resources\ServiceAppointmentResource\Pages;
 use App\Models\ServiceAppointment;
 use Filament\Forms;
@@ -12,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
+use Carbon\Carbon;
 use UnitEnum;
 use BackedEnum;
 use Filament\Actions\ActionGroup;
@@ -29,7 +31,7 @@ class ServiceAppointmentResource extends Resource
 
     protected static ?string $navigationLabel = 'Appointments';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 0;
 
     public static function getNavigationBadge(): ?string
     {
@@ -197,13 +199,12 @@ class ServiceAppointmentResource extends Resource
                                     ->color('gray'),
                                 InfolistComponents\TextEntry::make('status')
                                     ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'scheduled' => 'primary',
-                                        'in_progress' => 'info',
-                                        'completed' => 'success',
-                                        'cancelled' => 'danger',
-                                        'no_show' => 'danger',
-                                        default => 'gray',
+                                    ->color(function ($state): string {
+                                        $status = $state instanceof AppointmentStatus
+                                            ? $state
+                                            : AppointmentStatus::from($state);
+
+                                        return $status->badgeColor();
                                     }),
                                 InfolistComponents\TextEntry::make('appointment_date')
                                     ->label('Date')
@@ -357,9 +358,6 @@ class ServiceAppointmentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer')
                     ->searchable()
@@ -371,17 +369,19 @@ class ServiceAppointmentResource extends Resource
                     ->label('Services')
                     ->badge()
                     ->separator(', '),
-                Tables\Columns\TextColumn::make('appointment_date')
-                    ->date()
+                Tables\Columns\TextColumn::make('appointment_date_time')
+                    ->label('Appointment Date')
+                    ->getStateUsing(fn (ServiceAppointment $record) => Carbon::parse($record->appointment_date)->setTimeFromTimeString($record->appointment_time))
+                    ->dateTime('M d, Y g:i A')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('appointment_time'),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->colors([
-                        'primary' => 'scheduled',
-                        'info' => 'in_progress',
-                        'success' => 'completed',
-                        'danger' => ['cancelled', 'no_show'],
-                    ]),
+                    ->color(function ($state): string {
+                        $status = $state instanceof AppointmentStatus
+                            ? $state
+                            : AppointmentStatus::from($state);
+
+                        return $status->badgeColor();
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
