@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AppointmentStatus;
 use App\Models\AppointmentService;
 use App\Models\Customer;
 use App\Models\Service;
@@ -19,6 +20,61 @@ use Illuminate\Validation\Rule;
 
 class AppointmentController extends Controller
 {
+    private const AVAILABLE_HOURS = [
+        '8:00 AM',
+        '9:00 AM',
+        '10:00 AM',
+        '11:00 AM',
+        '12:00 PM',
+        '1:00 PM',
+        '2:00 PM',
+        '3:00 PM',
+        '4:00 PM',
+        '5:00 PM',
+    ];
+
+    /**
+     * Return availability (booked times + available hours) for a given date.
+     */
+    public function availability(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $date = $request->input('date');
+
+        $bookedTimes = ServiceAppointment::query()
+            ->whereDate('appointment_date', $date)
+            ->whereIn('status', [
+                AppointmentStatus::Scheduled->value,
+                AppointmentStatus::InProgress->value,
+            ])
+            ->orderBy('appointment_time')
+            ->pluck('appointment_time')
+            ->unique()
+            ->map(fn ($time) => Carbon::parse($time)->format('g:i A'))
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'date' => $date,
+                'available_hours' => self::AVAILABLE_HOURS,
+                'booked_times' => $bookedTimes,
+                'server_time' => Carbon::now()->toIso8601String(),
+            ],
+        ]);
+    }
+
     /**
      * Store a new appointment booking.
      */

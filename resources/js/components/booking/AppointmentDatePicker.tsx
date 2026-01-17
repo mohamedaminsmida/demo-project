@@ -9,6 +9,12 @@ interface AppointmentDatePickerProps {
     onTimeChange: (time: string) => void;
 }
 
+type AvailabilityState = {
+    availableHours: string[];
+    bookedTimes: string[];
+    serverTime: string;
+};
+
 export default function AppointmentDatePicker({
     selectedDate: initialDate,
     selectedTime: initialTime,
@@ -25,24 +31,13 @@ export default function AppointmentDatePicker({
         return null;
     };
 
-    // Derive initial hour from saved time
-    const getHourFromTime = (timeStr: string): string | null => {
-        if (!timeStr) return null;
-        const match = timeStr.match(/(\d+):00\s*(AM|PM)/i);
-        if (match) {
-            let hour = parseInt(match[1], 10);
-            const period = match[2].toUpperCase();
-            if (period === 'PM' && hour !== 12) hour += 12;
-            if (period === 'AM' && hour === 12) hour = 0;
-            return String(hour);
-        }
-        return null;
-    };
-
     const [selectedMonth, setSelectedMonth] = useState<string | null>(() => getMonthFromDate(initialDate));
     const [selectedDate, setSelectedDate] = useState<string>(initialDate || '');
-    const [selectedHour, setSelectedHour] = useState<string | null>(() => getHourFromTime(initialTime));
+    const [selectedHour, setSelectedHour] = useState<string | null>(() => initialTime || null);
     const [selectedTime, setSelectedTime] = useState<string>(initialTime || '');
+    const [availability, setAvailability] = useState<AvailabilityState | null>(null);
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
     // Sync with parent when values change
     useEffect(() => {
@@ -56,6 +51,48 @@ export default function AppointmentDatePicker({
             onTimeChange(selectedTime);
         }
     }, [selectedTime, onTimeChange]);
+
+    useEffect(() => {
+        if (!selectedDate) {
+            setAvailability(null);
+            setAvailabilityError(null);
+            return;
+        }
+
+        const controller = new AbortController();
+        setAvailabilityLoading(true);
+        setAvailabilityError(null);
+
+        fetch(`/api/appointments/availability?date=${selectedDate}`, { signal: controller.signal })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => null);
+                    const message = payload?.message ?? 'Failed to load availability';
+                    throw new Error(message);
+                }
+                return response.json();
+            })
+            .then((payload) => {
+                const data = payload?.data ?? {};
+                setAvailability({
+                    availableHours: Array.isArray(data.available_hours) ? data.available_hours : [],
+                    bookedTimes: Array.isArray(data.booked_times) ? data.booked_times : [],
+                    serverTime: data.server_time ?? '',
+                });
+            })
+            .catch((error) => {
+                if (error.name !== 'AbortError') {
+                    setAvailabilityError(error.message ?? 'Failed to load availability');
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setAvailabilityLoading(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [selectedDate]);
 
     // Generate available months (current + next 11 months = 12 months total)
     const availableMonths = useMemo(() => {
@@ -78,14 +115,15 @@ export default function AppointmentDatePicker({
         if (!selectedMonth) return [];
         const dates: { value: string; label: string }[] = [];
         const today = new Date();
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         const [year, month] = selectedMonth.split('-').map(Number);
         const lastDay = new Date(year, month, 0);
 
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const date = new Date(year, month - 1, day);
-            // Skip past dates and Sundays
-            if (date > today && date.getDay() !== 0) {
-                const value = date.toISOString().split('T')[0];
+            // Skip past dates
+            if (date >= startOfToday) {
+                const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const label = date.toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
@@ -97,18 +135,48 @@ export default function AppointmentDatePicker({
         return dates;
     }, [selectedMonth]);
 
-    // Generate hour options (8 AM to 5 PM)
+    const nowReference = useMemo(() => {
+        return availability?.serverTime ? new Date(availability.serverTime) : new Date();
+    }, [availability?.serverTime]);
+
+    const isSameDay = (dateStr: string, now: Date) => {
+        const date = new Date(`${dateStr}T00:00:00`);
+        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+    };
+
+    const parseTimeString = (timeStr: string) => {
+        const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return null;
+        let hour = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        const period = match[3].toUpperCase();
+        if (period === 'PM' && hour !== 12) hour += 12;
+        if (period === 'AM' && hour === 12) hour = 0;
+        return { hour, minutes };
+    };
+
+    const normalizeTimeLabel = (timeStr: string) => {
+        const parsed = parseTimeString(timeStr);
+        if (!parsed) return timeStr.trim();
+        const displayHour = parsed.hour === 0 ? 12 : parsed.hour > 12 ? parsed.hour - 12 : parsed.hour;
+        const period = parsed.hour >= 12 ? 'PM' : 'AM';
+        return `${displayHour}:${String(parsed.minutes).padStart(2, '0')} ${period}`;
+    };
+
     const availableHours = useMemo(() => {
-        const hours: { value: string; label: string }[] = [];
-        for (let i = 8; i <= 17; i++) {
-            const hour = i > 12 ? i - 12 : i;
-            const period = i >= 12 ? 'PM' : 'AM';
-            const value = `${i}`;
-            const label = `${hour}:00 ${period}`;
-            hours.push({ value, label });
+        if (!availability?.availableHours) {
+            return [] as { value: string; label: string; disabled: boolean }[];
         }
-        return hours;
-    }, []);
+
+        return availability.availableHours.map((hour) => {
+            const normalizedHour = normalizeTimeLabel(hour);
+            return {
+                value: normalizedHour,
+                label: normalizedHour,
+                disabled: false,
+            };
+        });
+    }, [availability?.availableHours]);
 
     const handleMonthSelect = (monthValue: string) => {
         setSelectedMonth(monthValue);
@@ -128,11 +196,7 @@ export default function AppointmentDatePicker({
 
     const handleHourSelect = (hourValue: string) => {
         setSelectedHour(hourValue);
-        // Automatically set time to the selected hour
-        const hour = parseInt(hourValue);
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : hour;
-        setSelectedTime(`${displayHour}:00 ${period}`);
+        setSelectedTime(hourValue);
     };
 
     const handleChangeMonth = () => {
@@ -147,6 +211,15 @@ export default function AppointmentDatePicker({
         setSelectedHour(null);
         setSelectedTime('');
     };
+
+    useEffect(() => {
+        if (!selectedHour || availableHours.length === 0) return;
+        const selected = availableHours.find((hour) => hour.value === selectedHour);
+        if (!selected || selected.disabled) {
+            setSelectedHour(null);
+            setSelectedTime('');
+        }
+    }, [availableHours, selectedHour]);
 
     const selectedMonthLabel = availableMonths.find((m) => m.value === selectedMonth)?.label;
     const selectedDateLabel = availableDates.find((d) => d.value === selectedDate)?.label;
@@ -239,6 +312,9 @@ export default function AppointmentDatePicker({
                         Select Hour <span className="text-red-500">*</span>
                     </label>
 
+                    {availabilityLoading && <p className="text-sm text-gray-500">Loading available hours...</p>}
+                    {availabilityError && <p className="text-sm text-red-600">{availabilityError}</p>}
+
                     {/* Collapsed Hour Display */}
                     {selectedHour ? (
                         <div
@@ -258,7 +334,12 @@ export default function AppointmentDatePicker({
                                     key={hour.value}
                                     type="button"
                                     onClick={() => handleHourSelect(hour.value)}
-                                    className="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:border-green-300 hover:bg-green-50"
+                                    disabled={hour.disabled}
+                                    className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                                        hour.disabled
+                                            ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                                            : 'cursor-pointer border-gray-300 text-gray-700 hover:border-green-300 hover:bg-green-50'
+                                    }`}
                                 >
                                     {hour.label}
                                 </button>
