@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServiceAppointmentResource\Pages;
 
 use App\Filament\Resources\ServiceAppointmentResource;
+use App\Filament\Resources\ServiceAppointmentResource\Widgets\Appointments;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -14,6 +15,13 @@ class ListServiceAppointments extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            Appointments::class,
         ];
     }
 }
