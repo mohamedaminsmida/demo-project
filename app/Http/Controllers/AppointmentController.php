@@ -195,6 +195,7 @@ class AppointmentController extends Controller
                 Rule::unique('customers', 'phone')->ignore($existingCustomerId),
             ],
             'customer.email' => 'required|email:rfc,dns|max:255',
+            'customer.address' => 'required|string|min:5|max:255',
             'customer.sms_updates' => 'nullable|boolean',
         ]);
 
@@ -280,6 +281,7 @@ class AppointmentController extends Controller
             ], [
                 'name' => $customerData['full_name'],
                 'email' => $customerData['email'],
+                'address' => $customerData['address'] ?? null,
             ]);
 
             // Create the vehicle for the customer

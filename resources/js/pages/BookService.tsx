@@ -114,6 +114,7 @@ const initialState: BookingState = {
         fullName: '',
         phone: '',
         email: '',
+        address: '',
         smsUpdates: false,
     },
 };
@@ -177,10 +178,10 @@ function validateVehicleInfo(vehicle: VehicleInfo, requiresTireSize: boolean): P
     }
 
     if (vehicle.vehicleType === 'other') {
-        const trimmedOtherType = vehicle.otherType.trim();
-        if (!trimmedOtherType) {
+        const normalizedOtherType = typeof vehicle.otherType === 'string' ? vehicle.otherType.trim() : '';
+        if (!normalizedOtherType) {
             errors.otherType = 'Please specify the vehicle type.';
-        } else if (trimmedOtherType.length < 2 || trimmedOtherType.length > 50) {
+        } else if (normalizedOtherType.length < 2 || normalizedOtherType.length > 50) {
             errors.otherType = 'Vehicle type must be between 2 and 50 characters.';
         }
     }
@@ -234,11 +235,27 @@ function validateVehicleInfo(vehicle: VehicleInfo, requiresTireSize: boolean): P
     return errors;
 }
 
+function flattenBackendErrors(errors: Record<string, string[]>, prefix: string): Record<string, string> {
+    return Object.keys(errors).reduce<Record<string, string>>((acc, key) => {
+        if (!key.startsWith(prefix)) {
+            return acc;
+        }
+
+        const field = key.replace(prefix, '');
+        const message = errors[key]?.[0];
+        if (field && message) {
+            acc[field] = message;
+        }
+        return acc;
+    }, {});
+}
+
 function validateCustomerInfo(customer: CustomerInfo): Partial<Record<keyof CustomerInfo, string>> {
     const errors: Partial<Record<keyof CustomerInfo, string>> = {};
     const trimmedName = customer.fullName.trim();
     const trimmedPhone = customer.phone.trim();
     const trimmedEmail = customer.email.trim();
+    const trimmedAddress = customer.address.trim();
 
     if (!trimmedName) {
         errors.fullName = 'Full name is required.';
@@ -256,6 +273,12 @@ function validateCustomerInfo(customer: CustomerInfo): Partial<Record<keyof Cust
         errors.email = 'Email address is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
         errors.email = 'Enter a valid email address.';
+    }
+
+    if (!trimmedAddress) {
+        errors.address = 'Address is required.';
+    } else if (trimmedAddress.length < 5 || trimmedAddress.length > 255) {
+        errors.address = 'Address must be between 5 and 255 characters.';
     }
 
     return errors;
@@ -411,6 +434,14 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             return;
         }
 
+        const normalizedOtherType = state.vehicle.vehicleType === 'other' ? String(state.vehicle.otherType ?? '').trim() : null;
+        if (state.vehicle.vehicleType === 'other' && (!normalizedOtherType || normalizedOtherType.length < 2)) {
+            setVehicleErrors({ otherType: 'Vehicle type must be between 2 and 50 characters.' });
+            setCurrentStep(3);
+            setSubmitError('Please correct the highlighted vehicle details before submitting.');
+            return;
+        }
+
         const nextCustomerErrors = validateCustomerInfo(state.customer);
         if (Object.keys(nextCustomerErrors).length > 0) {
             setCustomerErrors(nextCustomerErrors);
@@ -428,7 +459,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             service_ids: allServiceIds,
             vehicle: {
                 type: state.vehicle.vehicleType,
-                other_type: state.vehicle.vehicleType === 'other' ? state.vehicle.otherType : null,
+                ...(state.vehicle.vehicleType === 'other' && normalizedOtherType ? { other_type: normalizedOtherType } : {}),
                 make: state.vehicle.make,
                 model: state.vehicle.model,
                 year: state.vehicle.year,
@@ -443,6 +474,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 full_name: state.customer.fullName,
                 phone: state.customer.phone,
                 email: state.customer.email,
+                address: state.customer.address,
                 sms_updates: state.customer.smsUpdates,
             },
         };
@@ -467,6 +499,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 // Log detailed validation errors
                 if (data.errors) {
                     console.error('Validation errors:', data.errors);
+                    const vehicleServerErrors = flattenBackendErrors(data.errors, 'vehicle.');
+                    const customerServerErrors = flattenBackendErrors(data.errors, 'customer.');
+
+                    if (Object.keys(vehicleServerErrors).length > 0) {
+                        setVehicleErrors(vehicleServerErrors as Partial<Record<keyof VehicleInfo, string>>);
+                        setCurrentStep(3);
+                    }
+
+                    if (Object.keys(customerServerErrors).length > 0) {
+                        setCustomerErrors(customerServerErrors as Partial<Record<keyof CustomerInfo, string>>);
+                        setCurrentStep(5);
+                    }
                 }
                 throw new Error(data.message || 'Failed to submit appointment');
             }

@@ -9,6 +9,7 @@ export interface CustomerInfo {
     fullName: string;
     phone: string;
     email: string;
+    address: string;
     smsUpdates: boolean;
 }
 

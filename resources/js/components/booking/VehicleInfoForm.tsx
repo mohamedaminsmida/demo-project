@@ -132,8 +132,8 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                                 updateField('otherType', '');
                             }
                             updateField('vehicleType', nextType);
-                            markTouched('vehicleType');
                         }}
+                        onBlur={() => markTouched('vehicleType')}
                         options={VEHICLE_TYPES}
                         placeholder="Select vehicle type"
                         error={fieldError('vehicleType')}
@@ -147,8 +147,8 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             value={vehicle.otherType}
                             onChange={(v) => {
                                 updateField('otherType', v);
-                                markTouched('otherType');
                             }}
+                            onBlur={() => markTouched('otherType')}
                             placeholder="Describe the vehicle type"
                             error={fieldError('otherType')}
                             required
@@ -163,13 +163,12 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             if (v === '__custom') {
                                 setUseCustomBrand(true);
                                 updateField('make', '');
-                                markTouched('make');
                                 return;
                             }
                             setUseCustomBrand(false);
                             updateField('make', v);
-                            markTouched('make');
                         }}
+                        onBlur={() => markTouched('make')}
                         options={[...VEHICLE_BRANDS, { value: '__custom', label: 'Other / Not Listed' }]}
                         placeholder="Select brand"
                         error={fieldError('make')}
@@ -181,23 +180,23 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             value={vehicle.make}
                             onChange={(v) => {
                                 updateField('make', v);
-                                markTouched('make');
                             }}
-                            placeholder="Enter brand"
+                            onBlur={() => markTouched('make')}
+                            placeholder="Enter brand name"
                             error={fieldError('make')}
                             required
                         />
                     )}
                 </FormField>
 
-                <FormField label="Vehicle Model" required>
+                <FormField label="Model" required>
                     <Input
                         value={vehicle.model}
                         onChange={(v) => {
                             updateField('model', v);
-                            markTouched('model');
                         }}
-                        placeholder="e.g., Camry, F-150, Civic"
+                        onBlur={() => markTouched('model')}
+                        placeholder="e.g., Camry"
                         error={fieldError('model')}
                         required
                     />
@@ -208,9 +207,10 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                         value={vehicle.year}
                         onChange={(v) => {
                             updateField('year', v);
-                            markTouched('year');
                         }}
+                        onBlur={() => markTouched('year')}
                         options={yearOptions}
+                        placeholder="Select model year"
                         error={fieldError('year')}
                         required
                     />
@@ -222,8 +222,8 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             value={vehicle.tireSize}
                             onChange={(v) => {
                                 updateField('tireSize', v);
-                                markTouched('tireSize');
                             }}
+                            onBlur={() => markTouched('tireSize')}
                             options={TIRE_SIZES.map((size) => ({ value: size, label: size }))}
                             placeholder="Select tire size"
                             error={fieldError('tireSize')}
@@ -232,29 +232,30 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                     </FormField>
                 )}
 
-                <FormField label="VIN (Optional)">
+                <FormField label="VIN">
                     <Input
                         value={vehicle.vin}
                         onChange={(v) => {
-                            updateField('vin', v);
-                            markTouched('vin');
+                            updateField('vin', v.toUpperCase());
                         }}
+                        onBlur={() => markTouched('vin')}
                         placeholder="17-character VIN"
                         error={fieldError('vin')}
                     />
                 </FormField>
             </div>
 
-            <FormField label="Additional Notes (Optional)">
+            <FormField label="Notes">
                 <TextArea
                     value={vehicle.notes}
                     onChange={(v) => {
                         updateField('notes', v);
-                        markTouched('notes');
                     }}
-                    placeholder="Any additional information about your vehicle..."
+                    onBlur={() => markTouched('notes')}
+                    placeholder="Any specific notes for our team"
                     rows={3}
                     error={fieldError('notes')}
+                    maxLength={500}
                 />
             </FormField>
         </div>

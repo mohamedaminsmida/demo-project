@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import type { CustomerInfo } from '../../types/booking';
-import { Checkbox, FormField, Input } from '../ui';
+import { FormField, Input } from '../ui';
 
 interface CustomerInfoFormProps {
     customer: CustomerInfo;
@@ -49,9 +49,11 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                         value={customer.fullName}
                         onChange={(v) => {
                             updateField('fullName', v);
-                            markTouched('fullName');
                         }}
+                        onBlur={() => markTouched('fullName')}
                         placeholder="John Doe"
+                        maxLength={255}
+                        autoComplete="name"
                         error={fieldError('fullName')}
                         required
                     />
@@ -63,9 +65,11 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                         value={customer.phone}
                         onChange={(v) => {
                             updateField('phone', formatUsPhone(v));
-                            markTouched('phone');
                         }}
+                        onBlur={() => markTouched('phone')}
                         placeholder="(212) 555-0123"
+                        maxLength={20}
+                        autoComplete="tel"
                         error={fieldError('phone')}
                         required
                     />
@@ -77,20 +81,30 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                         value={customer.email}
                         onChange={(v) => {
                             updateField('email', v);
-                            markTouched('email');
                         }}
+                        onBlur={() => markTouched('email')}
                         placeholder="john@example.com"
+                        maxLength={255}
+                        autoComplete="email"
                         error={fieldError('email')}
                         required
                     />
                 </FormField>
+                <FormField label="Address" required>
+                    <Input
+                        value={customer.address}
+                        onChange={(v) => {
+                            updateField('address', v);
+                        }}
+                        onBlur={() => markTouched('address')}
+                        placeholder="123 Main St, Springfield"
+                        maxLength={255}
+                        autoComplete="street-address"
+                        error={fieldError('address')}
+                        required
+                    />
+                </FormField>
             </div>
-
-            <Checkbox
-                isSelected={customer.smsUpdates}
-                onChange={(v) => updateField('smsUpdates', v)}
-                label="Send me Email updates about my appointment"
-            />
         </div>
     );
 }
