@@ -15,6 +15,7 @@ class Vehicle extends Model
     protected $fillable = [
         'customer_id',
         'type',
+        'other_type',
         'brand',
         'model',
         'year',

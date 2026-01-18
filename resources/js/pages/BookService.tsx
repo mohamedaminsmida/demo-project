@@ -5,31 +5,25 @@ import heroBackgroundImage from '../../images/first_section.png';
 import secondServiceImage from '../../images/SECONDE.jpg';
 import CheckIcon from '../../images/svg/check.svg';
 
-import AppointmentDatePicker from '../components/booking/AppointmentDatePicker';
+import AppointmentStep from '../components/booking/AppointmentStep';
 import BookingWizard from '../components/booking/BookingWizard';
+import CustomerInfoForm from '../components/booking/CustomerInfoForm';
+import ReviewStep from '../components/booking/ReviewStep';
+import ServiceDetailsStep from '../components/booking/ServiceDetailsStep';
+import VehicleInfoForm from '../components/booking/VehicleInfoForm';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
-import { Checkbox, FormField, Input, Select, TextArea } from '../components/ui';
-import { getServiceBySlug, type ServiceConfig, type ServiceRequirement } from '../config/services';
+import { getServiceBySlug, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
+import type { BookingState, CustomerInfo } from '../types/booking';
+import type { VehicleInfo } from '../types/vehicle';
+import { getRequirementValue, getServiceRequirements, isRequirementValueEmpty } from '../utils/bookingRequirements';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
-
-type VehicleType = 'car' | 'light-truck' | 'truck' | 'motorcycle' | 'van' | 'other';
-
-interface VehicleInfo {
-    vehicleType: VehicleType | '';
-    make: string;
-    model: string;
-    year: string;
-    tireSize: string;
-    vin: string;
-    notes: string;
-}
 
 interface ServicePreviewFeature {
     label: string;
@@ -85,25 +79,6 @@ function buildServicePreview(service: ServiceConfig): ServicePreviewData {
     };
 }
 
-interface AppointmentInfo {
-    date: string;
-    time: string;
-}
-
-interface CustomerInfo {
-    fullName: string;
-    phone: string;
-    email: string;
-    smsUpdates: boolean;
-}
-
-interface BookingState {
-    vehicle: VehicleInfo;
-    serviceRequirements: Record<string, Record<string, any>>;
-    appointment: AppointmentInfo;
-    customer: CustomerInfo;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,73 +94,10 @@ const STEPS = [
 
 const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 
-const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-    { value: 'car', label: 'Cars' },
-    { value: 'light-truck', label: 'Light Trucks / SUVs' },
-    { value: 'truck', label: 'Trucks' },
-    { value: 'motorcycle', label: 'Motorcycles & Scooters' },
-    { value: 'van', label: 'Vans & Minivans' },
-    { value: 'other', label: 'Other' },
-];
-
-const VEHICLE_BRANDS: { value: string; label: string }[] = [
-    'Acura',
-    'Alfa Romeo',
-    'Audi',
-    'BMW',
-    'Buick',
-    'Cadillac',
-    'Chevrolet',
-    'Chrysler',
-    'Dodge',
-    'Ferrari',
-    'Fiat',
-    'Ford',
-    'GMC',
-    'Genesis',
-    'Honda',
-    'Hyundai',
-    'Infiniti',
-    'Jaguar',
-    'Jeep',
-    'Kia',
-    'Lamborghini',
-    'Land Rover',
-    'Lexus',
-    'Lincoln',
-    'Maserati',
-    'Mazda',
-    'McLaren',
-    'Mercedes-Benz',
-    'Mini',
-    'Mitsubishi',
-    'Nissan',
-    'Porsche',
-    'Ram',
-    'Subaru',
-    'Tesla',
-    'Toyota',
-    'Volkswagen',
-    'Volvo',
-].map((brand) => ({ value: brand, label: brand }));
-
-const TIRE_SIZES: string[] = [
-    '175/65R15',
-    '185/65R15',
-    '195/65R15',
-    '205/55R16',
-    '215/55R17',
-    '225/65R17',
-    '235/60R18',
-    '245/60R18',
-    '255/55R19',
-    '265/70R17',
-    'Other',
-];
-
 const initialState: BookingState = {
     vehicle: {
         vehicleType: '',
+        otherType: '',
         make: '',
         model: '',
         year: '',
@@ -245,220 +157,6 @@ function StepIndicator({ currentStep, className = '' }: { currentStep: number; c
     );
 }
 
-// Step Components
-// ─────────────────────────────────────────────────────────────────────────────
-
-function Step2VehicleInfo({
-    vehicle,
-    onChange,
-    showTireSize,
-}: {
-    vehicle: VehicleInfo;
-    onChange: (vehicle: VehicleInfo) => void;
-    showTireSize: boolean;
-}) {
-    const [useCustomBrand, setUseCustomBrand] = useState(() => {
-        if (!vehicle.make) return false;
-        return !VEHICLE_BRANDS.some((brand) => brand.value === vehicle.make);
-    });
-
-    const updateField = <K extends keyof VehicleInfo>(field: K, value: VehicleInfo[K]) => {
-        onChange({ ...vehicle, [field]: value });
-    };
-
-    useEffect(() => {
-        if (!vehicle.make) {
-            setUseCustomBrand(false);
-            return;
-        }
-
-        const matchesPredefined = VEHICLE_BRANDS.some((brand) => brand.value === vehicle.make);
-        setUseCustomBrand(!matchesPredefined);
-    }, [vehicle.make]);
-
-    const yearOptions = useMemo(() => {
-        const currentYear = new Date().getFullYear();
-        const range = Array.from({ length: 45 }, (_, i) => currentYear - i);
-
-        return [
-            { value: '', label: 'Select model year' },
-            { value: String(currentYear), label: `${currentYear} (Current Year)` },
-            ...range.slice(1).map((year) => ({ value: String(year), label: String(year) })),
-            { value: 'pre-1980', label: '1979 or Older' },
-        ];
-    }, []);
-
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Vehicle Information</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-                <FormField label="Vehicle Type" required>
-                    <Select
-                        value={vehicle.vehicleType}
-                        onChange={(v) => updateField('vehicleType', v as VehicleType)}
-                        options={VEHICLE_TYPES}
-                        placeholder="Select vehicle type"
-                        required
-                    />
-                </FormField>
-
-                <FormField label="Vehicle Brand" required>
-                    <Select
-                        value={useCustomBrand ? '__custom' : vehicle.make}
-                        onChange={(v) => {
-                            if (v === '__custom') {
-                                setUseCustomBrand(true);
-                                updateField('make', '');
-                                return;
-                            }
-                            setUseCustomBrand(false);
-                            updateField('make', v);
-                        }}
-                        options={[...VEHICLE_BRANDS, { value: '__custom', label: 'Other / Not Listed' }]}
-                        placeholder="Select brand"
-                        required
-                    />
-                    {useCustomBrand && (
-                        <Input className="mt-2" value={vehicle.make} onChange={(v) => updateField('make', v)} placeholder="Enter brand" required />
-                    )}
-                </FormField>
-
-                <FormField label="Vehicle Model" required>
-                    <Input value={vehicle.model} onChange={(v) => updateField('model', v)} placeholder="e.g., Camry, F-150, Civic" required />
-                </FormField>
-
-                <FormField label="Year" required>
-                    <Select value={vehicle.year} onChange={(v) => updateField('year', v)} options={yearOptions} required />
-                </FormField>
-
-                {showTireSize && (
-                    <FormField label="Tire Size" required>
-                        <Select
-                            value={vehicle.tireSize}
-                            onChange={(v) => updateField('tireSize', v)}
-                            options={TIRE_SIZES.map((size) => ({ value: size, label: size }))}
-                            placeholder="Select tire size"
-                            required
-                        />
-                    </FormField>
-                )}
-
-                <FormField label="VIN (Optional)">
-                    <Input value={vehicle.vin} onChange={(v) => updateField('vin', v)} placeholder="17-character VIN" />
-                </FormField>
-            </div>
-
-            <FormField label="Additional Notes (Optional)">
-                <TextArea
-                    value={vehicle.notes}
-                    onChange={(v) => updateField('notes', v)}
-                    placeholder="Any additional information about your vehicle..."
-                    rows={3}
-                />
-            </FormField>
-        </div>
-    );
-}
-
-function getServiceRequirements(service: ServiceConfig): ServiceRequirement[] {
-    return [...(service.requirements ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-}
-
-function getRequirementValue(state: BookingState, serviceId: string, key: string) {
-    return state.serviceRequirements[serviceId]?.[key];
-}
-
-function updateRequirementValue(state: BookingState, serviceId: string, key: string, value: any): BookingState {
-    const serviceValues = state.serviceRequirements[serviceId] ?? {};
-    return {
-        ...state,
-        serviceRequirements: {
-            ...state.serviceRequirements,
-            [serviceId]: {
-                ...serviceValues,
-                [key]: value,
-            },
-        },
-    };
-}
-
-function isRequirementValueEmpty(requirement: ServiceRequirement, value: any): boolean {
-    if (requirement.type === 'toggle' || requirement.type === 'checkbox') {
-        return !value;
-    }
-
-    if (requirement.type === 'multiselect') {
-        return !Array.isArray(value) || value.length === 0;
-    }
-
-    return value === undefined || value === null || value === '';
-}
-
-function validateRequirementValue(requirement: ServiceRequirement, value: any): string | null {
-    if (isRequirementValueEmpty(requirement, value)) {
-        return null;
-    }
-
-    const validations = requirement.validations ?? {};
-
-    switch (requirement.type) {
-        case 'text':
-            if (typeof value !== 'string') {
-                return 'Must be text.';
-            }
-
-            if (value.length > 50) {
-                return 'Must not exceed 50 characters.';
-            }
-            return null;
-        case 'textarea':
-            if (typeof value !== 'string') {
-                return 'Must be text.';
-            }
-
-            if (value.length > 250) {
-                return 'Must not exceed 250 characters.';
-            }
-            return null;
-        case 'number':
-            if (value === '' || Number.isNaN(Number(value))) {
-                return 'Must be a number.';
-            }
-
-            if (validations.number_max_length) {
-                const digits = String(value).replace(/\D/g, '');
-                const maxDigits = Number(validations.number_max_length);
-                if (digits.length > maxDigits) {
-                    return `Must not exceed ${maxDigits} digits.`;
-                }
-            }
-            return null;
-        case 'date': {
-            const dateValue = new Date(value);
-            if (Number.isNaN(dateValue.getTime())) {
-                return 'Must be a valid date.';
-            }
-
-            if (typeof validations.min_date === 'string') {
-                const minDate = new Date(validations.min_date);
-                if (!Number.isNaN(minDate.getTime()) && dateValue < minDate) {
-                    return 'Date must be on or after the minimum date.';
-                }
-            }
-
-            if (typeof validations.max_date === 'string') {
-                const maxDate = new Date(validations.max_date);
-                if (!Number.isNaN(maxDate.getTime()) && dateValue > maxDate) {
-                    return 'Date must be on or before the maximum date.';
-                }
-            }
-            return null;
-        }
-        default:
-            return null;
-    }
-}
-
 function serviceNeedsTireSize(service?: ServiceConfig | null): boolean {
     if (!service) {
         return false;
@@ -467,425 +165,100 @@ function serviceNeedsTireSize(service?: ServiceConfig | null): boolean {
     return (service.requirements ?? []).some((requirement) => requirement.key === 'tire_size');
 }
 
-function Step3ServiceDetails({
-    services,
-    state,
-    onChange,
-}: {
-    services: ServiceConfig[];
-    state: BookingState;
-    onChange: (state: BookingState) => void;
-}) {
-    if (!services || services.length === 0) {
-        return (
-            <div className="space-y-6">
-                <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                        </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">No Services Selected</h3>
-                    <p className="mt-2 text-gray-500">Please go back to Step 1 and select at least one service to continue.</p>
-                </div>
-            </div>
-        );
+const VEHICLE_TYPE_VALUES: VehicleInfo['vehicleType'][] = ['car', 'light-truck', 'truck', 'motorcycle', 'van', 'other'];
+const VIN_PATTERN = /^[A-HJ-NPR-Z0-9]{17}$/i;
+
+function validateVehicleInfo(vehicle: VehicleInfo, requiresTireSize: boolean): Partial<Record<keyof VehicleInfo, string>> {
+    const errors: Partial<Record<keyof VehicleInfo, string>> = {};
+    const currentYear = new Date().getFullYear();
+
+    if (!vehicle.vehicleType || !VEHICLE_TYPE_VALUES.includes(vehicle.vehicleType)) {
+        errors.vehicleType = 'Select a valid vehicle type.';
     }
 
-    return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-xl font-bold text-gray-900">Service Details</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                    Complete the details for your {services.length} selected service{services.length > 1 ? 's' : ''}
-                </p>
-            </div>
+    if (vehicle.vehicleType === 'other') {
+        const trimmedOtherType = vehicle.otherType.trim();
+        if (!trimmedOtherType) {
+            errors.otherType = 'Please specify the vehicle type.';
+        } else if (trimmedOtherType.length < 2 || trimmedOtherType.length > 50) {
+            errors.otherType = 'Vehicle type must be between 2 and 50 characters.';
+        }
+    }
 
-            {/* Service Cards */}
-            <div className="space-y-4">
-                {services.map((service) => {
-                    const serviceId = service.id.toString();
-                    const requirements = getServiceRequirements(service);
-                    const hasOptions = requirements.length > 0;
+    const trimmedMake = vehicle.make.trim();
+    if (!trimmedMake) {
+        errors.make = 'Vehicle make is required.';
+    } else if (trimmedMake.length < 2 || trimmedMake.length > 100) {
+        errors.make = 'Vehicle make must be between 2 and 100 characters.';
+    }
 
-                    return (
-                        <div
-                            key={service.id}
-                            className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-                        >
-                            {/* Service Header */}
-                            <div className="flex items-center gap-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white px-5 py-4">
-                                <div className="flex-1">
-                                    <h4 className="text-lg font-semibold text-gray-900">{service.name}</h4>
-                                    {service.category && (
-                                        <p className="text-xs font-medium tracking-wide text-green-600 uppercase">{service.category}</p>
-                                    )}
-                                </div>
-                                {hasOptions ? (
-                                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">Details Required</span>
-                                ) : (
-                                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Ready</span>
-                                )}
-                            </div>
+    const trimmedModel = vehicle.model.trim();
+    if (!trimmedModel) {
+        errors.model = 'Vehicle model is required.';
+    } else if (trimmedModel.length < 1 || trimmedModel.length > 100) {
+        errors.model = 'Vehicle model must be between 1 and 100 characters.';
+    }
 
-                            {/* Service Options */}
-                            <div className="p-5">
-                                {requirements.map((requirement) => {
-                                    const value = getRequirementValue(state, serviceId, requirement.key);
-                                    const isRequired = requirement.isRequired ?? false;
-                                    const requiredError =
-                                        isRequired && isRequirementValueEmpty(requirement, value) ? 'This field is required.' : null;
-                                    const validationError = validateRequirementValue(requirement, value);
-                                    const errorMessage = requiredError ?? validationError;
-                                    if (requirement.type === 'textarea') {
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <TextArea
-                                                    value={value ?? ''}
-                                                    onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
-                                                    placeholder={requirement.placeholder ?? undefined}
-                                                    rows={3}
-                                                    maxLength={250}
-                                                    error={errorMessage ?? undefined}
-                                                />
-                                            </FormField>
-                                        );
-                                    }
+    if (!vehicle.year) {
+        errors.year = 'Select a model year.';
+    } else if (vehicle.year !== 'pre-1980') {
+        if (!/^\d{4}$/.test(vehicle.year)) {
+            errors.year = 'Enter a valid 4-digit year.';
+        } else {
+            const numericYear = Number(vehicle.year);
+            if (numericYear < 1980 || numericYear > currentYear + 1) {
+                errors.year = `Year must be between 1980 and ${currentYear + 1}.`;
+            }
+        }
+    }
 
-                                    if (requirement.type === 'number') {
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <Input
-                                                    type="number"
-                                                    value={value ?? ''}
-                                                    onChange={(v) =>
-                                                        onChange(updateRequirementValue(state, serviceId, requirement.key, v === '' ? '' : Number(v)))
-                                                    }
-                                                    placeholder={requirement.placeholder ?? undefined}
-                                                    error={errorMessage ?? undefined}
-                                                />
-                                            </FormField>
-                                        );
-                                    }
+    if (requiresTireSize) {
+        if (!vehicle.tireSize) {
+            errors.tireSize = 'Tire size is required.';
+        } else if (!/^(Other|\d{3}\/\d{2}R\d{2})$/.test(vehicle.tireSize)) {
+            errors.tireSize = 'Enter a valid tire size.';
+        }
+    }
 
-                                    if (requirement.type === 'select') {
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <div className="space-y-2">
-                                                    <Select
-                                                        value={value ?? ''}
-                                                        onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
-                                                        options={(requirement.options ?? []).map((option) => ({
-                                                            value: option.value,
-                                                            label: option.label,
-                                                        }))}
-                                                        placeholder={requirement.placeholder ?? 'Select option'}
-                                                    />
-                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
-                                                </div>
-                                            </FormField>
-                                        );
-                                    }
+    if (vehicle.vin) {
+        const sanitizedVin = vehicle.vin.trim().toUpperCase();
+        if (!VIN_PATTERN.test(sanitizedVin)) {
+            errors.vin = 'VIN must be 17 characters (letters and numbers only).';
+        }
+    }
 
-                                    if (requirement.type === 'multiselect') {
-                                        const selectedValues = Array.isArray(value) ? value : [];
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <div className="space-y-2">
-                                                    {(requirement.options ?? []).map((option) => (
-                                                        <Checkbox
-                                                            key={option.value}
-                                                            label={option.label}
-                                                            isSelected={selectedValues.includes(option.value)}
-                                                            onChange={(checked) => {
-                                                                const next = checked
-                                                                    ? [...selectedValues, option.value]
-                                                                    : selectedValues.filter((item) => item !== option.value);
-                                                                onChange(updateRequirementValue(state, serviceId, requirement.key, next));
-                                                            }}
-                                                        />
-                                                    ))}
-                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
-                                                </div>
-                                            </FormField>
-                                        );
-                                    }
+    if (vehicle.notes && vehicle.notes.length > 500) {
+        errors.notes = 'Notes must not exceed 500 characters.';
+    }
 
-                                    if (requirement.type === 'radio') {
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <div className="space-y-2">
-                                                    {(requirement.options ?? []).map((option) => (
-                                                        <label key={option.value} className="flex items-center gap-2 text-sm text-gray-700">
-                                                            <input
-                                                                type="radio"
-                                                                name={`${serviceId}-${requirement.key}`}
-                                                                value={option.value}
-                                                                checked={value === option.value}
-                                                                onChange={() =>
-                                                                    onChange(updateRequirementValue(state, serviceId, requirement.key, option.value))
-                                                                }
-                                                                className="h-4 w-4 accent-green-600"
-                                                            />
-                                                            {option.label}
-                                                        </label>
-                                                    ))}
-                                                    {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
-                                                </div>
-                                            </FormField>
-                                        );
-                                    }
-
-                                    if (requirement.type === 'checkbox' || requirement.type === 'toggle') {
-                                        return (
-                                            <div key={requirement.key} className="space-y-2 pt-1">
-                                                <Checkbox
-                                                    label={requirement.label}
-                                                    isSelected={Boolean(value)}
-                                                    onChange={(checked) =>
-                                                        onChange(updateRequirementValue(state, serviceId, requirement.key, checked))
-                                                    }
-                                                />
-                                                {errorMessage && <p className="text-xs text-error-600">{errorMessage}</p>}
-                                            </div>
-                                        );
-                                    }
-
-                                    if (requirement.type === 'date') {
-                                        return (
-                                            <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                <Input
-                                                    type="date"
-                                                    value={value ?? ''}
-                                                    onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
-                                                    error={errorMessage ?? undefined}
-                                                />
-                                            </FormField>
-                                        );
-                                    }
-
-                                    return (
-                                        <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                            <Input
-                                                value={value ?? ''}
-                                                onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
-                                                placeholder={requirement.placeholder ?? undefined}
-                                                maxLength={50}
-                                                error={errorMessage ?? undefined}
-                                            />
-                                        </FormField>
-                                    );
-                                })}
-
-                                {!hasOptions && (
-                                    <div className="flex items-center gap-3 rounded-lg bg-green-50 px-4 py-3">
-                                        <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <p className="text-sm font-medium text-green-700">
-                                            No additional details required for this service. You're all set!
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
+    return errors;
 }
 
-function Step4Appointment({
-    appointment,
-    onChange,
-    selectedServiceIds,
-}: {
-    appointment: AppointmentInfo;
-    onChange: (appointment: AppointmentInfo) => void;
-    selectedServiceIds: number[];
-}) {
-    const handleDateChange = useCallback(
-        (date: string) => {
-            onChange({ ...appointment, date });
-        },
-        [appointment, onChange],
-    );
+function validateCustomerInfo(customer: CustomerInfo): Partial<Record<keyof CustomerInfo, string>> {
+    const errors: Partial<Record<keyof CustomerInfo, string>> = {};
+    const trimmedName = customer.fullName.trim();
+    const trimmedPhone = customer.phone.trim();
+    const trimmedEmail = customer.email.trim();
 
-    const handleTimeChange = useCallback(
-        (time: string) => {
-            onChange({ ...appointment, time });
-        },
-        [appointment, onChange],
-    );
+    if (!trimmedName) {
+        errors.fullName = 'Full name is required.';
+    } else if (trimmedName.length < 2 || trimmedName.length > 255) {
+        errors.fullName = 'Full name must be between 2 and 255 characters.';
+    }
 
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Appointment Date</h3>
-            <AppointmentDatePicker
-                selectedDate={appointment.date}
-                selectedTime={appointment.time}
-                serviceIds={selectedServiceIds}
-                onDateChange={handleDateChange}
-                onTimeChange={handleTimeChange}
-            />
-        </div>
-    );
-}
+    if (!trimmedPhone) {
+        errors.phone = 'Phone number is required.';
+    } else if (!/^\+?[0-9\-()\s]{7,20}$/.test(trimmedPhone)) {
+        errors.phone = 'Enter a valid phone number.';
+    }
 
-function Step5CustomerInfo({ customer, onChange }: { customer: CustomerInfo; onChange: (customer: CustomerInfo) => void }) {
-    const updateField = <K extends keyof CustomerInfo>(field: K, value: CustomerInfo[K]) => {
-        onChange({ ...customer, [field]: value });
-    };
+    if (!trimmedEmail) {
+        errors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        errors.email = 'Enter a valid email address.';
+    }
 
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
-
-            <div className="grid gap-4 md:grid-cols-2">
-                <FormField label="Full Name" required>
-                    <Input value={customer.fullName} onChange={(v) => updateField('fullName', v)} placeholder="John Doe" required />
-                </FormField>
-
-                <FormField label="Phone Number" required>
-                    <Input type="tel" value={customer.phone} onChange={(v) => updateField('phone', v)} placeholder="(555) 123-4567" required />
-                </FormField>
-
-                <FormField label="Email Address" required>
-                    <Input type="email" value={customer.email} onChange={(v) => updateField('email', v)} placeholder="john@example.com" required />
-                </FormField>
-            </div>
-
-            <Checkbox
-                isSelected={customer.smsUpdates}
-                onChange={(v) => updateField('smsUpdates', v)}
-                label="Send me SMS updates about my appointment"
-            />
-        </div>
-    );
-}
-
-function Step6Review({ service, state, selectedServices }: { service: ServiceConfig; state: BookingState; selectedServices: ServiceConfig[] }) {
-    const formatDate = (dateStr: string) => {
-        if (!dateStr) return 'Not selected';
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
-
-    const formatRequirementValue = (value: any) => {
-        if (Array.isArray(value)) {
-            return value.length > 0 ? value.join(', ') : 'Not provided';
-        }
-
-        if (typeof value === 'boolean') {
-            return value ? 'Yes' : 'No';
-        }
-
-        if (value === null || value === undefined || value === '') {
-            return 'Not provided';
-        }
-
-        return String(value);
-    };
-
-    // Helper to render a detail row
-    const DetailRow = ({ label, value }: { label: string; value: string | React.ReactNode }) => (
-        <div className="flex justify-between border-b border-gray-100 py-2 last:border-0">
-            <span className="text-gray-500">{label}</span>
-            <span className="text-right font-medium text-gray-900">{value}</span>
-        </div>
-    );
-
-    return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Review Your Booking</h3>
-
-            <div className="space-y-4">
-                {/* Services */}
-                <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">
-                        Services Booked ({selectedServices.length > 0 ? selectedServices.length : 1})
-                    </h4>
-                    {selectedServices.length > 0 ? (
-                        <ul className="space-y-2">
-                            {selectedServices.map((s) => (
-                                <li key={s.id} className="flex items-center justify-between border-b border-gray-100 py-2 last:border-0">
-                                    <span className="font-medium text-gray-900">{s.name}</span>
-                                    {s.basePrice && <span className="text-sm text-green-600">${s.basePrice.toFixed(2)}</span>}
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <>
-                            <DetailRow label="Service Type" value={service.name} />
-                            {service.estimatedDuration && <DetailRow label="Estimated Duration" value={service.estimatedDuration} />}
-                        </>
-                    )}
-                </div>
-
-                {/* Service Requirements */}
-                {selectedServices.map((selectedService) => {
-                    const requirements = getServiceRequirements(selectedService);
-                    if (requirements.length === 0) {
-                        return null;
-                    }
-
-                    const serviceId = selectedService.id.toString();
-                    const values = state.serviceRequirements[serviceId] ?? {};
-                    const filledRequirements = requirements.filter((requirement) => !isRequirementValueEmpty(requirement, values[requirement.key]));
-
-                    if (filledRequirements.length === 0) {
-                        return null;
-                    }
-
-                    return (
-                        <div key={`requirements-${selectedService.id}`} className="rounded-lg border border-gray-200 p-4">
-                            <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">{selectedService.name} Details</h4>
-                            {filledRequirements.map((requirement) => (
-                                <DetailRow key={requirement.key} label={requirement.label} value={formatRequirementValue(values[requirement.key])} />
-                            ))}
-                        </div>
-                    );
-                })}
-
-                {/* Vehicle */}
-                <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Vehicle Information</h4>
-                    <DetailRow label="Vehicle" value={`${state.vehicle.year} ${state.vehicle.make} ${state.vehicle.model}`} />
-                    <DetailRow label="Type" value={<span className="capitalize">{state.vehicle.vehicleType}</span>} />
-                    {state.vehicle.tireSize && <DetailRow label="Tire Size" value={state.vehicle.tireSize} />}
-                    {state.vehicle.vin && <DetailRow label="VIN" value={state.vehicle.vin} />}
-                    {state.vehicle.notes && <DetailRow label="Notes" value={state.vehicle.notes} />}
-                </div>
-
-                {/* Appointment */}
-                <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Appointment</h4>
-                    <DetailRow label="Date" value={formatDate(state.appointment.date)} />
-                    <DetailRow label="Time" value={state.appointment.time || 'Not selected'} />
-                </div>
-
-                {/* Customer */}
-                <div className="rounded-lg border border-gray-200 p-4">
-                    <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Contact Information</h4>
-                    <DetailRow label="Full Name" value={state.customer.fullName} />
-                    <DetailRow label="Phone" value={state.customer.phone} />
-                    <DetailRow label="Email" value={state.customer.email} />
-                    <DetailRow label="SMS Updates" value={state.customer.smsUpdates ? 'Enabled' : 'Disabled'} />
-                </div>
-            </div>
-        </div>
-    );
+    return errors;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -925,6 +298,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+    const [vehicleErrors, setVehicleErrors] = useState<Partial<Record<keyof VehicleInfo, string>>>({});
+    const [customerErrors, setCustomerErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
 
     const allServiceIds = useMemo(() => {
         if (!service) return [] as number[];
@@ -956,6 +331,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         }
     }, [servicesLoading, dbServices, slug]);
 
+    useEffect(() => {
+        if (currentStep === 3) {
+            setVehicleErrors(validateVehicleInfo(state.vehicle, serviceNeedsTireSize(service)));
+        }
+    }, [currentStep, state.vehicle, service]);
+
+    useEffect(() => {
+        if (currentStep === 5) {
+            setCustomerErrors(validateCustomerInfo(state.customer));
+        }
+    }, [currentStep, state.customer]);
+
     const canProceed = useCallback((): boolean => {
         switch (currentStep) {
             case 1:
@@ -966,12 +353,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 return !!(state.appointment.date && state.appointment.time);
             case 3:
                 // Vehicle Info
-                const v = state.vehicle;
-                const baseValid = v.vehicleType && v.make && v.model && v.year;
-                if (service && serviceNeedsTireSize(service)) {
-                    return !!(baseValid && v.tireSize);
-                }
-                return !!baseValid;
+                return Object.keys(validateVehicleInfo(state.vehicle, serviceNeedsTireSize(service))).length === 0;
             case 4:
                 // Service Details - validate all selected services
                 const selectedServices = dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()));
@@ -997,9 +379,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 return true;
             case 5:
                 // Customer Info
-                const c = state.customer;
-                const emailValid = c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email);
-                return !!(c.fullName && c.phone && emailValid);
+                return Object.keys(validateCustomerInfo(state.customer)).length === 0;
             case 6:
                 // Review & Submit
                 return true;
@@ -1023,6 +403,22 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const handleSubmit = async () => {
         if (!service) return;
 
+        const nextVehicleErrors = validateVehicleInfo(state.vehicle, serviceNeedsTireSize(service));
+        if (Object.keys(nextVehicleErrors).length > 0) {
+            setVehicleErrors(nextVehicleErrors);
+            setCurrentStep(3);
+            setSubmitError('Please correct the highlighted vehicle details before submitting.');
+            return;
+        }
+
+        const nextCustomerErrors = validateCustomerInfo(state.customer);
+        if (Object.keys(nextCustomerErrors).length > 0) {
+            setCustomerErrors(nextCustomerErrors);
+            setCurrentStep(5);
+            setSubmitError('Please correct the highlighted contact details before submitting.');
+            return;
+        }
+
         setIsSubmitting(true);
         setSubmitError(null);
 
@@ -1032,6 +428,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             service_ids: allServiceIds,
             vehicle: {
                 type: state.vehicle.vehicleType,
+                other_type: state.vehicle.vehicleType === 'other' ? state.vehicle.otherType : null,
                 make: state.vehicle.make,
                 model: state.vehicle.model,
                 year: state.vehicle.year,
@@ -1202,23 +599,24 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     </div>
                 </div>
 
-                <Step4Appointment
+                <AppointmentStep
                     appointment={state.appointment}
                     onChange={(appointment) => setState((prev) => ({ ...prev, appointment }))}
                     selectedServiceIds={allServiceIds}
                 />
-                <Step2VehicleInfo
+                <VehicleInfoForm
                     vehicle={state.vehicle}
                     onChange={(vehicle) => setState({ ...state, vehicle })}
                     showTireSize={serviceNeedsTireSize(service)}
+                    errors={vehicleErrors}
                 />
-                <Step3ServiceDetails
+                <ServiceDetailsStep
                     services={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
                     state={state}
                     onChange={setState}
                 />
-                <Step5CustomerInfo customer={state.customer} onChange={(customer) => setState({ ...state, customer })} />
-                <Step6Review
+                <CustomerInfoForm customer={state.customer} onChange={(customer) => setState({ ...state, customer })} errors={customerErrors} />
+                <ReviewStep
                     service={service}
                     state={state}
                     selectedServices={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
