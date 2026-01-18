@@ -3,6 +3,7 @@ import secondeImage from '../../../images/SECONDE.jpg';
 import brakesIcon from '../../../images/brakes.png';
 import oilIcon from '../../../images/oil_change.png';
 import redArrowIcon from '../../../images/svg/red-arrow.svg';
+import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type MaintenanceBlock = {
@@ -21,38 +22,54 @@ type MaintenanceBlock = {
     backgroundClass?: string;
 };
 
-const maintenanceBlocks: MaintenanceBlock[] = [
-    {
-        id: 'oil-changes',
+export default function MaintenanceSection() {
+    const { content } = useLocale();
+    const maintenanceContent = content?.services?.maintenance;
+    const oilChangesContent = maintenanceContent?.items?.['oil-changes'] ?? {
         title: 'Oil Changes',
         description: 'Quick, clean oil changes to protect your engine and improve performance.',
         bullets: ['Conventional / synthetic options', 'Filter replacement', 'Multi-point check'],
-        image: firstImage,
-        icon: oilIcon,
         ctaLabel: 'Book Now',
-        ctaHref: '/appointment?service=oil-change',
-        backgroundClass: 'bg-[#f5f5f5]',
-    },
-    {
-        id: 'brakes',
+    };
+    const brakesContent = maintenanceContent?.items?.brakes ?? {
         title: 'Brakes',
         description: 'Reliable brake inspections and repairs to keep you safe on the road.',
         bullets: ['Pad and rotor replacements', 'Caliper diagnostics', 'Fluid bleed or flush'],
-        image: secondeImage,
-        icon: brakesIcon,
         ctaLabel: 'Book Now',
-        ctaHref: '/appointment?service=brakes',
-        backgroundClass: 'bg-[#f5f5f5]',
-    },
-];
+    };
+    const maintenanceBlocks: MaintenanceBlock[] = [
+        {
+            id: 'oil-changes',
+            title: oilChangesContent.title,
+            description: oilChangesContent.description,
+            bullets: [...oilChangesContent.bullets],
+            image: firstImage,
+            icon: oilIcon,
+            ctaLabel: oilChangesContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=oil-change',
+            backgroundClass: 'bg-[#f5f5f5]',
+        },
+        {
+            id: 'brakes',
+            title: brakesContent.title,
+            description: brakesContent.description,
+            bullets: [...brakesContent.bullets],
+            image: secondeImage,
+            icon: brakesIcon,
+            ctaLabel: brakesContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=brakes',
+            backgroundClass: 'bg-[#f5f5f5]',
+        },
+    ];
 
-export default function MaintenanceSection() {
     return (
         <section className="bg-[#f5f5f5] pt-8 pb-6 lg:pt-12 lg:pb-0">
             <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center lg:mb-5">
-                    <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">Maintenance</h2>
-                    <p className="mt-2 text-base text-slate-900">Keep your vehicle running at its best.</p>
+                    <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">
+                        {maintenanceContent?.title ?? 'Maintenance'}
+                    </h2>
+                    <p className="mt-2 text-base text-slate-900">{maintenanceContent?.subtitle ?? 'Keep your vehicle running at its best.'}</p>
                 </div>
 
                 <div className="space-y-8 px-0 lg:px-6">

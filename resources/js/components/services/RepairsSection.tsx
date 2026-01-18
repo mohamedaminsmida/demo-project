@@ -2,6 +2,7 @@ import engineReplacementImage from '../../../images/engine_replacement.png';
 import liftImage from '../../../images/lift.png';
 import redArrowIcon from '../../../images/svg/red-arrow.svg';
 import transmissionImage from '../../../images/transmission.png';
+import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type RepairCard = {
@@ -15,46 +16,68 @@ type RepairCard = {
     ctaHref: string;
 };
 
-const repairCards: RepairCard[] = [
-    {
-        id: 'transmissions',
+export default function RepairsSection() {
+    const { content } = useLocale();
+    const repairsContent = content?.services?.repairs;
+    const transmissionsContent = repairsContent?.items?.transmissions ?? {
         title: 'Transmissions',
         description:
             'Professional transmission diagnostics, service, and replacement. Reliable brake inspections and repairs to keep you safe on the road.',
         bullets: ['Fluid service', 'Transmission repair', 'Full rebuild or replacement'],
-        image: transmissionImage,
-        variant: 'light',
         ctaLabel: 'Book Now',
-        ctaHref: '/appointment?service=transmission',
-    },
-    {
-        id: 'engine-replacement',
+    };
+    const engineContent = repairsContent?.items?.['engine-replacement'] ?? {
         title: 'Engine Replacement',
         description: 'Complete engine replacement performed with precision and high-quality parts.',
         bullets: ['Engine sourcing', 'Installation', 'Final testing & tune'],
-        image: engineReplacementImage,
-        variant: 'dark',
         ctaLabel: 'Book Now',
-        ctaHref: '/appointment?service=engine-replacement',
-    },
-    {
-        id: 'lift-kits',
+    };
+    const liftKitsContent = repairsContent?.items?.['lift-kits'] ?? {
         title: 'Lift Kits',
         description: 'Upgrade height and suspension with professional lift kit installation.',
         bullets: ['Lift kit fitting', 'Alignment after installation', 'Safety inspection'],
-        image: liftImage,
-        variant: 'light',
         ctaLabel: 'Book Now',
-        ctaHref: '/appointment?service=lift-kit',
-    },
-];
+    };
+    const repairCards: RepairCard[] = [
+        {
+            id: 'transmissions',
+            title: transmissionsContent.title,
+            description: transmissionsContent.description,
+            bullets: [...transmissionsContent.bullets],
+            image: transmissionImage,
+            variant: 'light',
+            ctaLabel: transmissionsContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=transmission',
+        },
+        {
+            id: 'engine-replacement',
+            title: engineContent.title,
+            description: engineContent.description,
+            bullets: [...engineContent.bullets],
+            image: engineReplacementImage,
+            variant: 'dark',
+            ctaLabel: engineContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=engine-replacement',
+        },
+        {
+            id: 'lift-kits',
+            title: liftKitsContent.title,
+            description: liftKitsContent.description,
+            bullets: [...liftKitsContent.bullets],
+            image: liftImage,
+            variant: 'light',
+            ctaLabel: liftKitsContent.ctaLabel ?? 'Book Now',
+            ctaHref: '/appointment?service=lift-kit',
+        },
+    ];
 
-export default function RepairsSection() {
     return (
         <section className="mb-2 mb-20 bg-[#f5f5f5] py-14 sm:py-0">
             <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center md:mb-8">
-                    <h2 className="text-[clamp(2rem,4vw,2.8rem)] font-black tracking-[0.05em] text-[#232323] uppercase">Repairs</h2>
+                    <h2 className="text-[clamp(2rem,4vw,2.8rem)] font-black tracking-[0.05em] text-[#232323] uppercase">
+                        {repairsContent?.title ?? 'Repairs'}
+                    </h2>
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-3">

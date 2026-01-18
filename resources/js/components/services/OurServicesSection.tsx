@@ -1,9 +1,12 @@
 import type { CSSProperties } from 'react';
 
 import firstSectionBg from '../../../images/first_section.png';
+import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
 export default function OurServicesSection() {
+    const { content } = useLocale();
+    const ourServicesContent = content?.services?.ourServices;
     const sectionStyle: CSSProperties = {
         backgroundImage: `url(${firstSectionBg})`,
         backgroundSize: 'cover',
@@ -19,10 +22,12 @@ export default function OurServicesSection() {
         >
             <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
                 <div className="mx-auto flex max-w-[520px] flex-col items-center gap-4 text-center lg:-translate-y-6">
-                    <h2 className="text-[clamp(1.5rem,3vw,2.7rem)] leading-tight font-bold uppercase">Our Services</h2>
+                    <h2 className="text-[clamp(1.5rem,3vw,2.7rem)] leading-tight font-bold uppercase">
+                        {ourServicesContent?.title ?? 'Our Services'}
+                    </h2>
                     <p className="text-sm text-white/90 lg:text-base">
-                        At Luque Tires, we provide complete tire care, essential maintenance, and expert repairs — all with honest pricing, fast
-                        turnaround, and bilingual service. Choose a category below to explore what we offer.
+                        {ourServicesContent?.description ??
+                            'At Luque Tires, we provide complete tire care, essential maintenance, and expert repairs — all with honest pricing, fast turnaround, and bilingual service. Choose a category below to explore what we offer.'}
                     </p>
                     <ServiceCtaButton
                         onClick={(event) => {

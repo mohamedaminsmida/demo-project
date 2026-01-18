@@ -75,6 +75,7 @@ function ServiceCard({ service }: { service: ServiceItem }) {
 
 export default function TiresWheelsSection() {
     const { content } = useLocale();
+    const tiresWheelsContent = content?.services?.tiresWheels;
     const newTiresContent = content?.services?.newTires ?? {
         title: 'New Tires',
         description: 'High-quality new tires from trusted brands, installed and balanced on-site.',
@@ -96,6 +97,22 @@ export default function TiresWheelsSection() {
         includes: ['Front or four-wheel alignment', 'Steering & suspension check', 'Tire wear analysis'],
         ratesTitle: 'Standard services rates',
         rates: ['Four-wheel alignment', '$120 — four-way alignment'],
+    };
+    const usedTiresContent = tiresWheelsContent?.usedTires ?? {
+        title: 'Used Tires',
+        description: 'Budget-friendly, safety-checked used tires that deliver performance and value.',
+        includesTitle: 'Includes',
+        includes: ['Inspection before sale', 'Mounting & balancing', 'Warranty options'],
+        ratesTitle: 'Standard services rates',
+        rates: ['Flat Repairs', '$30 + tax (13"–18")', '$35 + tax (19"–22")', 'Tire Rotation', '$45 (when tires are not purchased in-store)'],
+    };
+    const wheelsContent = tiresWheelsContent?.wheels ?? {
+        title: 'Wheels',
+        description: 'Wheel installation, replacement, and upgrades for aesthetics and performance.',
+        includesTitle: 'Includes',
+        includes: ['Wheel mounting', 'Balancing', 'Fitment assistance'],
+        ratesTitle: 'Standard services rates',
+        rates: ['Tire Dismount + Disposal', '$35 per tire (13"–17")', '$45 per tire (18"–20")'],
     };
 
     const services: ServiceItem[] = [
@@ -127,45 +144,39 @@ export default function TiresWheelsSection() {
         },
         {
             id: 'used-tires',
-            title: 'Used Tires',
-            description: 'Budget-friendly, safety-checked used tires that deliver performance and value.',
+            title: usedTiresContent.title,
+            description: usedTiresContent.description,
             sections: [
                 {
-                    heading: 'Includes',
-                    items: ['Inspection before sale', 'Mounting & balancing', 'Warranty options'],
+                    heading: usedTiresContent.includesTitle,
+                    items: [...usedTiresContent.includes],
                 },
                 {
-                    heading: 'Standard services rates',
-                    items: [
-                        'Flat Repairs',
-                        '$30 + tax (13"–18")',
-                        '$35 + tax (19"–22")',
-                        'Tire Rotation',
-                        '$45 (when tires are not purchased in-store)',
-                    ],
+                    heading: usedTiresContent.ratesTitle,
+                    items: [...usedTiresContent.rates],
                 },
             ],
             variant: 'dark',
-            ctaLabel: 'Book Now',
+            ctaLabel: usedTiresContent.ctaLabel ?? 'Book Now',
             ctaHref: '/appointment?service=used-tires',
             image: usedTiresImage,
         },
         {
             id: 'wheels',
-            title: 'Wheels',
-            description: 'Wheel installation, replacement, and upgrades for aesthetics and performance.',
+            title: wheelsContent.title,
+            description: wheelsContent.description,
             sections: [
                 {
-                    heading: 'Includes',
-                    items: ['Wheel mounting', 'Balancing', 'Fitment assistance'],
+                    heading: wheelsContent.includesTitle,
+                    items: [...wheelsContent.includes],
                 },
                 {
-                    heading: 'Standard services rates',
-                    items: ['Tire Dismount + Disposal', '$35 per tire (13"–17")', '$45 per tire (18"–20")'],
+                    heading: wheelsContent.ratesTitle,
+                    items: [...wheelsContent.rates],
                 },
             ],
             variant: 'light',
-            ctaLabel: 'Book Now',
+            ctaLabel: wheelsContent.ctaLabel ?? 'Book Now',
             ctaHref: '/appointment?service=wheels',
             image: wheelsImage,
         },
@@ -175,7 +186,9 @@ export default function TiresWheelsSection() {
         <section id="tires-section" className="bg-[#f5f5f5] pt-12 pb-6 lg:pt-10 lg:pb-0">
             <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center lg:mb-8">
-                    <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">Tires & Wheels</h2>
+                    <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">
+                        {tiresWheelsContent?.title ?? 'Tires & Wheels'}
+                    </h2>
                 </div>
             </div>
 

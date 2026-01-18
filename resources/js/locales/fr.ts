@@ -12,6 +12,84 @@ const fr = {
         serviceButton: 'Nos services',
     },
     services: {
+        ourServices: {
+            title: 'Nos services',
+            description:
+                'Chez Luque Tires, nous proposons des pneus complets, un entretien essentiel et des réparations expertes — le tout avec des tarifs honnêtes, un service rapide et un accueil bilingue. Choisissez une catégorie ci-dessous pour découvrir nos services.',
+        },
+        tiresWheels: {
+            title: 'Pneus & roues',
+            usedTires: {
+                title: 'Pneus usagés',
+                description: 'Des pneus usagés économiques, vérifiés pour la sécurité et la performance.',
+                includesTitle: 'Comprend',
+                includes: ['Inspection avant vente', 'Montage et équilibrage', 'Options de garantie'],
+                ratesTitle: 'Tarifs standards',
+                rates: [
+                    'Réparations de crevaison',
+                    '30 $ + taxes (13"–18")',
+                    '35 $ + taxes (19"–22")',
+                    'Rotation des pneus',
+                    '45 $ (si les pneus ne sont pas achetés sur place)',
+                ],
+                ctaLabel: 'Réserver',
+            },
+            wheels: {
+                title: 'Roues',
+                description: 'Installation, remplacement et amélioration des roues pour le style et la performance.',
+                includesTitle: 'Comprend',
+                includes: ['Montage des roues', 'Équilibrage', 'Assistance au fitment'],
+                ratesTitle: 'Tarifs standards',
+                rates: ['Démontage + mise au rebut', '35 $ par pneu (13"–17")', '45 $ par pneu (18"–20")'],
+                ctaLabel: 'Réserver',
+            },
+        },
+        maintenance: {
+            title: 'Entretien',
+            subtitle: 'Gardez votre véhicule au meilleur de sa forme.',
+            items: {
+                'oil-changes': {
+                    title: 'Changements d’huile',
+                    description: 'Changements d’huile rapides et propres pour protéger votre moteur et améliorer les performances.',
+                    bullets: ['Options conventionnelle / synthétique', 'Remplacement du filtre', 'Contrôle multi-points'],
+                    ctaLabel: 'Réserver',
+                },
+                brakes: {
+                    title: 'Freins',
+                    description: 'Inspections et réparations fiables des freins pour votre sécurité sur la route.',
+                    bullets: ['Remplacement des plaquettes et disques', 'Diagnostic des étriers', 'Purge ou remplacement du liquide'],
+                    ctaLabel: 'Réserver',
+                },
+            },
+        },
+        repairs: {
+            title: 'Réparations',
+            items: {
+                transmissions: {
+                    title: 'Transmissions',
+                    description:
+                        'Diagnostic, entretien et remplacement de transmission par des professionnels. Inspections et réparations fiables des freins pour votre sécurité sur la route.',
+                    bullets: ['Service du fluide', 'Réparation de transmission', 'Reconstruction complète ou remplacement'],
+                    ctaLabel: 'Réserver',
+                },
+                'engine-replacement': {
+                    title: 'Remplacement du moteur',
+                    description: 'Remplacement complet du moteur avec précision et pièces de qualité.',
+                    bullets: ['Approvisionnement moteur', 'Installation', 'Tests finaux et réglages'],
+                    ctaLabel: 'Réserver',
+                },
+                'lift-kits': {
+                    title: 'Kits de rehausse',
+                    description: 'Augmentez la hauteur et la suspension avec une installation professionnelle.',
+                    bullets: ['Pose du kit', 'Alignement après installation', 'Inspection de sécurité'],
+                    ctaLabel: 'Réserver',
+                },
+            },
+        },
+        quote: {
+            lineOne: 'De l’entretien quotidien aux grosses réparations',
+            lineTwo: 'Nous sommes là pour vous.',
+        },
         newTires: {
             title: 'Pneus neufs',
             description: 'Pneus neufs de qualité installés et équilibrés sur place avec des marques de confiance.',
