@@ -10,6 +10,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Support\HtmlString;
@@ -37,9 +38,9 @@ class AdminPanelProvider extends PanelProvider
                 'success' => Color::hex('#15803D'), // green from check icon
             ])
             ->brandLogo(fn () => new HtmlString(
-                '<img src="' . Vite::asset('resources/images/logo_black.png') . '" alt="Logo" style="height:5rem; max-height:100%;" />'
+                '<img src="' . Vite::asset('resources/images/logo_black.png') . '" alt="Logo" style="height:6rem; max-height:100%;" />'
             ))
-            ->brandLogoHeight('3rem')
+            ->brandLogoHeight('5rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -65,6 +66,13 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->favicon(asset('public/images/logo_black.png'));
+             ->plugins([
+                AuthUIEnhancerPlugin::make()
+                ->formPanelPosition('right')
+                ->mobileFormPanelPosition('bottom')
+                ->formPanelWidth('40%')
+                ->emptyPanelBackgroundImageUrl(asset('images/backoffice_background.png'))
+             ])  
+            ->favicon(asset('images/logo_black.png'));
     }
 }

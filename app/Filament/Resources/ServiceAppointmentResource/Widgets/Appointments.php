@@ -45,7 +45,10 @@ class Appointments extends CalendarWidget
         return [
             Action::make('filterStatus')
                 ->label('Filter')
-                ->form([
+                ->fillForm([
+                    'status' => $this->statusFilter,
+                ])
+                ->schema([
                     Select::make('status')
                         ->label('Status')
                         ->options([
@@ -55,8 +58,7 @@ class Appointments extends CalendarWidget
                             AppointmentStatus::Cancelled->value => 'Cancelled',
                             AppointmentStatus::NoShow->value => 'No-show',
                         ])
-                        ->placeholder('All')
-                        ->default($this->statusFilter),
+                        ->placeholder('All'),
                 ])
                 ->action(function (array $data): void {
                     $this->statusFilter = $data['status'] ?? null;
