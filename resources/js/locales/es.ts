@@ -115,6 +115,38 @@ const es = {
             ctaLabel: 'Reservar alineación',
         },
     },
+    footer: {
+        about:
+            'Luque Tires comenzó como un pequeño taller familiar con un objetivo sencillo: mantener a nuestros vecinos seguros en la carretera. Fundado en la confianza, la honestidad y el trabajo duro, pronto nos convertimos en algo más que un lugar para comprar llantas: nos volvimos parte de la comunidad.',
+        contact: {
+            title: 'Información de contacto',
+            phone: '+1 360-736-8313',
+            email: 'info@luquetires.com',
+            address: '332 Fair St, Centralia, WA 98531',
+        },
+        languageToggle: '(EN/ES)',
+        quickLinks: {
+            title: 'Enlaces rápidos',
+            items: {
+                home: 'Inicio',
+                about: 'Acerca de',
+                services: 'Servicios',
+                contact: 'Contacto',
+            },
+        },
+        workingHours: {
+            title: 'Horario de atención',
+            items: [
+                { label: 'Lun–Vie', value: '9:00 AM – 6:00 PM' },
+                { label: 'Sáb', value: '9:00 AM – 5:00 PM' },
+                { label: 'Dom', value: 'Cerrado' },
+            ],
+        },
+        privacy: {
+            line: 'Política de privacidad – © {year} Luque Tires',
+            link: 'Política de privacidad',
+        },
+    },
 } as const;
 
 export default es;

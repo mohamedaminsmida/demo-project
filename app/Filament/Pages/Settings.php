@@ -40,6 +40,9 @@ class Settings extends Page implements HasForms
                 ['day' => 'saturday', 'open' => '08:00', 'close' => '14:00'],
                 ['day' => 'sunday', 'open' => '', 'close' => ''],
             ],
+            'footer_phone' => '+1 360-736-8313',
+            'footer_email' => 'info@luquetires.com',
+            'footer_address' => '332 Fair St, Centralia, WA 98531',
         ]);
     }
 
@@ -106,6 +109,17 @@ class Settings extends Page implements HasForms
                     ->icon('heroicon-o-clock'),
                 Components\Section::make('Footer Section')
                     ->schema([
+                        Forms\Components\TextInput::make('footer_phone')
+                            ->label('Footer Phone')
+                            ->tel()
+                            ->placeholder('+1 360-736-8313'),
+                        Forms\Components\TextInput::make('footer_email')
+                            ->label('Footer Email')
+                            ->email()
+                            ->placeholder('info@luquetires.com'),
+                        Forms\Components\TextInput::make('footer_address')
+                            ->label('Footer Address')
+                            ->placeholder('332 Fair St, Centralia, WA 98531'),
                         Forms\Components\TextInput::make('footer_facebook')
                             ->label('Facebook URL')
                             ->url()

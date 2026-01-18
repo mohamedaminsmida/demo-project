@@ -115,6 +115,38 @@ const en = {
             ctaLabel: 'Book alignment',
         },
     },
+    footer: {
+        about:
+            'Luque Tires began as a small, family-run shop with one simple goal: to keep our neighbors safe on the road. Founded on trust, honesty, and hard work, we quickly became more than just a place to buy tires—we became part of the community.',
+        contact: {
+            title: 'Contact info',
+            phone: '+1 360-736-8313',
+            email: 'info@luquetires.com',
+            address: '332 Fair St, Centralia, WA 98531',
+        },
+        languageToggle: '(EN/ES)',
+        quickLinks: {
+            title: 'Quick Links',
+            items: {
+                home: 'Home',
+                about: 'About us',
+                services: 'Services',
+                contact: 'Contact us',
+            },
+        },
+        workingHours: {
+            title: 'Working Hours',
+            items: [
+                { label: 'Mon–Fri', value: '9:00 AM – 6:00 PM' },
+                { label: 'Sat', value: '9:00 AM – 5:00 PM' },
+                { label: 'Sun', value: 'Closed' },
+            ],
+        },
+        privacy: {
+            line: 'Privacy Policy – © {year} Luque Tires',
+            link: 'Privacy Policy',
+        },
+    },
 } as const;
 
 export default en;

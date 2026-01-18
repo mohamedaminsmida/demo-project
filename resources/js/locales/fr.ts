@@ -115,6 +115,38 @@ const fr = {
             ctaLabel: 'Réserver un alignement',
         },
     },
+    footer: {
+        about:
+            'Luque Tires a commencé comme un petit atelier familial avec un objectif simple : garder nos voisins en sécurité sur la route. Fondée sur la confiance, l’honnêteté et le travail acharné, l’entreprise est vite devenue plus qu’un simple magasin de pneus : nous sommes devenus une partie de la communauté.',
+        contact: {
+            title: 'Informations de contact',
+            phone: '+1 360-736-8313',
+            email: 'info@luquetires.com',
+            address: '332 Fair St, Centralia, WA 98531',
+        },
+        languageToggle: '(EN/ES)',
+        quickLinks: {
+            title: 'Liens rapides',
+            items: {
+                home: 'Accueil',
+                about: 'À propos',
+                services: 'Services',
+                contact: 'Contact',
+            },
+        },
+        workingHours: {
+            title: "Heures d'ouverture",
+            items: [
+                { label: 'Lun–Ven', value: '9:00 AM – 6:00 PM' },
+                { label: 'Sam', value: '9:00 AM – 5:00 PM' },
+                { label: 'Dim', value: 'Fermé' },
+            ],
+        },
+        privacy: {
+            line: 'Politique de confidentialité – © {year} Luque Tires',
+            link: 'Politique de confidentialité',
+        },
+    },
 } as const;
 
 export default fr;
