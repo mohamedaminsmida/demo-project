@@ -17,28 +17,37 @@ type ServiceItem = {
     image?: string;
 };
 
-function ServiceCard({ service }: { service: ServiceItem }) {
+function ServiceCard({
+    service,
+    cornerClass = '',
+    alignCentered = true,
+    orderClass = '',
+}: {
+    service: ServiceItem;
+    cornerClass?: string;
+    alignCentered?: boolean;
+    orderClass?: string;
+}) {
     const isDark = service.variant === 'dark';
-    const alignContentCenter = service.id === 'new-tires' || service.id === 'used-tires';
-    const useGrayBackground = service.id === 'new-tires' || service.id === 'wheels';
+    const alignContentCenter = alignCentered && (service.id === 'new-tires' || service.id === 'used-tires');
 
     return (
         <div
-            className={`flex flex-col gap-4 p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : useGrayBackground ? 'bg-[#f5f5f5] text-slate-900' : 'bg-white text-slate-900'} ${
-                alignContentCenter ? 'items-center md:items-start' : ''
-            }`}
+            className={`flex h-full flex-col gap-4 rounded-3xl p-8 md:p-10 ${isDark ? 'bg-[#202020] text-white' : 'bg-[#f5f5f5] text-slate-900'} ${
+                alignContentCenter ? 'items-center sm:items-start' : ''
+            } ${cornerClass} ${orderClass}`}
         >
             {service.image && (
-                <div className={`flex md:mb-5 ${alignContentCenter ? 'w-full justify-center md:ml-16 md:justify-start' : ''}`}>
+                <div className={`flex md:mb-5 ${alignContentCenter ? 'w-full justify-center sm:justify-start' : ''}`}>
                     <img src={service.image} alt="" aria-hidden className="h-16 w-auto" />
                 </div>
             )}
-            <h3 className={`text-2xl font-semibold md:text-3xl ${alignContentCenter ? 'text-center md:ml-16 md:self-start md:text-left' : ''}`}>
+            <h3 className={`text-2xl font-semibold md:text-3xl ${alignContentCenter ? 'text-center sm:self-start sm:text-left' : ''}`}>
                 {service.title}
             </h3>
             <p
                 className={`text-base leading-relaxed ${isDark ? 'text-white/80' : 'text-slate-600'} ${
-                    alignContentCenter ? 'mx-auto max-w-xl text-center md:ml-16 md:text-left' : ''
+                    alignContentCenter ? 'mx-auto max-w-xl text-center sm:mx-0 sm:max-w-none sm:text-left' : ''
                 }`}
             >
                 {service.description}
@@ -47,7 +56,7 @@ function ServiceCard({ service }: { service: ServiceItem }) {
             {service.sections.map((section) => (
                 <div
                     key={section.heading}
-                    className={`w-full space-y-2 ${alignContentCenter ? 'mx-auto max-w-xl text-center md:ml-16 md:text-left' : ''}`}
+                    className={`w-full space-y-2 ${alignContentCenter ? 'mx-auto max-w-xl text-center sm:mx-0 sm:max-w-none sm:text-left' : ''}`}
                 >
                     <p className={`text-base font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{section.heading}</p>
                     <ul className="space-y-1 text-sm">
@@ -56,7 +65,7 @@ function ServiceCard({ service }: { service: ServiceItem }) {
                                 key={`${section.heading}-${item}`}
                                 className={`flex items-start gap-2 ${
                                     isDark ? 'text-white/75' : 'text-slate-700'
-                                } ${alignContentCenter ? 'justify-center md:justify-start' : ''}`}
+                                } ${alignContentCenter ? 'justify-center sm:justify-start' : ''}`}
                             >
                                 <img src={redArrowIcon} alt="" aria-hidden className="mt-0.5 h-4 w-4" />
                                 <span>{item}</span>
@@ -66,7 +75,11 @@ function ServiceCard({ service }: { service: ServiceItem }) {
                 </div>
             ))}
 
-            <div className={`pt-3 ${alignContentCenter ? 'mx-auto flex w-full max-w-xl justify-center md:ml-16 md:justify-start' : ''}`}>
+            <div
+                className={`mt-auto pt-3 ${
+                    alignContentCenter ? 'mx-auto flex w-full max-w-xl justify-center sm:mx-0 sm:max-w-none sm:justify-start' : ''
+                }`}
+            >
                 <ServiceCtaButton label={service.ctaLabel} href={service.ctaHref} variant="filled" />
             </div>
         </div>
@@ -182,9 +195,22 @@ export default function TiresWheelsSection() {
         },
     ];
 
+    const layoutVariants: ServiceItem['variant'][] = ['light', 'dark', 'dark', 'light'];
+    const cornerClasses = ['sm:rounded-br-none', 'sm:rounded-bl-none', 'sm:rounded-tr-none', 'sm:rounded-tl-none'];
+
+    const orderClasses = ['order-1', 'order-2', 'order-4 sm:order-3', 'order-3 sm:order-4'];
+
+    const servicesInGrid = services.map((service, index) => ({
+        ...service,
+        variant: layoutVariants[index] ?? service.variant,
+        cornerClass: cornerClasses[index] ?? '',
+        alignCentered: index % 2 !== 0,
+        orderClass: orderClasses[index] ?? '',
+    }));
+
     return (
         <section id="tires-section" className="bg-[#f5f5f5] pt-12 pb-6 lg:pt-10 lg:pb-0">
-            <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-10">
+            <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10">
                 <div className="mb-8 text-center lg:mb-8">
                     <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">
                         {tiresWheelsContent?.title ?? 'Tires & Wheels'}
@@ -192,10 +218,16 @@ export default function TiresWheelsSection() {
                 </div>
             </div>
 
-            <div className="w-full">
-                <div className="grid gap-0 md:grid-cols-2">
-                    {services.map((service) => (
-                        <ServiceCard key={service.id} service={service} />
+            <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10">
+                <div className="grid grid-cols-1 items-stretch gap-0 sm:grid-cols-2">
+                    {servicesInGrid.map((service) => (
+                        <ServiceCard
+                            key={service.id}
+                            service={service}
+                            cornerClass={service.cornerClass}
+                            alignCentered={service.alignCentered}
+                            orderClass={service.orderClass}
+                        />
                     ))}
                 </div>
             </div>

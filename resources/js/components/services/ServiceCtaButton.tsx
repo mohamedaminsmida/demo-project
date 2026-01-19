@@ -1,6 +1,8 @@
 import clsx from 'clsx';
 import type { MouseEvent } from 'react';
 
+import arrowIcon from '../../../images/svg/arrow.svg';
+
 import { useLocale } from '../../locales/LocaleProvider';
 
 type ServiceCtaButtonProps = {
@@ -23,8 +25,8 @@ export default function ServiceCtaButton({
 
     const baseClasses =
         variant === 'filled'
-            ? 'inline-flex cursor-pointer items-center justify-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-300 hover:bg-red-800'
-            : 'inline-flex cursor-pointer items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-zinc-900 shadow-[0_15px_30px_rgba(0,0,0,0.25)] transition-colors duration-500 ease-out hover:bg-green-800 hover:text-white';
+            ? 'group inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-green-800 px-6 pr-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-red-800 hover:pr-9'
+            : 'group inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-white px-6 pr-6 py-3 text-sm font-semibold text-zinc-900 shadow-[0_15px_30px_rgba(0,0,0,0.25)] transition-all duration-500 ease-out hover:bg-green-800 hover:text-white hover:pr-9';
 
     return (
         <a
@@ -36,7 +38,22 @@ export default function ServiceCtaButton({
                 }
             }}
         >
-            {label}
+            <span className="relative inline-flex items-center">
+                <span>{label}</span>
+                <span
+                    aria-hidden
+                    className="absolute -right-8 block h-5 w-5 text-white opacity-0 transition-all duration-200 ease-out group-hover:-right-6 group-hover:opacity-100"
+                    style={{
+                        WebkitMaskImage: `url(${arrowIcon})`,
+                        maskImage: `url(${arrowIcon})`,
+                        WebkitMaskRepeat: 'no-repeat',
+                        maskRepeat: 'no-repeat',
+                        WebkitMaskSize: 'contain',
+                        maskSize: 'contain',
+                        backgroundColor: 'currentColor',
+                    }}
+                />
+            </span>
         </a>
     );
 }

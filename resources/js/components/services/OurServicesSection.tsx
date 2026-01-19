@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import firstSectionBg from '../../../images/first_section.png';
+import firstSectionBg from '../../../images/first_section_two.png';
 import { useLocale } from '../../locales/LocaleProvider';
 import ServiceCtaButton from './ServiceCtaButton';
 
@@ -17,7 +17,7 @@ export default function OurServicesSection() {
 
     return (
         <section
-            className="relative -mt-24 flex min-h-[320px] items-center justify-center overflow-hidden pt-24 pb-0 text-white lg:-mt-32 lg:min-h-[460px] lg:pt-36 lg:pb-12"
+            className="relative -mt-24 flex min-h-[320px] items-center justify-center overflow-hidden pt-24 pb-0 font-sans text-white lg:-mt-32 lg:min-h-[460px] lg:pt-36 lg:pb-12 [&_h1]:font-sans [&_h2]:font-sans [&_h3]:font-sans [&_h4]:font-sans [&_h5]:font-sans [&_h6]:font-sans"
             style={sectionStyle}
         >
             <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
