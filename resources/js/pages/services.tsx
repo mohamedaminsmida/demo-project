@@ -2,10 +2,12 @@ import { Head } from '@inertiajs/react';
 
 import heroBackgroundImage from '../../images/first_section.png';
 import Layout from '../components/layout/Layout';
+import FaqSection from '../components/services/FaqSection';
 import MaintenanceSection from '../components/services/MaintenanceSection';
 import OurServicesSection from '../components/services/OurServicesSection';
 import QuoteSection from '../components/services/QuoteSection';
 import RepairsSection from '../components/services/RepairsSection';
+import TestimonialsSection from '../components/services/TestimonialsSection';
 import TiresWheelsSection from '../components/services/TiresWheelsSection';
 
 export default function Services() {
@@ -28,6 +30,8 @@ export default function Services() {
                 <MaintenanceSection />
                 <QuoteSection />
                 <RepairsSection />
+                <TestimonialsSection />
+                <FaqSection />
             </div>
         </Layout>
     );

@@ -24,6 +24,8 @@
     /* BASE COLOR */
     --color-transparent: rgb(0 0 0 / 0);
     --color-white: rgb(255 255 255);
+    --color-primary: #0f9f68;
+    --color-primary-foreground: #ffffff;
     --color-black: rgb(0 0 0);
 
     --color-gray-50: rgb(250 250 250);

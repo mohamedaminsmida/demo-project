@@ -69,21 +69,14 @@ export default function Header() {
                     <div className="flex flex-wrap items-center gap-5 text-sm font-medium text-white md:gap-7 md:text-base">
                         <nav className="flex items-center gap-5">
                             {navLinks.map((link, index) => {
-                                const isDisabled = link.href === '/about' || link.href === '/contact';
                                 const baseClass =
-                                    pathname === link.href ? 'font-semibold text-[#a40d0d]' : 'text-white/70 transition hover:text-white';
+                                    pathname === link.href ? 'font-semibold text-[#a40d0d]' : 'text-white transition hover:text-[#a40d0d]/80';
 
                                 return (
                                     <Fragment key={link.label}>
-                                        {isDisabled ? (
-                                            <span className={`cursor-not-allowed text-white/40 ${pathname === link.href ? 'font-semibold' : ''}`}>
-                                                {link.label}
-                                            </span>
-                                        ) : (
-                                            <Link href={link.href} className={baseClass}>
-                                                {link.label}
-                                            </Link>
-                                        )}
+                                        <Link href={link.href} className={baseClass}>
+                                            {link.label}
+                                        </Link>
                                         {index !== navLinks.length - 1 && <span className="h-4 w-px bg-white/30" aria-hidden />}
                                     </Fragment>
                                 );
@@ -132,14 +125,9 @@ export default function Header() {
 
                     <nav className="flex flex-col gap-6 text-base font-medium">
                         {navLinks.map((link) => {
-                            const isDisabled = link.href === '/about' || link.href === '/contact';
-                            const baseClass = link.isActive ? 'text-[#a40d0d]' : 'text-white/80 transition hover:text-white';
+                            const baseClass = link.isActive ? 'font-semibold text-[#a40d0d]' : 'text-white transition hover:text-[#a40d0d]/80';
 
-                            return isDisabled ? (
-                                <span key={link.label} className="cursor-not-allowed text-white/40">
-                                    {link.label}
-                                </span>
-                            ) : (
+                            return (
                                 <Link key={link.label} href={link.href} className={baseClass} onClick={() => setIsMenuOpen(false)}>
                                     {link.label}
                                 </Link>

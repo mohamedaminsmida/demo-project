@@ -4,6 +4,7 @@ import redArrowIcon from '../../../images/svg/red-arrow.svg';
 import usedTiresImage from '../../../images/used_tiers.png';
 import wheelsImage from '../../../images/wheels.png';
 import { useLocale } from '../../locales/LocaleProvider';
+import SectionContainer from '../layout/SectionContainer';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type ServiceItem = {
@@ -210,15 +211,15 @@ export default function TiresWheelsSection() {
 
     return (
         <section id="tires-section" className="bg-[#f5f5f5] pt-12 pb-6 lg:pt-10 lg:pb-0">
-            <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10">
+            <SectionContainer>
                 <div className="mb-8 text-center lg:mb-8">
-                    <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">
+                    <h2 className="font-sans text-[clamp(1.5rem,3vw,2.5rem)] leading-tight font-bold text-slate-900 uppercase">
                         {tiresWheelsContent?.title ?? 'Tires & Wheels'}
                     </h2>
                 </div>
-            </div>
+            </SectionContainer>
 
-            <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10">
+            <SectionContainer>
                 <div className="grid grid-cols-1 items-stretch gap-0 sm:grid-cols-2">
                     {servicesInGrid.map((service) => (
                         <ServiceCard
@@ -230,7 +231,7 @@ export default function TiresWheelsSection() {
                         />
                     ))}
                 </div>
-            </div>
+            </SectionContainer>
         </section>
     );
 }

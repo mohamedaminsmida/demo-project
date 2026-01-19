@@ -3,6 +3,7 @@ import liftImage from '../../../images/lift.png';
 import redArrowIcon from '../../../images/svg/red-arrow.svg';
 import transmissionImage from '../../../images/transmission.png';
 import { useLocale } from '../../locales/LocaleProvider';
+import SectionContainer from '../layout/SectionContainer';
 import ServiceCtaButton from './ServiceCtaButton';
 
 type RepairCard = {
@@ -73,9 +74,9 @@ export default function RepairsSection() {
 
     return (
         <section className="mb-2 mb-20 bg-[#f5f5f5] py-14 sm:py-0">
-            <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+            <SectionContainer>
                 <div className="mb-8 text-center md:mb-8">
-                    <h2 className="text-[clamp(2rem,4vw,2.8rem)] font-black tracking-[0.05em] text-[#232323] uppercase">
+                    <h2 className="font-sans text-[clamp(2rem,4vw,2.8rem)] font-bold tracking-[0.05em] text-[#232323] uppercase">
                         {repairsContent?.title ?? 'Repairs'}
                     </h2>
                 </div>
@@ -91,7 +92,7 @@ export default function RepairsSection() {
                                 key={card.id}
                                 className={`${
                                     isDark ? 'bg-[#1c1c1c] text-white' : 'bg-white text-[#1f1f1f]'
-                                } mx-auto flex h-full w-full max-w-[360px] flex-col p-7 shadow-lg md:min-h-[350px]`}
+                                } mx-auto flex h-full w-full max-w-[360px] flex-col rounded-3xl p-7 shadow-lg md:min-h-[420px] md:max-w-[420px] md:p-9`}
                             >
                                 <div className="mb-5 space-y-2">
                                     <div
@@ -130,7 +131,7 @@ export default function RepairsSection() {
                         );
                     })}
                 </div>
-            </div>
+            </SectionContainer>
         </section>
     );
 }

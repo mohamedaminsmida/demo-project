@@ -25,8 +25,8 @@ export default function ServiceCtaButton({
 
     const baseClasses =
         variant === 'filled'
-            ? 'group inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-green-800 px-6 pr-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-red-800 hover:pr-9'
-            : 'group inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-white px-6 pr-6 py-3 text-sm font-semibold text-zinc-900 shadow-[0_15px_30px_rgba(0,0,0,0.25)] transition-all duration-500 ease-out hover:bg-green-800 hover:text-white hover:pr-9';
+            ? 'group inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0f9f68] px-6 pr-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-red-800 hover:pr-9'
+            : 'group inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-white px-6 pr-6 py-3 text-sm font-semibold text-zinc-900 shadow-[0_15px_30px_rgba(0,0,0,0.25)] transition-all duration-500 ease-out hover:bg-[#0f9f68] hover:text-white hover:pr-9';
 
     return (
         <a
