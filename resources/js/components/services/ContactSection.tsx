@@ -1,7 +1,9 @@
 import { usePage } from '@inertiajs/react';
 
 import contactBackground from '../../../images/contact_background.jpg';
+import contactUpperBackground from '../../../images/contact_upper_background.png';
 import infoPanelBackground from '../../../images/Rectangle.png';
+import { useLocale } from '../../locales/LocaleProvider';
 import SectionContainer from '../layout/SectionContainer';
 import { FormField, Input, Select, TextArea } from '../ui';
 
@@ -50,23 +52,6 @@ const contactDetails = [
     },
 ];
 
-const SERVICE_OPTIONS = [
-    { value: 'new-used-tires', label: 'New & Used Tires' },
-    { value: 'mounting-balancing', label: 'Mounting & Balancing' },
-    { value: 'repairs-valve', label: 'Repairs & Valve Replacement' },
-    { value: 'same-day', label: 'Same-Day Service' },
-    { value: 'not-sure', label: 'Not sure – please advise' },
-];
-
-const VEHICLE_TYPE_OPTIONS = [
-    { value: 'car', label: 'Cars' },
-    { value: 'light-truck', label: 'Light Trucks / SUVs' },
-    { value: 'truck', label: 'Trucks' },
-    { value: 'motorcycle', label: 'Motorcycles & Scooters' },
-    { value: 'van', label: 'Vans & Minivans' },
-    { value: 'other', label: 'Other' },
-];
-
 type SettingWorkingHour = {
     day: string;
     open?: string;
@@ -75,7 +60,9 @@ type SettingWorkingHour = {
 };
 
 export default function ContactSection() {
+    const { content: localeContent } = useLocale();
     const { props } = usePage();
+    const contactContent = localeContent.contactSection;
     const settings = (
         props as {
             settings?: {
@@ -98,15 +85,8 @@ export default function ContactSection() {
     };
 
     const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const dayAbbrevMap: Record<string, string> = {
-        monday: 'Mon',
-        tuesday: 'Tue',
-        wednesday: 'Wed',
-        thursday: 'Thu',
-        friday: 'Fri',
-        saturday: 'Sat',
-        sunday: 'Sun',
-    };
+    const dayAbbrevMap: Record<string, string> = contactContent.hours.dayAbbrev;
+    const closedLabel = contactContent.hours.closedLabel;
 
     const workingHoursFromSettings = Array.isArray(settings?.working_hours)
         ? settings.working_hours
@@ -120,7 +100,7 @@ export default function ContactSection() {
                   const dayKey = entry.day.toLowerCase();
                   const label = dayAbbrevMap[dayKey] ?? dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
                   const hasHours = !entry.is_day_off && entry.open && entry.close;
-                  const value = hasHours ? `${formatTime(entry.open)} – ${formatTime(entry.close)}` : 'Closed';
+                  const value = hasHours ? `${formatTime(entry.open)} – ${formatTime(entry.close)}` : contactContent.hours.closedLabel;
                   return { dayKey, label, value };
               })
         : [];
@@ -160,147 +140,168 @@ export default function ContactSection() {
     })();
 
     return (
-        <section
-            className="bg-cover bg-center bg-no-repeat py-16 text-white"
-            style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.9)), url(${contactBackground})` }}
-        >
-            <SectionContainer className="grid gap-8 lg:grid-cols-[1fr_2fr]">
-                <div className="relative min-h-[520px] overflow-hidden rounded-t-3xl lg:min-h-[620px]">
-                    <img
-                        src={infoPanelBackground}
-                        alt="Contact info background"
-                        className="h-full w-full rounded-t-3xl object-contain"
-                        loading="lazy"
-                    />
-                    <div className="absolute inset-0 space-y-6 p-6 text-white">
-                        <div>
-                            <h2 className="font-sans text-[clamp(1.8rem,4vw,2.8rem)] leading-tight font-bold lg:text-[clamp(2rem,4.2vw,3.2rem)]">
-                                Get in touch
+        <>
+            <section
+                className="relative z-0 bg-cover bg-center bg-no-repeat pt-24 pb-44 text-slate-800"
+                style={{ backgroundImage: `url(${contactUpperBackground})` }}
+            >
+                <SectionContainer>
+                    <div className="max-w-8xl space-y-4">
+                        <h2 className="font-sans text-[clamp(1.6rem,3.6vw,2.4rem)] leading-tight font-bold tracking-wide text-slate-900 uppercase lg:text-[clamp(1.8rem,4vw,2.8rem)]">
+                            {contactContent.title}
+                        </h2>
+                        <p className="text-base leading-relaxed font-medium text-slate-700 sm:text-lg sm:leading-8">{contactContent.description}</p>
+                    </div>
+                </SectionContainer>
+            </section>
+            <section
+                className="relative z-10 bg-cover bg-center bg-no-repeat py-16 text-white"
+                style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.9)), url(${contactBackground})` }}
+            >
+                <SectionContainer className="grid gap-8 lg:grid-cols-[1fr_2fr]">
+                    <div
+                        className="relative z-20 -mt-14 min-h-[520px] overflow-hidden rounded-t-3xl bg-cover bg-center shadow-2xl sm:-mt-22 lg:-mt-30 lg:min-h-[620px]"
+                        style={{ backgroundImage: `url(${infoPanelBackground})` }}
+                    >
+                        <div className="relative z-10 space-y-7 p-7 text-white">
+                            <h2 className="font-sans text-[clamp(1.6rem,3.6vw,2.4rem)] leading-tight font-bold tracking-wide text-white uppercase lg:text-[clamp(1.8rem,4vw,2.4rem)]">
+                                {contactContent.panelTitle}
                             </h2>
-                        </div>
-
-                        <div>
-                            <div className="mb-3 flex items-center gap-2">
-                                <span className="text-white">
-                                    <MapPinIcon />
-                                </span>
-                                <h3 className="font-sans text-sm font-bold tracking-wider text-white uppercase lg:text-lg">Location</h3>
+                            <div>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <span className="text-white [&>svg]:h-8 [&>svg]:w-8">
+                                        <MapPinIcon />
+                                    </span>
+                                    <h3 className="font-sans text-base font-bold tracking-[0.18em] text-white uppercase lg:text-xl">
+                                        {contactContent.info.location}
+                                    </h3>
+                                </div>
+                                <p className="text-base text-white/90 lg:text-xl">{settings?.footer_address || '332 Fair St, Centralia, WA 98531'}</p>
                             </div>
-                            <p className="text-sm text-white/90 lg:text-lg">{settings?.footer_address || '332 Fair St, Centralia, WA 98531'}</p>
-                        </div>
 
-                        <div>
-                            <div className="mb-3 flex items-center gap-2">
-                                <span className="text-white">
-                                    <PhoneIcon />
-                                </span>
-                                <h3 className="font-sans text-sm font-bold tracking-wider text-white uppercase lg:text-lg">Phone</h3>
+                            <div>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <span className="text-white [&>svg]:h-8 [&>svg]:w-8">
+                                        <PhoneIcon />
+                                    </span>
+                                    <h3 className="font-sans text-base font-bold tracking-[0.18em] text-white uppercase lg:text-xl">
+                                        {contactContent.info.phone}
+                                    </h3>
+                                </div>
+                                <a
+                                    href={`tel:${settings?.footer_phone || '+13607368313'}`}
+                                    className="text-base text-white/90 transition hover:text-[#0f9f68] lg:text-xl"
+                                >
+                                    {settings?.footer_phone || '+1 360-736-8313'}
+                                </a>
                             </div>
-                            <a
-                                href={`tel:${settings?.footer_phone || '+13607368313'}`}
-                                className="text-sm text-white/90 transition hover:text-[#0f9f68] lg:text-lg"
-                            >
-                                {settings?.footer_phone || '+1 360-736-8313'}
-                            </a>
-                        </div>
 
-                        <div>
-                            <div className="mb-3 flex items-center gap-2">
-                                <span className="text-white">
-                                    <EnvelopeIcon />
-                                </span>
-                                <h3 className="font-sans text-sm font-bold tracking-wider text-white uppercase lg:text-lg">Email</h3>
+                            <div>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <span className="text-white [&>svg]:h-8 [&>svg]:w-8">
+                                        <EnvelopeIcon />
+                                    </span>
+                                    <h3 className="font-sans text-base font-bold tracking-[0.18em] text-white uppercase lg:text-xl">
+                                        {contactContent.info.email}
+                                    </h3>
+                                </div>
+                                <a
+                                    href={`mailto:${settings?.footer_email || 'info@luquetires.com'}`}
+                                    className="text-base text-white/90 transition hover:text-[#0f9f68] lg:text-xl"
+                                >
+                                    {settings?.footer_email || 'info@luquetires.com'}
+                                </a>
                             </div>
-                            <a
-                                href={`mailto:${settings?.footer_email || 'info@luquetires.com'}`}
-                                className="text-sm text-white/90 transition hover:text-[#0f9f68] lg:text-lg"
-                            >
-                                {settings?.footer_email || 'info@luquetires.com'}
-                            </a>
-                        </div>
 
-                        <div>
-                            <div className="mb-3 flex items-center gap-2">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6 text-white">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M12 6v6l4 2" />
-                                </svg>
-                                <h3 className="font-sans text-sm font-bold tracking-wider text-white uppercase lg:text-lg">Open Hours</h3>
-                            </div>
-                            <div className="space-y-1.5">
-                                {groupedWorkingHours.map((entry, idx) => (
-                                    <div key={idx} className="flex justify-between text-sm lg:text-lg">
-                                        <span className="text-white/70">{entry.label}:</span>
-                                        <span className="text-white/90">{entry.value}</span>
-                                    </div>
-                                ))}
+                            <div>
+                                <div className="mb-4 flex items-center gap-3">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-white">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M12 6v6l4 2" />
+                                    </svg>
+                                    <h3 className="font-sans text-base font-bold tracking-[0.18em] text-white uppercase lg:text-xl">
+                                        {contactContent.hours.title}
+                                    </h3>
+                                </div>
+                                <div className="space-y-2">
+                                    {groupedWorkingHours.map((entry, idx) => (
+                                        <div key={idx} className="flex justify-between text-base lg:text-xl">
+                                            <span className="text-white/85">{entry.label}:</span>
+                                            <span className="font-semibold text-white">{entry.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="rounded-3xl border border-white/15 bg-black/40 p-8 text-white backdrop-blur-sm">
-                    <form className="mt-6 grid gap-5 sm:grid-cols-2">
-                        <FormField label="Name" required labelClassName="text-white/80">
-                            <Input
-                                placeholder="Full name"
-                                isRequired
-                                inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
-                            />
-                        </FormField>
-                        <FormField label="Email" required labelClassName="text-white/80">
-                            <Input
-                                type="email"
-                                placeholder="you@example.com"
-                                isRequired
-                                inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
-                            />
-                        </FormField>
-                        <FormField label="Phone" required labelClassName="text-white/80">
-                            <Input
-                                type="tel"
-                                placeholder="(555) 123-4567"
-                                isRequired
-                                inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
-                            />
-                        </FormField>
-                        <FormField label="Interested Service" required labelClassName="text-white/80">
-                            <Select
-                                options={SERVICE_OPTIONS}
-                                placeholder="Select a service"
-                                required
-                                buttonClassName="bg-white/5 border-white/25 text-white text-base px-5 py-3 hover:border-white/40"
-                            />
-                        </FormField>
-                        <FormField label="Vehicle Type" required labelClassName="text-white/80">
-                            <Select
-                                options={VEHICLE_TYPE_OPTIONS}
-                                placeholder="Select vehicle type"
-                                required
-                                buttonClassName="bg-white/5 border-white/25 text-white text-base px-5 py-3 hover:border-white/40"
-                            />
-                        </FormField>
-                        <div className="sm:col-span-2">
-                            <FormField label="Message" required labelClassName="text-white/80">
-                                <TextArea
-                                    rows={4}
-                                    placeholder="Tell us how we can help"
+                    <div className="rounded-3xl border border-white/15 bg-black/40 p-8 text-white backdrop-blur-sm">
+                        <form className="mt-6 grid gap-5 sm:grid-cols-2">
+                            <FormField label={contactContent.form.nameLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                <Input
+                                    placeholder={contactContent.form.namePlaceholder}
                                     isRequired
-                                    textareaClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
+                                    inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
                                 />
                             </FormField>
-                        </div>
-                        <div className="sm:col-span-2">
-                            <button
-                                type="button"
-                                className="w-full rounded-full bg-[#0f9f68] px-6 py-3 font-semibold text-white transition hover:bg-red-800"
-                            >
-                                Submit Request
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </SectionContainer>
-        </section>
+                            <FormField label={contactContent.form.emailLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                <Input
+                                    type="email"
+                                    placeholder={contactContent.form.emailPlaceholder}
+                                    isRequired
+                                    inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
+                                />
+                            </FormField>
+                            <div className="sm:col-span-2">
+                                <FormField label={contactContent.form.phoneLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                    <Input
+                                        type="tel"
+                                        placeholder={contactContent.form.phonePlaceholder}
+                                        isRequired
+                                        inputClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
+                                    />
+                                </FormField>
+                            </div>
+                            <div className="grid gap-5 sm:col-span-2 sm:grid-cols-2">
+                                <FormField label={contactContent.form.serviceLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                    <Select
+                                        options={[...contactContent.form.serviceOptions]}
+                                        placeholder={contactContent.form.servicePlaceholder}
+                                        required
+                                        buttonClassName="bg-white/5 border-white/25 text-white text-base px-5 py-3 hover:border-white/40"
+                                    />
+                                </FormField>
+                                <FormField label={contactContent.form.vehicleLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                    <Select
+                                        options={[...contactContent.form.vehicleOptions]}
+                                        placeholder={contactContent.form.vehiclePlaceholder}
+                                        required
+                                        buttonClassName="bg-white/5 border-white/25 text-white text-base px-5 py-3 hover:border-white/40"
+                                    />
+                                </FormField>
+                            </div>
+                            <div className="sm:col-span-2">
+                                <FormField label={contactContent.form.messageLabel} required labelClassName="text-white/80 text-base lg:text-lg">
+                                    <TextArea
+                                        rows={4}
+                                        placeholder={contactContent.form.messagePlaceholder}
+                                        isRequired
+                                        textareaClassName="bg-white/5 border-white/25 text-white placeholder:text-white/60 text-base px-5 py-3 focus:border-[#0f9f68] focus:ring-[#0f9f68]/20"
+                                    />
+                                </FormField>
+                            </div>
+                            <div className="sm:col-span-2">
+                                <button
+                                    type="button"
+                                    className="w-full cursor-pointer rounded-full bg-[#0f9f68] px-6 py-3 font-semibold text-white transition hover:bg-red-800"
+                                >
+                                    {contactContent.form.submitLabel}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </SectionContainer>
+            </section>
+        </>
     );
 }

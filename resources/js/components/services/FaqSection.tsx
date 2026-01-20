@@ -83,7 +83,7 @@ const faqGroups: FaqGroup[] = [
 
 export default function FaqSection() {
     const allItems = faqGroups.flatMap((group) => group.items);
-    const [openItemId, setOpenItemId] = useState(allItems[0]?.id ?? '');
+    const [openItemId, setOpenItemId] = useState('');
 
     return (
         <section className="bg-white py-16">

@@ -47,6 +47,10 @@ Route::get('/services', function () {
     return Inertia::render('services');
 })->name('services');
 
+Route::get('/contact', function () {
+    return Inertia::render('contact');
+})->name('contact');
+
 Route::get('/service-appointment', function () {
     return Inertia::render('service-appointment');
 })->name('service.appointment');
