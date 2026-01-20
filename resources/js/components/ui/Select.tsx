@@ -1,3 +1,4 @@
+import type { Key } from '@react-types/shared';
 import { useCallback } from 'react';
 import {
     Button,
@@ -23,7 +24,7 @@ export interface SelectOption {
 }
 
 export interface SelectProps
-    extends Omit<AriaSelectProps<SelectOption>, 'children' | 'selectedKey' | 'defaultSelectedKey' | 'onSelectionChange'> {
+    extends Omit<AriaSelectProps<SelectOption>, 'children' | 'selectedKey' | 'defaultSelectedKey' | 'onSelectionChange' | 'onChange'> {
     label?: string;
     options: SelectOption[];
     placeholder?: string;
@@ -32,6 +33,10 @@ export interface SelectProps
     defaultValue?: string;
     onChange?: (value: string) => void;
     required?: boolean;
+    buttonClassName?: string;
+    selectedKey?: Key | null;
+    defaultSelectedKey?: Key | null;
+    onSelectionChange?: (key: Key | null) => void;
 }
 
 export function Select({
@@ -45,24 +50,28 @@ export function Select({
     isRequired,
     required,
     onSelectionChange,
+    buttonClassName,
     ...props
 }: SelectProps) {
     const finalRequired = isRequired ?? required;
 
     const handleSelectionChange = useCallback(
-        (key: React.Key | null) => {
+        (key: Key | null) => {
             onSelectionChange?.(key);
-            onChange?.(key?.toString() ?? '');
+            onChange?.(key == null ? '' : String(key));
         },
         [onSelectionChange, onChange],
     );
+
+    const selectedKeyValue = value ?? props.selectedKey ?? undefined;
+    const defaultSelectedKeyValue = defaultValue ?? props.defaultSelectedKey ?? undefined;
 
     return (
         <AriaSelect
             {...props}
             className="group flex flex-col gap-1.5"
-            selectedKey={value ?? props.selectedKey}
-            defaultSelectedKey={defaultValue ?? props.defaultSelectedKey}
+            selectedKey={selectedKeyValue === null ? undefined : selectedKeyValue}
+            defaultSelectedKey={defaultSelectedKeyValue === null ? undefined : defaultSelectedKeyValue}
             onSelectionChange={handleSelectionChange}
             isRequired={finalRequired}
         >
@@ -89,9 +98,14 @@ export function Select({
                     'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50',
                     // Error state
                     error && 'border-error-500 focus:ring-error-500/20 focus:border-error-600',
+                    buttonClassName,
                 )}
             >
-                <SelectValue placeholder={placeholder} className="flex-1 truncate data-[placeholder]:text-gray-500" />
+                <SelectValue className="flex-1 truncate">
+                    {({ selectedText }) =>
+                        selectedText || <span className="text-gray-500">{placeholder ?? 'Select'}</span>
+                    }
+                </SelectValue>
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                     <ChevronDownIcon />
                 </span>

@@ -6,15 +6,17 @@ export interface InputProps extends TextFieldProps {
     placeholder?: string;
     error?: string;
     required?: boolean;
+    labelClassName?: string;
+    inputClassName?: string;
 }
 
-export function Input({ label, placeholder, error, isRequired, required, ...props }: InputProps) {
+export function Input({ label, placeholder, error, isRequired, required, labelClassName, inputClassName, ...props }: InputProps) {
     const finalRequired = isRequired ?? required;
 
     return (
         <TextField {...props} isRequired={finalRequired} className="group flex flex-col gap-1.5">
             {label && (
-                <Label className="text-sm font-medium text-gray-900 cursor-default">
+                <Label className={cx('text-sm font-medium text-gray-900 cursor-default', labelClassName)}>
                     {label}
                     {finalRequired && <span className="text-error-500 ml-0.5">*</span>}
                 </Label>
@@ -35,6 +37,7 @@ export function Input({ label, placeholder, error, isRequired, required, ...prop
                     'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50',
                     // Error state
                     error && 'border-error-500 focus:ring-error-500/20 focus:border-error-600',
+                    inputClassName,
                 )}
             />
             {error && <p className="text-xs text-error-600">{error}</p>}

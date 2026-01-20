@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 
 import heroBackgroundImage from '../../images/first_section.png';
 import Layout from '../components/layout/Layout';
+import ContactSection from '../components/services/ContactSection';
 import FaqSection from '../components/services/FaqSection';
 import MaintenanceSection from '../components/services/MaintenanceSection';
 import OurServicesSection from '../components/services/OurServicesSection';
@@ -32,6 +33,7 @@ export default function Services() {
                 <RepairsSection />
                 <TestimonialsSection />
                 <FaqSection />
+                <ContactSection />
             </div>
         </Layout>
     );

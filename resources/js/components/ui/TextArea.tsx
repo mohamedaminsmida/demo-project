@@ -6,13 +6,15 @@ export interface TextAreaProps extends TextFieldProps {
     placeholder?: string;
     rows?: number;
     error?: string;
+    labelClassName?: string;
+    textareaClassName?: string;
 }
 
-export function TextArea({ label, placeholder, rows = 3, error, ...props }: TextAreaProps) {
+export function TextArea({ label, placeholder, rows = 3, error, labelClassName, textareaClassName, ...props }: TextAreaProps) {
     return (
         <TextField {...props} className="group flex flex-col gap-1.5">
             {label && (
-                <Label className="text-sm font-medium text-gray-900 cursor-default">
+                <Label className={cx('text-sm font-medium text-gray-900 cursor-default', labelClassName)}>
                     {label}
                     {props.isRequired && <span className="text-error-500 ml-0.5">*</span>}
                 </Label>
@@ -35,6 +37,7 @@ export function TextArea({ label, placeholder, rows = 3, error, ...props }: Text
                     'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50',
                     // Error state
                     error && 'border-error-500 focus:ring-error-500/20 focus:border-error-600',
+                    textareaClassName,
                 )}
             />
             {error && <p className="text-xs text-error-600">{error}</p>}

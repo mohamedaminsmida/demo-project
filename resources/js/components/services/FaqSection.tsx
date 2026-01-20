@@ -97,11 +97,11 @@ export default function FaqSection() {
                     </p>
                 </div>
 
-                <div className="flex w-full max-w-[760px] flex-col gap-4">
+                <div className="flex w-full max-w-[1000px] flex-col gap-4">
                     {allItems.map((item) => {
                         const isOpen = item.id === openItemId;
                         return (
-                            <div key={item.id} className="rounded-2xl border border-slate-200 bg-white transition hover:border-slate-300">
+                            <div key={item.id} className="rounded-2xl border border-slate-200 bg-white transition hover:border-red-700">
                                 <button
                                     type="button"
                                     onClick={() => setOpenItemId(isOpen ? '' : item.id)}
