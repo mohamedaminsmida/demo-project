@@ -17,6 +17,7 @@ class ServiceRequirement extends Model
         'label',
         'key',
         'type',
+        'price',
         'options',
         'is_required',
         'validations',
@@ -30,6 +31,7 @@ class ServiceRequirement extends Model
         'validations' => 'array',
         'is_required' => 'boolean',
         'sort_order' => 'integer',
+        'price' => 'decimal:2',
     ];
 
     protected static function booted(): void

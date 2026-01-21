@@ -197,7 +197,7 @@ const en = {
             ],
         },
         privacy: {
-            line: 'Privacy Policy – © {year} Luque Tires',
+            line: 'Privacy Policy © {year} Luque Tires',
             link: 'Privacy Policy',
         },
     },

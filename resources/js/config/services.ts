@@ -14,6 +14,7 @@ export type ServiceRequirementType =
 export interface ServiceRequirementOption {
     label: string;
     value: string;
+    price?: number;
 }
 
 export interface ServiceRequirement {
@@ -21,6 +22,7 @@ export interface ServiceRequirement {
     label: string;
     key: string;
     type: ServiceRequirementType;
+    price?: number;
     options?: ServiceRequirementOption[] | null;
     isRequired?: boolean;
     validations?: Record<string, string | number | boolean> | null;

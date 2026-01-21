@@ -10,6 +10,7 @@ type LayoutProps = PropsWithChildren<{
     boxed?: boolean;
     backgroundColorClass?: string;
     contentBackgroundClass?: string;
+    showFooter?: boolean;
 }>;
 
 export default function Layout({
@@ -18,6 +19,7 @@ export default function Layout({
     boxed = true,
     backgroundColorClass = 'bg-[#050505]',
     contentBackgroundClass = 'bg-white',
+    showFooter = true,
 }: LayoutProps) {
     const [isMounted, setIsMounted] = useState(false);
 
@@ -44,7 +46,7 @@ export default function Layout({
                     >
                         {boxed ? (
                             <div
-                                className={`rounded-3xl border border-white/80 ${contentBackgroundClass} p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]`}
+                                className={`rounded-none border border-white/80 md:rounded-md ${contentBackgroundClass} p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]`}
                             >
                                 {isMounted ? (
                                     children
@@ -59,11 +61,11 @@ export default function Layout({
                         ) : isMounted ? (
                             children
                         ) : (
-                            <div className="mx-auto my-12 h-64 w-full max-w-4xl animate-pulse rounded-3xl bg-white/70" />
+                            <div className="mx-auto my-12 h-64 w-full max-w-4xl animate-pulse rounded-none bg-white/70" />
                         )}
                     </main>
 
-                    <Footer />
+                    {showFooter ? <Footer /> : null}
                 </div>
             </div>
         </LocaleProvider>

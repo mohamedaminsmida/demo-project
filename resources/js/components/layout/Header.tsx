@@ -15,6 +15,8 @@ export default function Header() {
     const pathname = url.split('?')[0];
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    const isBookingWizard = pathname === '/appointment';
+
     const navLinks = useMemo(
         () => [
             { label: localeContent.nav.home, href: '/', isActive: pathname === '/' },
@@ -31,14 +33,33 @@ export default function Header() {
             <div className="mx-auto w-full max-w-5xl px-2 py-0.5 text-white md:px-6 md:py-1">
                 {/* Mobile: burger at start, logo centered, language switcher at end */}
                 <div className="relative flex min-h-[3.5rem] items-center justify-between gap-3 md:hidden">
-                    <button
-                        type="button"
-                        className="flex h-12 w-12 items-center justify-center"
-                        onClick={() => setIsMenuOpen(true)}
-                        aria-label="Open menu"
-                    >
-                        <img src={burgerIcon} alt="Open menu" className="h-7 w-7 brightness-0 invert" />
-                    </button>
+                    {isBookingWizard ? (
+                        <button
+                            type="button"
+                            className="flex h-12 w-12 items-center justify-center text-green-700"
+                            onClick={() => window.history.back()}
+                            aria-label="Go back"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-7 w-7">
+                                <path
+                                    d="M19 12H5M5 12L12 5M5 12L12 19"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            </svg>
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="flex h-12 w-12 items-center justify-center"
+                            onClick={() => setIsMenuOpen(true)}
+                            aria-label="Open menu"
+                        >
+                            <img src={burgerIcon} alt="Open menu" className="h-7 w-7 brightness-0 invert" />
+                        </button>
+                    )}
 
                     <Link href="/" className="absolute top-1 left-1/2 -translate-x-1/2">
                         <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto object-contain" />
@@ -97,45 +118,50 @@ export default function Header() {
             </div>
 
             {/* Mobile sidebar overlay */}
-            <div className={`fixed inset-0 z-50 transition ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} aria-hidden={!isMenuOpen}>
-                {/* Dark overlay to close menu on click */}
-                <button
-                    type="button"
-                    className={`absolute inset-0 bg-black/70 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                    aria-label="Close menu"
-                />
-                {/* Sliding drawer with nav links */}
-                <aside
-                    className={`absolute top-0 left-0 flex h-full w-72 flex-col gap-8 bg-[#2b2b2b] px-6 py-6 shadow-2xl transition-transform duration-300 ${
-                        isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
+            {!isBookingWizard ? (
+                <div
+                    className={`fixed inset-0 z-50 transition ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+                    aria-hidden={!isMenuOpen}
                 >
-                    <div className="flex items-center justify-between">
-                        <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto" />
-                        <button
-                            type="button"
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-2xl text-white"
-                            onClick={() => setIsMenuOpen(false)}
-                            aria-label="Close menu"
-                        >
-                            ×
-                        </button>
-                    </div>
+                    {/* Dark overlay to close menu on click */}
+                    <button
+                        type="button"
+                        className={`absolute inset-0 bg-black/70 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        aria-label="Close menu"
+                    />
+                    {/* Sliding drawer with nav links */}
+                    <aside
+                        className={`absolute top-0 left-0 flex h-full w-72 flex-col gap-8 bg-[#2b2b2b] px-6 py-6 shadow-2xl transition-transform duration-300 ${
+                            isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto" />
+                            <button
+                                type="button"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-2xl text-white"
+                                onClick={() => setIsMenuOpen(false)}
+                                aria-label="Close menu"
+                            >
+                                ×
+                            </button>
+                        </div>
 
-                    <nav className="flex flex-col gap-6 text-base font-medium">
-                        {navLinks.map((link) => {
-                            const baseClass = link.isActive ? 'font-semibold text-[#a40d0d]' : 'text-white transition hover:text-[#a40d0d]/80';
+                        <nav className="flex flex-col gap-6 text-base font-medium">
+                            {navLinks.map((link) => {
+                                const baseClass = link.isActive ? 'font-semibold text-[#a40d0d]' : 'text-white transition hover:text-[#a40d0d]/80';
 
-                            return (
-                                <Link key={link.label} href={link.href} className={baseClass} onClick={() => setIsMenuOpen(false)}>
-                                    {link.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
-                </aside>
-            </div>
+                                return (
+                                    <Link key={link.label} href={link.href} className={baseClass} onClick={() => setIsMenuOpen(false)}>
+                                        {link.label}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </aside>
+                </div>
+            ) : null}
         </header>
     );
 }

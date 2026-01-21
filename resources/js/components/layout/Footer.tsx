@@ -144,21 +144,21 @@ export default function Footer() {
     const workingHoursToRender = groupedWorkingHours ?? footer.workingHours.items;
 
     return (
-        <footer className="border-t border-slate-200 bg-white text-slate-900">
+        <footer className="border-t border-slate-200 bg-white text-slate-700">
             <div className="mx-auto w-full max-w-[1280px] px-4 py-12 sm:px-6 lg:px-10">
                 <div className="grid gap-8 border-b border-slate-200 pb-10 lg:grid-cols-2">
                     <div className="space-y-6">
                         <img src={logoBlack} alt="Luque Tires" className="-mt-2 h-24 w-auto object-contain lg:-mt-3 lg:h-28" />
-                        <p className="text-sm leading-relaxed text-slate-900">{footerDescription || footer.about}</p>
+                        <p className="text-sm leading-relaxed text-slate-700 lg:text-base">{footerDescription || footer.about}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 text-sm sm:gap-8 md:grid-cols-3 md:gap-10 lg:gap-4">
+                    <div className="grid grid-cols-2 gap-6 text-sm text-slate-700 sm:gap-8 md:grid-cols-3 md:gap-8 lg:gap-8 lg:text-base">
                         <div className="space-y-4">
-                            <p className="text-md font-semibold text-slate-900">{footer.contact.title}</p>
+                            <p className="text-sm font-semibold text-slate-800 lg:text-base">{footer.contact.title}</p>
                             <ul className="space-y-1">
                                 <li>{footerPhone}</li>
                                 <li>
-                                    <a href={`mailto:${footerEmail}`} className="hover:text-red-600">
+                                    <a href={`mailto:${footerEmail}`} className="text-slate-700 hover:text-red-600">
                                         {footerEmail}
                                     </a>
                                 </li>
@@ -168,7 +168,7 @@ export default function Footer() {
                                 {footerFacebook && (
                                     <a
                                         href={footerFacebook}
-                                        className="text-slate-900 transition hover:text-red-600"
+                                        className="text-slate-700 transition hover:text-red-600"
                                         aria-label="Facebook"
                                         target="_blank"
                                         rel="noreferrer"
@@ -179,7 +179,7 @@ export default function Footer() {
                                 {footerInstagram && (
                                     <a
                                         href={footerInstagram}
-                                        className="text-slate-900 transition hover:text-red-600"
+                                        className="text-slate-700 transition hover:text-red-600"
                                         aria-label="Instagram"
                                         target="_blank"
                                         rel="noreferrer"
@@ -191,11 +191,11 @@ export default function Footer() {
                         </div>
 
                         <div className="space-y-4">
-                            <p className="text-sm font-semibold text-slate-900">{footer.quickLinks.title}</p>
+                            <p className="text-sm font-semibold text-slate-800 lg:text-base">{footer.quickLinks.title}</p>
                             <ul className="space-y-1">
                                 {quickLinks.map((link) => (
                                     <li key={link.label}>
-                                        <a href={link.href} className="hover:text-red-600">
+                                        <a href={link.href} className="text-slate-700 hover:text-red-600">
                                             {link.label}
                                         </a>
                                     </li>
@@ -203,16 +203,13 @@ export default function Footer() {
                             </ul>
                         </div>
 
-                        <div className="space-y-4">
-                            <p className="text-sm font-semibold text-slate-900">{footer.workingHours.title}</p>
+                        <div className="space-y-4 md:-ml-10">
+                            <p className="text-sm font-semibold text-slate-800 lg:text-base">{footer.workingHours.title}</p>
                             <ul className="space-y-1">
                                 {workingHoursToRender.map((item) => (
-                                    <li
-                                        key={item.label}
-                                        className="flex flex-col gap-1 text-slate-700 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
-                                    >
+                                    <li key={item.label} className="flex flex-col gap-1 text-slate-700 sm:flex-row sm:items-center sm:gap-4">
                                         <span className="whitespace-nowrap">{item.label}</span>
-                                        <span className="font-medium whitespace-nowrap text-slate-900 sm:text-right">{item.value}</span>
+                                        <span className="font-medium whitespace-nowrap text-slate-800 sm:text-right">{item.value}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -220,13 +217,13 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="flex flex-col items-center justify-between gap-4 pt-6 text-xs text-slate-900 sm:flex-row">
+                <div className="flex flex-col items-center justify-between gap-4 pt-6 text-xs text-slate-700 sm:flex-row lg:text-sm">
                     <p>{footer.privacy.line.replace('{year}', String(currentYear))}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-900">
+                    <div className="flex items-center gap-2 text-xs text-slate-700 lg:text-sm">
                         <span>Powered by</span>
                         <img src={strivehawkLogo} alt="Strivehawk" className="h-6 w-auto" />
                     </div>
-                    <a href="#privacy" className="text-slate-900 hover:text-red-600">
+                    <a href="/privacy-policy" className="text-slate-700 hover:text-red-600">
                         {footer.privacy.link}
                     </a>
                 </div>

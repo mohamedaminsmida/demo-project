@@ -1,3 +1,5 @@
+import ServiceCtaButton from './ServiceCtaButton';
+
 export default function LocationSection() {
     return (
         <section className="bg-white py-0">
@@ -10,6 +12,16 @@ export default function LocationSection() {
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
+                />
+            </div>
+            <div className="flex justify-center bg-[#f2f0ee] py-6">
+                <ServiceCtaButton
+                    label="Google Map"
+                    href="https://maps.google.com/?q=Luque%20Tires"
+                    variant="filled"
+                    className="text-base"
+                    target="_blank"
+                    rel="noreferrer"
                 />
             </div>
         </section>

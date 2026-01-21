@@ -8,9 +8,17 @@ type OurServicesSectionProps = {
     title?: string;
     description?: string;
     showButton?: boolean;
+    showDescription?: boolean;
+    titleClassName?: string;
 };
 
-export default function OurServicesSection({ title, description, showButton = true }: OurServicesSectionProps) {
+export default function OurServicesSection({
+    title,
+    description,
+    showButton = true,
+    showDescription = true,
+    titleClassName,
+}: OurServicesSectionProps) {
     const { content } = useLocale();
     const ourServicesContent = content?.services?.ourServices;
     const displayTitle = title ?? ourServicesContent?.title ?? 'Our Services';
@@ -33,10 +41,14 @@ export default function OurServicesSection({ title, description, showButton = tr
         >
             <div className="relative mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10">
                 <div className="mx-auto flex max-w-[520px] flex-col items-center gap-4 text-center lg:-translate-y-6">
-                    <h2 className="text-[clamp(1.5rem,3vw,2.7rem)] leading-tight font-bold uppercase lg:text-[clamp(1.8rem,2.8vw,3.1rem)]">
+                    <h2
+                        className={`text-[clamp(1.5rem,3vw,2.7rem)] leading-tight font-bold uppercase lg:text-[clamp(1.8rem,2.8vw,3.1rem)] ${
+                            titleClassName ?? ''
+                        }`}
+                    >
                         {displayTitle}
                     </h2>
-                    <p className="text-sm text-white/90 lg:text-lg">{displayDescription}</p>
+                    {showDescription && <p className="text-sm text-white/90 lg:text-lg">{displayDescription}</p>}
                     {showButton && (
                         <ServiceCtaButton
                             onClick={(event) => {

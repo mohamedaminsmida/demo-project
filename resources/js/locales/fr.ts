@@ -197,7 +197,7 @@ const fr = {
             ],
         },
         privacy: {
-            line: 'Politique de confidentialité – © {year} Luque Tires',
+            line: 'Politique de confidentialité © {year} Luque Tires',
             link: 'Politique de confidentialité',
         },
     },

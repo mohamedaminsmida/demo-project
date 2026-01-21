@@ -11,6 +11,8 @@ type ServiceCtaButtonProps = {
     className?: string;
     variant?: 'default' | 'filled';
     onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+    target?: string;
+    rel?: string;
 };
 
 export default function ServiceCtaButton({
@@ -19,6 +21,8 @@ export default function ServiceCtaButton({
     className,
     variant = 'default',
     onClick,
+    target,
+    rel,
 }: ServiceCtaButtonProps) {
     const { content } = useLocale();
     const label = overrideLabel ?? content?.cta?.serviceButton ?? 'Explore tire services';
@@ -32,6 +36,8 @@ export default function ServiceCtaButton({
         <a
             href={href}
             className={clsx(baseClasses, className)}
+            target={target}
+            rel={rel}
             onClick={(event) => {
                 if (onClick) {
                     onClick(event);

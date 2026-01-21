@@ -42,6 +42,13 @@ class RequirementsRelationManager extends RelationManager
                     ->required()
                     ->live()
                     ->default('text'),
+                Forms\Components\TextInput::make('price')
+                    ->label('Price')
+                    ->numeric()
+                    ->minValue(0)
+                    ->prefix('$')
+                    ->visible(fn (callable $get) => in_array($get('type'), ['checkbox', 'toggle'], true))
+                    ->helperText('Optional additional charge when enabled.'),
                 Forms\Components\TextInput::make('validations.number_max_length')
                     ->label('Max Digits')
                     ->numeric()
@@ -62,9 +69,14 @@ class RequirementsRelationManager extends RelationManager
                         Forms\Components\TextInput::make('label')
                             ->required(),
                         Forms\Components\TextInput::make('value')
-                            ->required(),
+                            ->required()
+                            ->distinct(),
+                        Forms\Components\TextInput::make('price')
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('$'),
                     ])
-                    ->columns(2)
+                    ->columns(3)
                     ->addActionLabel('Add Option')
                     ->visible(fn (callable $get) => in_array($get('type'), ['select', 'multiselect', 'radio'], true)),
                 Forms\Components\Toggle::make('is_required')

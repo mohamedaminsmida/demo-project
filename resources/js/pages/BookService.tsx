@@ -295,9 +295,9 @@ interface BookServiceProps {
 export default function BookService({ serviceSlug }: BookServiceProps) {
     const heroBackground = (
         <div
-            className="h-[320px] w-full bg-cover bg-center bg-no-repeat opacity-90"
+            className="h-screen w-full bg-cover bg-center bg-no-repeat"
             style={{
-                backgroundImage: `linear-gradient(180deg, rgba(5,5,5,0.92), rgba(5,5,5,0.85)), url(${heroBackgroundImage})`,
+                backgroundImage: `url(${heroBackgroundImage})`,
             }}
         />
     );
@@ -527,7 +527,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Service not found
     if (!service) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
+            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
                 <Head title="Book Service" />
                 <div className="py-12 text-center">
                     <h1 className="mb-4 text-2xl font-bold text-gray-900">Service Not Found</h1>
@@ -546,7 +546,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Loading state - show full-screen loader while submitting
     if (isSubmitting) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
+            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
                 <Head title="Submitting..." />
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="rounded-2xl bg-white p-8 shadow-2xl">
@@ -564,7 +564,13 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Success state
     if (submitSuccess) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-[#f5f5f5f5]" background={heroBackground}>
+            <Layout
+                boxed={true}
+                backgroundColorClass="bg-gray-400"
+                contentBackgroundClass="bg-[#f5f5f5f5]"
+                background={heroBackground}
+                showFooter={false}
+            >
                 <Head title="Booking Confirmed" />
                 <div className="py-12 text-center">
                     <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
@@ -597,7 +603,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     }
 
     return (
-        <Layout boxed={true} backgroundColorClass="bg-[#f5f5f5f5]" contentBackgroundClass="bg-white" background={heroBackground}>
+        <Layout boxed={true} backgroundColorClass="bg-gray-200" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
             <Head title={`Book ${service.name}`} />
 
             <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit} canProceed={canProceed}>
@@ -614,7 +620,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     )}
 
                     <div className="mt-25 mb-6">
-                        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">Select Services</h2>
+                        <h2 className="mb-6 text-center text-4xl font-bold text-gray-900">Select Services</h2>
                         {servicesLoading ? (
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>

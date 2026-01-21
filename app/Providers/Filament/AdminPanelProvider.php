@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -34,7 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->darkMode(false)
             ->colors([
-                'primary' => Color::hex('#B22222'), // deep red from red-arrow icon
+                'primary' => Color::hex('#bb1010ff'), // deep red from red-arrow icon
                 'success' => Color::hex('#15803D'), // green from check icon
             ])
             ->brandLogo(fn () => new HtmlString(
@@ -67,6 +68,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
              ->plugins([
+                 FilamentShieldPlugin::make(),
                 AuthUIEnhancerPlugin::make()
                 ->formPanelPosition('right')
                 ->mobileFormPanelPosition('bottom')
