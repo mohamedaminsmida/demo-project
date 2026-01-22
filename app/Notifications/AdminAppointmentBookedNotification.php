@@ -8,32 +8,22 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 
-class AppointmentConfirmationNotification extends Notification
+class AdminAppointmentBookedNotification extends Notification
 {
     use Queueable, ShouldQueue;
 
-    /**
-     * Create a new notification instance.
-     */
     public function __construct(
         private readonly ServiceAppointment $appointment
     ) {}
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return ['mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail(object $notifiable): MailMessage
     {
         $appointment = $this->appointment;
@@ -47,13 +37,20 @@ class AppointmentConfirmationNotification extends Notification
         $heroImage = config('mail.hero_image')
             ?? Vite::asset('resources/images/FIRST.jpg');
 
+        $manageUrl = Route::has('filament.admin.resources.service-appointments.view')
+            ? route('filament.admin.resources.service-appointments.view', ['record' => $appointment])
+            : url('/admin/service-appointments/' . $appointment->id);
+
         return (new MailMessage)
-            ->subject('Appointment Confirmed - ' . config('app.name'))
+            ->subject('New Appointment Booked - ' . config('app.name'))
             ->view('emails.appointment-confirmation', [
-                'greetingName' => $appointment->customer_name,
-                'introText' => 'Your appointment has been confirmed. Below are your appointment details.',
+                'greetingName' => 'Luque Tires Team',
+                'introText' => 'A new service appointment has been booked and is ready for your review.',
                 'detailsHeading' => 'Appointment Details',
                 'customerName' => $appointment->customer_name,
+                'customerEmail' => $appointment->customer_email,
+                'customerPhone' => $appointment->customer_phone,
+                'showCustomerDetails' => true,
                 'companyName' => config('app.name'),
                 'services' => $serviceNames ?: 'General Service',
                 'appointmentDate' => $date,
@@ -61,27 +58,10 @@ class AppointmentConfirmationNotification extends Notification
                 'vehicleInfo' => $vehicleInfo,
                 'supportPhone' => config('app.support_phone', '(555) 123-4567'),
                 'shopAddress' => config('app.shop_address', '123 Main Street, Your City, ST 00000'),
+                'actionUrl' => $manageUrl,
+                'actionLabel' => 'See Details',
                 'heroImage' => $heroImage,
-                'customerEmail' => $appointment->customer_email,
-                'customerPhone' => $appointment->customer_phone,
-                'showCustomerDetails' => false,
-                'actionUrl' => null,
-                'actionLabel' => null,
                 'estimatedPrice' => null,
             ]);
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'appointment_id' => $this->appointment->id,
-            'appointment_date' => $this->appointment->appointment_date,
-            'appointment_time' => $this->appointment->appointment_time,
-        ];
     }
 }

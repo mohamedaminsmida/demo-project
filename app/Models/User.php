@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'zip_code',
         'sms_notifications',
         'email_notifications',
+        'avatar_url',
     ];
 
     /**
@@ -54,6 +56,17 @@ class User extends Authenticatable
             'sms_notifications' => 'boolean',
             'email_notifications' => 'boolean',
         ];
+    }
+
+    /**
+     * Get the avatar URL attribute.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $rawAvatarUrl = $this->getRawOriginal('avatar_url');
+        return $rawAvatarUrl 
+            ? Storage::url($rawAvatarUrl)
+            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
     }
 
 }

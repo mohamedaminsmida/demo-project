@@ -353,14 +353,26 @@ class AppointmentController extends Controller
 
             DB::commit();
 
-            // Send confirmation email using Laravel Notification
+            // Send booking emails using Laravel Notifications
+            $appointment->load(['services', 'vehicle']);
+
+            $adminEmail = Setting::query()->first()?->footer_email
+                ?: config('mail.from.address');
+
+            if ($adminEmail) {
+                try {
+                    \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                        ->notify(new \App\Notifications\AdminAppointmentBookedNotification($appointment));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send admin booking email to ' . $adminEmail . ': ' . $e->getMessage());
+                }
+            }
+
             try {
-                $appointment->load(['services', 'vehicle']);
                 \Illuminate\Support\Facades\Notification::route('mail', $appointment->customer_email)
                     ->notify(new \App\Notifications\AppointmentConfirmationNotification($appointment));
             } catch (\Exception $e) {
-                // Log email error but don't fail the appointment creation
-                Log::warning('Failed to send appointment confirmation email: ' . $e->getMessage());
+                Log::warning('Failed to send customer booking email to ' . $appointment->customer_email . ': ' . $e->getMessage());
             }
 
             return response()->json([

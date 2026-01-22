@@ -46,6 +46,11 @@ class UserResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create'),
+                        Forms\Components\Select::make('roles')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
                     ])
                     ->columns(2),
 
@@ -62,16 +67,6 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('zip_code')
                             ->maxLength(20),
-                    ])
-                    ->columns(2),
-
-                Components\Section::make('Notification Preferences')
-                    ->schema([
-                        Forms\Components\Toggle::make('sms_notifications')
-                            ->label('SMS Notifications'),
-                        Forms\Components\Toggle::make('email_notifications')
-                            ->label('Email Notifications')
-                            ->default(true),
                     ])
                     ->columns(2),
             ]);
