@@ -42,13 +42,12 @@ class ServiceResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
-                        Forms\Components\Select::make('category')
-                            ->options([
-                                'tires' => 'Tires & Wheels',
-                                'maintenance' => 'Maintenance',
-                                'repairs' => 'Repairs',
-                            ])
-                            ->required(),
+                        Forms\Components\Select::make('service_category_id')
+                            ->label('Service Category')
+                            ->relationship('serviceCategory', 'name')
+                            ->searchable()
+                            ->required()
+                            ->preload(),
                         Forms\Components\Textarea::make('description')
                             ->required()
                             ->rows(3)
@@ -108,6 +107,9 @@ class ServiceResource extends Resource
                         'success' => 'maintenance',
                         'warning' => 'repairs',
                     ]),
+                Tables\Columns\TextColumn::make('serviceCategory.name')
+                    ->label('Service Category')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('base_price')
                     ->money('USD')
                     ->sortable(),
@@ -129,6 +131,9 @@ class ServiceResource extends Resource
                         'maintenance' => 'Maintenance',
                         'repairs' => 'Repairs',
                     ]),
+                Tables\Filters\SelectFilter::make('service_category_id')
+                    ->label('Service Category')
+                    ->relationship('serviceCategory', 'name'),
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active'),
             ])

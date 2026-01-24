@@ -14,7 +14,7 @@ import VehicleInfoForm from '../components/booking/VehicleInfoForm';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
-import { getServiceBySlug, type ServiceConfig } from '../config/services';
+import { getServiceBySlug, type ServiceCategory, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
 import type { BookingState, CustomerInfo } from '../types/booking';
@@ -634,6 +634,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                                     description: service.description,
                                     backgroundImage: service.image || (index % 2 === 0 ? firstServiceImage : secondServiceImage),
                                     price: service.basePrice,
+                                    category: service.category as ServiceCategory,
                                 }))}
                                 selectedServiceIds={selectedServiceIds}
                                 onServiceSelect={(serviceId) => {

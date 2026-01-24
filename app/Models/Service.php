@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -15,6 +16,7 @@ class Service extends Model
         'slug',
         'name',
         'category',
+        'service_category_id',
         'description',
         'details',
         'image',
@@ -45,5 +47,10 @@ class Service extends Model
     {
         return $this->hasMany(ServiceRequirement::class)
             ->orderBy('sort_order');
+    }
+
+    public function serviceCategory(): BelongsTo
+    {
+        return $this->belongsTo(ServiceCategory::class);
     }
 }
