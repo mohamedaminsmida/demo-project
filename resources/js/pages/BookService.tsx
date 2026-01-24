@@ -380,8 +380,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const canProceed = useCallback((): boolean => {
         switch (currentStep) {
             case 1:
-                // Service Summary
-                return true;
+                // Service Summary - require at least one service selected
+                return selectedServiceIds.length > 0;
             case 2:
                 // Appointment
                 return !!(state.appointment.date && state.appointment.time);
@@ -420,7 +420,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             default:
                 return false;
         }
-    }, [currentStep, state, service]);
+    }, [currentStep, state, service, selectedServiceIds, dbServices]);
 
     const handleNext = () => {
         if (currentStep < 6 && canProceed()) {

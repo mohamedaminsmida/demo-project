@@ -1,5 +1,5 @@
 import { ChevronDown } from '@untitledui/icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AnimatedList from './AnimatedList';
 
 // API types (matching your backend models)
@@ -81,6 +81,39 @@ export default function ServicesCards({ categories: propCategories, className = 
 
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
+    // Sort categories: if a service is selected, put its category first and expand it
+    const sortedCategories = useMemo(() => {
+        if (!categories || !categories.length) return [];
+
+        const selectedServiceId = selectedServiceIds?.[0];
+        if (!selectedServiceId) return categories;
+
+        const selectedService = categories.flatMap((cat) => cat.services || []).find((s) => s.id.toString() === selectedServiceId);
+
+        if (!selectedService?.service_category_id) return categories;
+
+        // Find the category by service_category_id
+        const selectedCategory = categories.find((cat) => cat.id === selectedService.service_category_id);
+        if (!selectedCategory) return categories;
+
+        const selectedCategorySlug = selectedCategory.slug;
+
+        // Put selected category first
+        const selected = categories.find((cat) => cat.slug === selectedCategorySlug);
+        const others = categories.filter((cat) => cat.slug !== selectedCategorySlug);
+
+        const result = selected ? [selected, ...others] : categories;
+
+        // Auto-expand the selected category
+        setExpandedCategories((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(selectedCategorySlug);
+            return newSet;
+        });
+
+        return result;
+    }, [categories, selectedServiceIds]);
+
     if (loading) return <div className="p-10 text-center">Loading services...</div>;
     if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
     if (!categories?.length) return <div className="p-10 text-center">No service categories found.</div>;
@@ -98,7 +131,7 @@ export default function ServicesCards({ categories: propCategories, className = 
     return (
         <section className={`px-6 py-10 ${className}`}>
             <div className="mx-auto max-w-7xl space-y-6">
-                {categories.map((category) => {
+                {sortedCategories.map((category) => {
                     const isExpanded = expandedCategories.has(category.slug);
                     const categoryServices = category.services?.filter((s) => s.is_active) ?? [];
 
@@ -110,13 +143,13 @@ export default function ServicesCards({ categories: propCategories, className = 
                                     onClick={() => toggleCategory(category.slug)}
                                 >
                                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                        <div className="text-left">
-                                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{category.name}</h2>
-                                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                                {categoryServices.length} service{categoryServices.length !== 1 ? 's' : ''}
-                                            </p>
+                                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{category.name}</h2>
+                                        <div className="flex items-center gap-3">
+                                            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                {categoryServices.length} services
+                                            </span>
+                                            <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                         </div>
-                                        <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                     </div>
                                 </button>
                             </div>
