@@ -10,6 +10,7 @@ use App\Models\ServiceAppointment;
 use App\Models\ServiceRequirementValue;
 use App\Models\Setting;
 use App\Models\Vehicle;
+use App\Services\EmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -164,7 +165,7 @@ class AppointmentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $existingCustomerId = Customer::where('phone', $request->input('customer.phone'))->value('id');
+        $existingCustomerId = Customer::where('email', $request->input('customer.email'))->value('id');
         $existingVehicleId = Vehicle::where('vin', $request->input('vehicle.vin'))->value('id');
 
         $validator = Validator::make($request->all(), [
@@ -192,9 +193,13 @@ class AppointmentController extends Controller
                 'string',
                 'max:20',
                 'regex:/^\+?[0-9\-()\s]{7,20}$/',
-                Rule::unique('customers', 'phone')->ignore($existingCustomerId),
             ],
-            'customer.email' => 'required|email:rfc,dns|max:255',
+            'customer.email' => [
+                'required',
+                'email:rfc,dns',
+                'max:255',
+                Rule::unique('customers', 'email')->ignore($existingCustomerId),
+            ],
             'customer.address' => 'required|string|min:5|max:255',
             'customer.sms_updates' => 'nullable|boolean',
         ]);
@@ -277,10 +282,10 @@ class AppointmentController extends Controller
 
             $customerData = $request->input('customer');
             $customer = Customer::updateOrCreate([
-                'phone' => $customerData['phone'],
-            ], [
-                'name' => $customerData['full_name'],
                 'email' => $customerData['email'],
+            ], [
+                'phone' => $customerData['phone'],
+                'name' => $customerData['full_name'],
                 'address' => $customerData['address'] ?? null,
             ]);
 
@@ -300,14 +305,22 @@ class AppointmentController extends Controller
             ];
 
             if ($vehicleVin) {
+                // If VIN exists, use it as unique identifier
                 $vehicle = Vehicle::firstOrCreate(['vin' => $vehicleVin], $vehicleAttributes);
-
+                
                 if ($vehicle->customer_id !== $customer->id) {
                     $vehicle->customer_id = $customer->id;
                     $vehicle->save();
                 }
             } else {
-                $vehicle = Vehicle::create($vehicleAttributes);
+                // If no VIN, use combination of make, model, year for uniqueness
+                $vehicle = Vehicle::firstOrCreate([
+                    'customer_id' => $customer->id,
+                    'brand' => $vehicleData['make'],
+                    'model' => $vehicleData['model'],
+                    'year' => $vehicleData['year'],
+                    'vin' => null,  // Explicitly check for null VIN
+                ], $vehicleAttributes);
             }
 
             // Calculate estimated price from selected services
@@ -353,27 +366,50 @@ class AppointmentController extends Controller
 
             DB::commit();
 
-            // Send booking emails using Laravel Notifications
+            // Send booking emails using Brevo Email Service
             $appointment->load(['services', 'vehicle']);
+            
+            Log::info('Preparing to send appointment emails', [
+                'appointment_id' => $appointment->id,
+                'customer_email' => $appointment->customer_email,
+                'customer_name' => $appointment->customer_name,
+            ]);
+            
+            $emailService = new EmailService();
+            
+            $adminEmail = null;
+            $adminEmailSource = null;
+            
+            // Try to find a user with 'admin' role
+            $adminUser = \App\Models\User::role('admin')->first();
+            
+            if ($adminUser) {
+                $adminEmail = $adminUser->email;
+                $adminEmailSource = 'user.role(admin)';
+            } else {
+                // Fallback to config-based admin email
+                $adminEmail = config('services.brevo.admin_email')
+                    ?: Setting::query()->first()?->footer_email
+                    ?: config('mail.from.address');
+                $adminEmailSource = config('services.brevo.admin_email') ? 'services.brevo.admin_email' : (Setting::query()->first()?->footer_email ? 'settings.footer_email' : 'mail.from.address');
+            }
 
-            $adminEmail = Setting::query()->first()?->footer_email
-                ?: config('mail.from.address');
-
+            // Send email to admin
             if ($adminEmail) {
-                try {
-                    \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-                        ->notify(new \App\Notifications\AdminAppointmentBookedNotification($appointment));
-                } catch (\Exception $e) {
-                    Log::warning('Failed to send admin booking email to ' . $adminEmail . ': ' . $e->getMessage());
-                }
+                Log::info('Sending admin notification email', [
+                    'admin_email' => $adminEmail,
+                    'admin_email_source' => $adminEmailSource,
+                ]);
+                $adminEmailSent = $emailService->sendAppointmentNotificationToAdmin($appointment, $adminEmail);
+                Log::info('Admin email result', ['sent' => $adminEmailSent]);
+            } else {
+                Log::warning('No admin email configured, skipping admin notification');
             }
 
-            try {
-                \Illuminate\Support\Facades\Notification::route('mail', $appointment->customer_email)
-                    ->notify(new \App\Notifications\AppointmentConfirmationNotification($appointment));
-            } catch (\Exception $e) {
-                Log::warning('Failed to send customer booking email to ' . $appointment->customer_email . ': ' . $e->getMessage());
-            }
+            // Send confirmation email to customer
+            Log::info('Sending customer confirmation email');
+            $customerEmailSent = $emailService->sendAppointmentConfirmation($appointment);
+            Log::info('Customer email result', ['sent' => $customerEmailSent]);
 
             return response()->json([
                 'success' => true,

@@ -26,7 +26,8 @@
                     <tr>
                         <td style="padding:12px 40px 20px;color:#111827;">
                             <p style="margin:0 0 12px;font-size:16px;">Hi
-                                <strong>{{ $greetingName ?? 'Luque Tires Team' }}</strong>,</p>
+                                <strong>{{ $greetingName ?? 'Luque Tires Team' }}</strong>,
+                            </p>
                             <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4b5563;">
                                 {{ $introText ?? 'A new service appointment has been booked and is ready for your review.' }}
                             </p>
@@ -44,6 +45,39 @@
                                         <td style="padding:10px 12px;font-weight:600;color:#111827;">{{ $services }}
                                         </td>
                                     </tr>
+                                    @if (!empty($serviceDetails) && is_array($serviceDetails))
+                                        <tr>
+                                            <td
+                                                style="padding:10px 12px;width:35%;text-transform:uppercase;letter-spacing:0.06em;font-size:12px;color:#6b7280;vertical-align:top;">
+                                                Service details</td>
+                                            <td style="padding:10px 12px;color:#111827;">
+                                                <table role="presentation" cellpadding="0" cellspacing="0"
+                                                    style="width:100%;border-collapse:collapse;font-size:14px;color:#111827;">
+                                                    @foreach ($serviceDetails as $serviceDetail)
+                                                        <tr>
+                                                            <td style="padding:6px 0;color:#111827;">
+                                                                {{ $serviceDetail['name'] ?? '' }}
+                                                            </td>
+                                                            <td align="right"
+                                                                style="padding:6px 0;color:#111827;font-weight:600;">
+                                                                ${{ $serviceDetail['price'] ?? '' }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                    @if (!empty($totalPrice))
+                                                        <tr>
+                                                            <td
+                                                                style="padding:10px 0 0;color:#111827;border-top:1px solid #e5e7eb;font-weight:700;">
+                                                                Total</td>
+                                                            <td align="right"
+                                                                style="padding:10px 0 0;color:#0f9d58;border-top:1px solid #e5e7eb;font-weight:800;">
+                                                                ${{ $totalPrice }}</td>
+                                                        </tr>
+                                                    @endif
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     <tr>
                                         <td
                                             style="padding:10px 12px;width:35%;text-transform:uppercase;letter-spacing:0.06em;font-size:12px;color:#6b7280;">
@@ -73,6 +107,16 @@
                                     @endif
                                 </table>
                             </div>
+
+                            @if (!empty($customerNotice))
+                                <div
+                                    style="margin-top:18px;border:1px solid #fecaca;border-radius:18px;padding:16px 18px;background-color:#fee2e2;">
+                                    <p style="margin:0;font-size:14px;line-height:1.6;color:#991b1b;">
+                                        <strong>{{ $customerNoticeTitle ?? 'Please note' }}:</strong>
+                                        {{ $customerNotice }}
+                                    </p>
+                                </div>
+                            @endif
 
                             @if (!empty($showCustomerDetails))
                                 <h3 style="margin:22px 0 16px;font-size:18px;color:#111827;">Customer Contact</h3>

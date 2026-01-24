@@ -12,6 +12,7 @@
         "filament/filament": "^4.5",
         "filament/widgets": "^4.5",
         "guava/calendar": "^2.1",
+        "hofmannsven/laravel-brevo": "^2.1",
         "inertiajs/inertia-laravel": "^2.0",
         "joaopaulolndev/filament-edit-profile": "^2.0",
         "laravel/framework": "^12.0",

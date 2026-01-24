@@ -39,4 +39,11 @@ return [
         'token' => env('MAILTRAP_TOKEN'),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+        'default_sender_name' => env('BREVO_SENDER_NAME', config('app.name')),
+        'default_sender_email' => env('BREVO_SENDER_EMAIL', 'noreply@yourapp.com'),
+        'admin_email' => env('BREVO_ADMIN_EMAIL'),
+    ],
+
 ];

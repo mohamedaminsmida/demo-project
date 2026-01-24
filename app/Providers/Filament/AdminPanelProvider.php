@@ -102,8 +102,8 @@ class AdminPanelProvider extends PanelProvider
                 ->shouldShowEmailForm()
                 ->shouldShowDeleteAccountForm(false)
                 ->shouldShowSanctumTokens()
-                ->shouldShowBrowserSessionsForm()
-                ->shouldShowAvatarForm()
+                ->shouldShowBrowserSessionsForm(false)
+                ->shouldShowAvatarForm(true)
              ])  
             ->favicon(asset('images/logo_black.png'));
     }
