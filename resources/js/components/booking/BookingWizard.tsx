@@ -59,15 +59,6 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
 
     return (
         <div className="space-y-8 overflow-x-hidden pt-6">
-            <div className="mx-auto max-w-5xl px-4">
-                <div className="mb-3 flex items-center justify-between sm:hidden">
-                    <div className="text-sm font-semibold text-gray-900">{currentStepMeta ? currentStepMeta.title : `Step ${currentStep}`}</div>
-                    <div className="text-xs font-medium text-gray-500">
-                        {currentStep}/{STEPS.length}
-                    </div>
-                </div>
-            </div>
-
             <Stepper
                 currentStep={currentStep}
                 onStepChange={(step) => {
@@ -78,9 +69,9 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
                 backButtonText="Back"
                 nextButtonText="Continue"
                 canProceed={canProceed}
-                indicatorContainerClassName="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0"
-                indicatorRowClassName="flex w-max items-start gap-4 scroll-smooth py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-full sm:items-start sm:gap-2"
-                connectorClassName="hidden sm:block"
+                indicatorContainerClassName="-mx-4 px-4 sm:mx-0 sm:px-0"
+                indicatorRowClassName="flex w-full items-start gap-4 py-1 sm:items-start sm:gap-2"
+                connectorClassName=""
                 renderStepIndicator={({ step, currentStep: activeStep, onStepClick }) => {
                     const meta = STEPS.find((s) => s.id === step);
                     if (!meta) return null;

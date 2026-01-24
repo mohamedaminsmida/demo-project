@@ -620,18 +620,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit} canProceed={canProceed}>
                 <div>
                     {serviceLoading ? (
-                        <div className="mb-10 bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12">
+                        <div className="mb-6 bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:mb-10 sm:px-12">
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>
                                 <p className="mt-4 text-gray-600">Loading service details...</p>
                             </div>
                         </div>
                     ) : (
-                        <ServicePreview service={service} className="mb-10" />
+                        <ServicePreview service={service} className="mb-6 sm:mb-10" />
                     )}
 
-                    <div className="mt-25 mb-6">
-                        <h2 className="mb-6 text-center text-4xl font-bold text-gray-900">Select Services</h2>
+                    <div className="mt-8 mb-4 px-0 sm:mt-25 sm:mb-6 sm:px-0">
+                        <h2 className="mb-4 text-center text-4xl font-bold text-gray-900 sm:mb-6">Select Services</h2>
                         {servicesLoading ? (
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>

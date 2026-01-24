@@ -41,12 +41,12 @@ export default function Layout({
 
                     <main
                         className={`w-full flex-1 transition-opacity duration-500 ease-out ${
-                            boxed ? 'mx-auto max-w-6xl px-4 py-12' : ''
+                            boxed ? 'mx-auto max-w-6xl px-2 py-12 sm:px-4' : ''
                         } ${isMounted ? 'opacity-100' : 'opacity-0'}`}
                     >
                         {boxed ? (
                             <div
-                                className={`rounded-none border border-white/80 md:rounded-md ${contentBackgroundClass} p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]`}
+                                className={`rounded-2xl border border-white/80 ${contentBackgroundClass} p-4 shadow-[0_30px_80px_rgba(15,23,42,0.08)] sm:p-6`}
                             >
                                 {isMounted ? (
                                     children

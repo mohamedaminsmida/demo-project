@@ -51,14 +51,14 @@ export default function ServicePreview({
             <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
                 <div className="space-y-6">
                     <div className="space-y-3">
-                        {subtitle && <p className="text-sm font-medium tracking-[0.2em] text-gray-500 uppercase">{subtitle}</p>}
-                        <h3 className="text-4xl font-bold text-gray-900">{title}</h3>
+                        {subtitle && <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase sm:text-sm">{subtitle}</p>}
+                        <h3 className="text-2xl font-bold text-gray-900 sm:text-4xl">{title}</h3>
                     </div>
 
                     <ul className="space-y-4">
                         {features.map((feature) => (
-                            <li key={feature.label} className="flex items-center gap-3 text-base text-gray-800">
-                                <img src={checkIcon} alt="Check icon" className="-mt-0.5 h-6 w-6" />
+                            <li key={feature.label} className="flex items-center gap-3 text-sm text-gray-800 sm:text-base">
+                                <img src={checkIcon} alt="Check icon" className="-mt-0.5 h-5 w-5 sm:h-6 sm:w-6" />
                                 <div>
                                     <p className="font-medium text-gray-900">{feature.label}</p>
                                 </div>

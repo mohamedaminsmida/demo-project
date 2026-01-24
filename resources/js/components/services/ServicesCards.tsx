@@ -129,8 +129,8 @@ export default function ServicesCards({ categories: propCategories, className = 
     };
 
     return (
-        <section className={`px-6 py-10 ${className}`}>
-            <div className="mx-auto max-w-7xl space-y-6">
+        <section className={`px-0 py-10 sm:px-6 ${className}`}>
+            <div className="w-full space-y-6 sm:mx-auto sm:max-w-7xl">
                 {sortedCategories.map((category) => {
                     const isExpanded = expandedCategories.has(category.slug);
                     const categoryServices = category.services?.filter((s) => s.is_active) ?? [];
@@ -143,9 +143,9 @@ export default function ServicesCards({ categories: propCategories, className = 
                                     onClick={() => toggleCategory(category.slug)}
                                 >
                                     <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700">
-                                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">{category.name}</h2>
+                                        <h2 className="text-lg font-semibold text-gray-900 sm:text-2xl dark:text-white">{category.name}</h2>
                                         <div className="flex items-center gap-3">
-                                            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800 sm:px-2.5 sm:text-xs dark:bg-green-900 dark:text-green-200">
                                                 {categoryServices.length} services
                                             </span>
                                             <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -183,7 +183,7 @@ export default function ServicesCards({ categories: propCategories, className = 
                                                             className={`absolute inset-0 transition-colors ${isSelected ? 'bg-black/80' : 'bg-gradient-to-t from-black/70 via-black/40 to-black/20'}`}
                                                         ></div>
 
-                                                        <div className="relative flex min-h-[200px] flex-col items-center justify-center p-5">
+                                                        <div className="relative flex min-h-[160px] flex-col items-center justify-center p-4 sm:min-h-[200px] sm:p-5">
                                                             {isSelected ? (
                                                                 <>
                                                                     <svg
@@ -192,7 +192,7 @@ export default function ServicesCards({ categories: propCategories, className = 
                                                                         viewBox="0 0 24 24"
                                                                         fill="none"
                                                                         xmlns="http://www.w3.org/2000/svg"
-                                                                        className="mb-3"
+                                                                        className="mb-3 h-12 w-12 sm:h-16 sm:w-16"
                                                                     >
                                                                         <path
                                                                             fillRule="evenodd"
@@ -201,13 +201,15 @@ export default function ServicesCards({ categories: propCategories, className = 
                                                                             fill="white"
                                                                         />
                                                                     </svg>
-                                                                    <h3 className="text-center text-xl font-bold text-white">{service.name}</h3>
+                                                                    <h3 className="text-center text-lg font-bold text-white sm:text-xl">
+                                                                        {service.name}
+                                                                    </h3>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <h3 className="mb-2 text-2xl font-bold text-white">{service.name}</h3>
+                                                                    <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">{service.name}</h3>
                                                                     {service.description && (
-                                                                        <p className="text-sm text-white/90">{service.description}</p>
+                                                                        <p className="text-xs text-white/90 sm:text-sm">{service.description}</p>
                                                                     )}
                                                                 </>
                                                             )}

@@ -94,6 +94,15 @@ export default function Stepper({
         updateStep(clicked);
     };
 
+    const mobileStepWindow = React.useMemo(() => {
+        if (totalSteps <= 3) {
+            return { start: 1, end: totalSteps };
+        }
+
+        const start = Math.min(Math.max(currentStep - 1, 1), totalSteps - 2);
+        return { start, end: start + 2 };
+    }, [currentStep, totalSteps]);
+
     return (
         <div className={className}>
             <div className="space-y-8">
@@ -103,26 +112,37 @@ export default function Stepper({
                             {stepsArray.map((_, index) => {
                                 const stepNumber = index + 1;
                                 const isNotLastStep = index < totalSteps - 1;
+                                const isVisibleOnMobile = stepNumber >= mobileStepWindow.start && stepNumber <= mobileStepWindow.end;
+                                const nextStepNumber = stepNumber + 1;
+                                const isNextVisibleOnMobile = nextStepNumber >= mobileStepWindow.start && nextStepNumber <= mobileStepWindow.end;
+
+                                const indicatorVisibilityClass = isVisibleOnMobile ? 'contents' : 'hidden sm:contents';
+                                const connectorVisibilityClass =
+                                    isNotLastStep && isVisibleOnMobile && isNextVisibleOnMobile ? 'contents' : 'hidden sm:contents';
 
                                 return (
                                     <React.Fragment key={stepNumber}>
-                                        {renderStepIndicator ? (
-                                            renderStepIndicator({
-                                                step: stepNumber,
-                                                currentStep,
-                                                onStepClick: onClickStep,
-                                            })
-                                        ) : (
-                                            <DefaultStepIndicator
-                                                step={stepNumber}
-                                                currentStep={currentStep}
-                                                onClickStep={onClickStep}
-                                                disableStepIndicators={disableStepIndicators}
-                                            />
-                                        )}
+                                        <div className={indicatorVisibilityClass}>
+                                            {renderStepIndicator ? (
+                                                renderStepIndicator({
+                                                    step: stepNumber,
+                                                    currentStep,
+                                                    onStepClick: onClickStep,
+                                                })
+                                            ) : (
+                                                <DefaultStepIndicator
+                                                    step={stepNumber}
+                                                    currentStep={currentStep}
+                                                    onClickStep={onClickStep}
+                                                    disableStepIndicators={disableStepIndicators}
+                                                />
+                                            )}
+                                        </div>
 
                                         {isNotLastStep && (
-                                            <DefaultStepConnector isComplete={currentStep > stepNumber} className={connectorClassName} />
+                                            <div className={connectorVisibilityClass}>
+                                                <DefaultStepConnector isComplete={currentStep > stepNumber} className={connectorClassName} />
+                                            </div>
                                         )}
                                     </React.Fragment>
                                 );
@@ -286,11 +306,13 @@ function DefaultStepIndicator({
     currentStep,
     onClickStep,
     disableStepIndicators,
+    className,
 }: {
     step: number;
     currentStep: number;
     onClickStep: (step: number) => void;
     disableStepIndicators: boolean;
+    className?: string;
 }) {
     const status = currentStep === step ? 'active' : currentStep < step ? 'inactive' : 'complete';
 
@@ -305,7 +327,7 @@ function DefaultStepIndicator({
             type="button"
             onClick={handleClick}
             disabled={disableStepIndicators}
-            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-base font-semibold transition-colors ${outerClass} ${
+            className={`${className ?? ''} flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-base font-semibold transition-colors ${outerClass} ${
                 disableStepIndicators ? 'cursor-default opacity-60' : 'cursor-pointer hover:bg-green-800'
             }`}
         >

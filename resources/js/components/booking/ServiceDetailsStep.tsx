@@ -331,53 +331,48 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                 })}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-                <div className="border-b border-gray-100 bg-gray-50 px-6 py-4">
-                    <h4 className="text-base font-semibold text-gray-900">Price Summary</h4>
-                    <p className="mt-1 text-sm text-gray-600">Estimated total based on selected services and options.</p>
-                </div>
+            <div className="space-y-5 p-6">
+                <div className="space-y-4">
+                    {pricing.services.map((line) => (
+                        <div key={line.serviceId} className="rounded-xl border border-gray-100 bg-white p-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="font-semibold text-gray-900">{line.name}</p>
+                                    <p className="text-xs text-gray-500">Base + selected options</p>
+                                </div>
+                                <p className="font-semibold text-gray-900">${line.total.toFixed(2)}</p>
+                            </div>
 
-                <div className="space-y-5 p-6">
-                    <div className="space-y-4">
-                        {pricing.services.map((line) => (
-                            <div key={line.serviceId} className="rounded-xl border border-gray-100 bg-white p-4">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{line.name}</p>
-                                        <p className="text-xs text-gray-500">Base + selected options</p>
-                                    </div>
-                                    <p className="font-semibold text-gray-900">${line.total.toFixed(2)}</p>
+                            <div className="mt-3 space-y-2 text-sm">
+                                <div className="flex justify-between text-gray-700">
+                                    <span>Base price</span>
+                                    <span>${line.basePrice.toFixed(2)}</span>
                                 </div>
 
-                                <div className="mt-3 space-y-2 text-sm">
-                                    <div className="flex justify-between text-gray-700">
-                                        <span>Base price</span>
-                                        <span>${line.basePrice.toFixed(2)}</span>
+                                {line.addons.length > 0 && (
+                                    <div className="space-y-2">
+                                        {line.addons.map((addon, idx) => (
+                                            <div key={`${line.serviceId}-addon-${idx}`} className="flex justify-between text-gray-700">
+                                                <span>{addon.label}</span>
+                                                <span>+${addon.amount.toFixed(2)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="mt-6 space-y-4">
+                                    <div className="flex items-center justify-between rounded-xl bg-gray-900 px-5 py-4 text-white">
+                                        <span className="text-lg font-bold">Total</span>
+                                        <span className="text-lg font-bold">${pricing.total.toFixed(2)}</span>
                                     </div>
 
-                                    {line.addons.length > 0 && (
-                                        <div className="space-y-2">
-                                            {line.addons.map((addon, idx) => (
-                                                <div key={`${line.serviceId}-addon-${idx}`} className="flex justify-between text-gray-700">
-                                                    <span>{addon.label}</span>
-                                                    <span>+${addon.amount.toFixed(2)}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                                        <p className="text-[15px] font-bold text-red-700">All payments are on-site.</p>
+                                    </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-gray-900 px-5 py-4 text-white">
-                        <span className="text-sm font-semibold">Total</span>
-                        <span className="text-lg font-bold">${pricing.total.toFixed(2)}</span>
-                    </div>
-
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                        <p className="text-sm font-semibold text-red-700">All payments are on-site.</p>
-                    </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
