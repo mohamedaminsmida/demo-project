@@ -6,7 +6,8 @@ use App\Models\AppointmentService;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\ServiceAppointment;
-use App\Models\ServiceAppointmentDetail;
+use App\Models\ServiceRequirementValue;
+use App\Models\Setting;
 use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -19,9 +20,26 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            AdminsSeeder::class,
             ServicesSeeder::class,
             ServiceDetailsSeeder::class,
         ]);
+
+        // Seed default settings with working hours
+        Setting::updateOrCreate(
+            ['id' => 1],
+            [
+                'working_hours' => [
+                    ['day' => 'monday', 'open' => '09:00', 'close' => '18:00', 'is_day_off' => false],
+                    ['day' => 'tuesday', 'open' => '09:00', 'close' => '18:00', 'is_day_off' => false],
+                    ['day' => 'wednesday', 'open' => '09:00', 'close' => '18:00', 'is_day_off' => false],
+                    ['day' => 'thursday', 'open' => '09:00', 'close' => '18:00', 'is_day_off' => false],
+                    ['day' => 'friday', 'open' => '09:00', 'close' => '18:00', 'is_day_off' => false],
+                    ['day' => 'saturday', 'open' => '09:00', 'close' => '17:00', 'is_day_off' => false],
+                    ['day' => 'sunday', 'open' => '', 'close' => '', 'is_day_off' => true],
+                ],
+            ]
+        );
 
         $faker = fake();
 
@@ -38,7 +56,7 @@ class DatabaseSeeder extends Seeder
             ]);
         });
 
-        $services = Service::all();
+        $services = Service::with(['serviceCategory', 'requirements'])->get();
         $vehicleTypes = ['car', 'suv', 'truck', 'van', 'light-truck', 'motorcycle', 'other'];
         $timeSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
         $statuses = ['scheduled', 'in_progress', 'completed', 'cancelled', 'no_show'];
@@ -87,59 +105,41 @@ class DatabaseSeeder extends Seeder
                             'price' => $price,
                         ]);
 
-                        $requiredFields = (array) $service->required_fields;
-                        ServiceAppointmentDetail::create([
-                            'appointment_service_id' => $appointmentService->id,
-                            'tire_condition' => in_array('tire_condition', $requiredFields, true)
-                                ? ($service->slug === 'new-tires' ? 'new' : 'used')
-                                : null,
-                            'number_of_tires' => in_array('number_of_tires', $requiredFields, true)
-                                ? $faker->numberBetween(1, 4)
-                                : null,
-                            'tpms_service' => in_array('tpms_service', $requiredFields, true)
-                                ? $faker->boolean()
-                                : null,
-                            'alignment_service' => in_array('alignment_service', $requiredFields, true)
-                                ? $faker->boolean()
-                                : null,
-                            'wheel_type' => in_array('wheel_type', $requiredFields, true)
-                                ? $faker->randomElement(['alloy', 'steel', 'chrome'])
-                                : null,
-                            'oil_type' => in_array('oil_type', $requiredFields, true)
-                                ? $faker->randomElement(['conventional', 'synthetic', 'synthetic-blend', 'full-synthetic', 'high-mileage'])
-                                : null,
-                            'last_change_date' => in_array('last_change_date', $requiredFields, true)
-                                ? $faker->dateTimeBetween('-6 months', 'now')
-                                : null,
-                            'brake_position' => in_array('brake_position', $requiredFields, true)
-                                ? $faker->randomElement(['front', 'rear', 'both'])
-                                : null,
-                            'noise_or_vibration' => in_array('noise_or_vibration', $requiredFields, true)
-                                ? $faker->boolean()
-                                : null,
-                            'warning_light' => in_array('warning_light', $requiredFields, true)
-                                ? $faker->boolean()
-                                : null,
-                            'symptom_type' => $service->category === 'repairs'
-                                ? $faker->randomElement(['noise', 'vibration', 'warning_light', 'performance', 'leak', 'electrical', 'other'])
-                                : null,
-                            'other_symptom_description' => $service->category === 'repairs'
-                                ? $faker->optional()->sentence()
-                                : null,
-                            'problem_description' => in_array('problem_description', $requiredFields, true)
-                                ? $faker->sentences(2, true)
-                                : null,
-                            'vehicle_drivable' => in_array('vehicle_drivable', $requiredFields, true)
-                                ? $faker->randomElement(['yes', 'no'])
-                                : null,
-                            'photo_paths' => in_array('photo_paths', $requiredFields, true)
-                                ? $faker->randomElements([
-                                    '/uploads/photos/example-1.jpg',
-                                    '/uploads/photos/example-2.jpg',
-                                    '/uploads/photos/example-3.jpg',
-                                ], rand(1, 2))
-                                : null,
-                        ]);
+                        $service->loadMissing('requirements');
+
+                        foreach ($service->requirements as $requirement) {
+                            $value = null;
+
+                            if (in_array($requirement->type, ['toggle', 'checkbox'], true)) {
+                                $value = $faker->boolean();
+                            } elseif ($requirement->type === 'number') {
+                                $value = $faker->numberBetween(1, 4);
+                            } elseif ($requirement->type === 'date') {
+                                $value = Carbon::instance($faker->dateTimeBetween('-6 months', 'now'))->format('Y-m-d');
+                            } elseif (in_array($requirement->type, ['textarea', 'text'], true)) {
+                                $value = $faker->sentences(2, true);
+                            } elseif (in_array($requirement->type, ['select', 'radio'], true)) {
+                                $options = is_array($requirement->options) ? $requirement->options : [];
+                                $values = collect($options)
+                                    ->map(fn ($opt) => $opt['value'] ?? null)
+                                    ->filter()
+                                    ->values();
+
+                                if ($values->isNotEmpty()) {
+                                    $value = $faker->randomElement($values->all());
+                                }
+                            }
+
+                            if ($value === null) {
+                                continue;
+                            }
+
+                            ServiceRequirementValue::create([
+                                'appointment_service_id' => $appointmentService->id,
+                                'service_requirement_id' => $requirement->id,
+                                'value' => $value,
+                            ]);
+                        }
                     }
 
                     $appointment->update([

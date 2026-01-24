@@ -96,7 +96,7 @@ class ServiceAppointmentResource extends Resource
                             ->relationship(
                                 name: 'services',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn ($query) => $query->select(['services.id', 'services.name', 'services.slug', 'services.category', 'services.base_price'])
+                                modifyQueryUsing: fn ($query) => $query->select(['services.id', 'services.name', 'services.slug', 'services.base_price'])
                             )
                             ->multiple()
                             ->preload()

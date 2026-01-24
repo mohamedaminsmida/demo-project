@@ -14,8 +14,8 @@ class ServiceController extends Controller
     public function index(): JsonResponse
     {
         $services = Service::where('is_active', true)
-            ->with('requirements')
-            ->orderBy('category')
+            ->with(['requirements', 'serviceCategory'])
+            ->orderBy('service_category_id')
             ->orderBy('name')
             ->get()
             ->map(function ($service) {
@@ -23,7 +23,14 @@ class ServiceController extends Controller
                     'id' => $service->id,
                     'slug' => $service->slug,
                     'name' => $service->name,
-                    'category' => $service->category,
+                    'category' => $service->serviceCategory?->slug,
+                    'serviceCategory' => $service->serviceCategory
+                        ? [
+                            'id' => $service->serviceCategory->id,
+                            'name' => $service->serviceCategory->name,
+                            'slug' => $service->serviceCategory->slug,
+                        ]
+                        : null,
                     'description' => $service->description,
                     'details' => $service->details ?? null,
                     'image' => $service->image ? asset('storage/' . $service->image) : null,
@@ -59,7 +66,7 @@ class ServiceController extends Controller
     {
         $service = Service::where('slug', $slug)
             ->where('is_active', true)
-            ->with('requirements')
+            ->with(['requirements', 'serviceCategory'])
             ->first();
 
         if (!$service) {
@@ -73,7 +80,14 @@ class ServiceController extends Controller
                 'id' => $service->id,
                 'slug' => $service->slug,
                 'name' => $service->name,
-                'category' => $service->category,
+                'category' => $service->serviceCategory?->slug,
+                'serviceCategory' => $service->serviceCategory
+                    ? [
+                        'id' => $service->serviceCategory->id,
+                        'name' => $service->serviceCategory->name,
+                        'slug' => $service->serviceCategory->slug,
+                    ]
+                    : null,
                 'description' => $service->description,
                 'details' => $service->details ?? null,
                 'image' => $service->image ? asset('storage/' . $service->image) : null,

@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\BrevoController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/service-categories', [ServiceCategoryController::class, 'index'])->name('api.service-categories.index');
 
 Route::get('/services', [ServiceController::class, 'index'])->name('api.services.index');
 Route::get('/services/{slug}', [ServiceController::class, 'show'])->name('api.services.show');

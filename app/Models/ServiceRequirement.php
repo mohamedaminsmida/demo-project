@@ -41,6 +41,10 @@ class ServiceRequirement extends Model
                 return;
             }
 
+            if ($requirement->key) {
+                return;
+            }
+
             $serviceSlug = $requirement->service?->slug
                 ?? Service::query()->whereKey($requirement->service_id)->value('slug');
 

@@ -1,8 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import firstServiceImage from '../../images/FIRST.jpg';
 import heroBackgroundImage from '../../images/first_section.png';
-import secondServiceImage from '../../images/SECONDE.jpg';
 import CheckIcon from '../../images/svg/check.svg';
 
 import AppointmentStep from '../components/booking/AppointmentStep';
@@ -14,7 +12,7 @@ import VehicleInfoForm from '../components/booking/VehicleInfoForm';
 import Layout from '../components/layout/Layout';
 import ServicePreview from '../components/services/ServicePreview';
 import ServicesCards from '../components/services/ServicesCards';
-import { getServiceBySlug, type ServiceCategory, type ServiceConfig } from '../config/services';
+import { getServiceBySlug, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
 import type { BookingState, CustomerInfo } from '../types/booking';
@@ -66,6 +64,19 @@ function buildServicePreview(service: ServiceConfig): ServicePreviewData {
                 { label: 'OEM-grade fluids & parts', highlighted: true },
                 { label: 'Multi-point inspection', description: 'Complimentary report' },
                 { label: 'Service reminders', description: 'Text/email updates' },
+            ],
+            price: service.basePrice,
+        };
+    }
+
+    if (service.category === 'upgrades') {
+        return {
+            title: `${service.name} Upgrade`,
+            subtitle: 'Upgrades',
+            features: [
+                { label: 'Professional installation', highlighted: true },
+                { label: 'Fitment check', description: 'Compatibility confirmed' },
+                { label: 'Post-install inspection', description: 'Safety + torque check' },
             ],
             price: service.basePrice,
         };
@@ -628,14 +639,6 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                             </div>
                         ) : (
                             <ServicesCards
-                                services={dbServices.map((service, index) => ({
-                                    id: service.id.toString(),
-                                    title: service.name,
-                                    description: service.description,
-                                    backgroundImage: service.image || (index % 2 === 0 ? firstServiceImage : secondServiceImage),
-                                    price: service.basePrice,
-                                    category: service.category as ServiceCategory,
-                                }))}
                                 selectedServiceIds={selectedServiceIds}
                                 onServiceSelect={(serviceId) => {
                                     setSelectedServiceIds((prev) => {

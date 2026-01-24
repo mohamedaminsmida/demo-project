@@ -1,4 +1,4 @@
-export type ServiceCategory = 'tires' | 'maintenance' | 'repairs';
+export type ServiceCategory = 'tires' | 'maintenance' | 'repairs' | 'upgrades';
 
 export type ServiceRequirementType =
     | 'text'

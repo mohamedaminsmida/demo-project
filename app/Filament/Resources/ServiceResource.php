@@ -101,12 +101,6 @@ class ServiceResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('slug')
                     ->searchable(),
-                Tables\Columns\BadgeColumn::make('category')
-                    ->colors([
-                        'primary' => 'tires',
-                        'success' => 'maintenance',
-                        'warning' => 'repairs',
-                    ]),
                 Tables\Columns\TextColumn::make('serviceCategory.name')
                     ->label('Service Category')
                     ->sortable(),
@@ -125,12 +119,6 @@ class ServiceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('category')
-                    ->options([
-                        'tires' => 'Tires & Wheels',
-                        'maintenance' => 'Maintenance',
-                        'repairs' => 'Repairs',
-                    ]),
                 Tables\Filters\SelectFilter::make('service_category_id')
                     ->label('Service Category')
                     ->relationship('serviceCategory', 'name'),
@@ -168,8 +156,8 @@ class ServiceResource extends Resource
                                     ->label('Name'),
                                 InfolistComponents\TextEntry::make('slug')
                                     ->label('Slug'),
-                                InfolistComponents\TextEntry::make('category')
-                                    ->label('Category')
+                                InfolistComponents\TextEntry::make('serviceCategory.name')
+                                    ->label('Service Category')
                                     ->badge(),
                                 InfolistComponents\TextEntry::make('estimated_duration')
                                     ->label('Estimated Duration'),
