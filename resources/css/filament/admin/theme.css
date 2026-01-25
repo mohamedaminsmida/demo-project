@@ -5,3 +5,14 @@
 @source '../../../../vendor/guava/calendar/resources/**/*';
 @import '../../../../vendor/guava/calendar/resources/css/theme.css';
 @source '../../../../vendor/diogogpinto/filament-auth-ui-enhancer/resources/**/*.blade.php';
+
+.fc .fc-daygrid-event,
+.fc .fc-timegrid-event {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.fc .fc-event-title,
+.fc .fc-event-time {
+    line-height: 1.25;
+}

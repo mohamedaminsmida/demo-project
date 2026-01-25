@@ -16,13 +16,10 @@ class ServiceAppointmentInfolist
         return $schema
             ->components([
                 Section::make('Appointment Information')
+                    ->collapsible()
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                                InfolistComponents\TextEntry::make('id')
-                                    ->label('Appointment ID')
-                                    ->badge()
-                                    ->color('gray'),
                                 InfolistComponents\TextEntry::make('status')
                                     ->badge()
                                     ->color(function ($state): string {
@@ -32,6 +29,11 @@ class ServiceAppointmentInfolist
 
                                         return $status->badgeColor();
                                     }),
+                                          InfolistComponents\TextEntry::make('final_price')
+                                    ->label('Final Price')
+                                    ->money('USD')
+                                    ->badge()
+                                    ->placeholder('Not set'),
                                 InfolistComponents\TextEntry::make('appointment_date')
                                     ->label('Date')
                                     ->date('l, F j, Y'),
@@ -41,6 +43,7 @@ class ServiceAppointmentInfolist
                     ]),
 
                 Section::make('Customer Information')
+                    ->collapsible()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -53,10 +56,14 @@ class ServiceAppointmentInfolist
                                 InfolistComponents\TextEntry::make('customer_email')
                                     ->label('Email')
                                     ->icon('heroicon-o-envelope'),
+                                InfolistComponents\TextEntry::make('customer_address')
+                                    ->label('Address')
+                                    ->placeholder('Not provided'),
                             ]),
                     ]),
 
                 Section::make('Vehicle Information')
+                    ->collapsible()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -68,20 +75,18 @@ class ServiceAppointmentInfolist
                                     ->label('Model'),
                                 InfolistComponents\TextEntry::make('vehicle.type')
                                     ->label('Type'),
-                                InfolistComponents\TextEntry::make('vehicle.tire_size')
-                                    ->label('Tire Size')
-                                    ->placeholder('Not specified'),
                                 InfolistComponents\TextEntry::make('vehicle.vin')
                                     ->label('VIN')
                                     ->placeholder('Not provided'),
+                                InfolistComponents\TextEntry::make('vehicle.notes')
+                                    ->label('Vehicle Notes')
+                                    ->placeholder('No notes')
+                                    ->columnSpanFull(),
                             ]),
-                        InfolistComponents\TextEntry::make('vehicle.notes')
-                            ->label('Vehicle Notes')
-                            ->placeholder('No notes')
-                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Service Details')
+                    ->collapsible()
                     ->schema([
                         InfolistComponents\TextEntry::make('services.name')
                             ->label('Selected Services')
@@ -99,7 +104,10 @@ class ServiceAppointmentInfolist
                                 $details = [];
                                 foreach ($record->appointmentServices as $appointmentService) {
                                     $serviceName = $appointmentService->service->name ?? 'Unknown Service';
-                                    $servicePrice = $appointmentService->price ? '-$' . number_format($appointmentService->price, 2) : '-$100.00';
+                                    $rawPrice = $appointmentService->price ?? $appointmentService->service->base_price;
+                                    $servicePrice = $rawPrice !== null
+                                        ? '$' . number_format((float) $rawPrice, 2)
+                                        : 'Not priced';
 
                                     $appointmentService->loadMissing(['requirementValues.requirement']);
                                     $requirements = $appointmentService->requirementValues
@@ -115,19 +123,19 @@ class ServiceAppointmentInfolist
                                                 default => (string) $rawValue,
                                             };
 
-                                            return "<li>• {$label}: <span class='font-medium'>{$formatted}</span></li>";
+                                            return "<div class='flex flex-col rounded-md border border-gray-100 bg-white/60 px-3 py-2'><div class='text-xs uppercase tracking-wide text-gray-500'>{$label}</div><div class='text-sm font-medium text-gray-900'>{$formatted}</div></div>";
                                         })
                                         ->filter(fn ($line) => $line !== null && $line !== '')
                                         ->values();
 
                                     if ($requirements->isEmpty()) {
-                                        $details[] = "<div class='mb-8 pb-6 border-b-2 border-gray-300 last:border-0'><div class='flex justify-between items-start mb-4'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-base font-bold text-green-600 ml-4'>{$servicePrice}</span></div><p class='text-gray-500'>No additional details provided.</p></div>";
+                                        $details[] = "<div class='rounded-xl border border-gray-200 bg-white/80 p-4 shadow-sm'><div class='flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-sm font-semibold text-emerald-700'>{$servicePrice}</span></div><p class='mt-3 text-sm text-gray-500'>No additional details provided.</p></div>";
                                         continue;
                                     }
 
-                                    $info = ["<div class='mb-8 pb-6 border-b-2 border-gray-300 last:border-0'><div class='flex justify-between items-start mb-4'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-base font-bold text-green-600 ml-4 whitespace-nowrap'>{$servicePrice}</span></div><ul class='mt-2 space-y-1.5'>"];
+                                    $info = ["<div class='rounded-xl border border-gray-200 bg-white/80 p-4 shadow-sm'><div class='flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3'><strong class='text-lg text-gray-900'>{$serviceName}</strong><span class='text-sm font-semibold text-emerald-700'>{$servicePrice}</span></div><div class='mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2'>"];
                                     $info[] = implode('', $requirements->all());
-                                    $info[] = "</ul></div>";
+                                    $info[] = "</div></div>";
                                     $details[] = implode('', $info);
                                 }
 
@@ -135,30 +143,6 @@ class ServiceAppointmentInfolist
                             }),
                     ])
                     ->collapsible(),
-
-                Section::make('Pricing')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                InfolistComponents\TextEntry::make('final_price')
-                                    ->label('Final Price')
-                                    ->money('USD')
-                                    ->placeholder('Not set'),
-                            ]),
-                    ]),
-
-                Section::make('Timestamps')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                InfolistComponents\TextEntry::make('created_at')
-                                    ->label('Created')
-                                    ->dateTime(),
-                                InfolistComponents\TextEntry::make('updated_at')
-                                    ->label('Last Updated')
-                                    ->dateTime(),
-                            ]),
-                    ]),
             ]);
     }
 }

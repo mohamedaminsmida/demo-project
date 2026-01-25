@@ -24,6 +24,9 @@ class Appointments extends CalendarWidget
 
 
     protected array $options = [
+        'height' => 900,
+        'expandRows' => true,
+        'dayMaxEventRows' => 4,
         'headerToolbar' => [
             'start' => 'prev,next today',
             'center' => 'title',
@@ -95,12 +98,7 @@ class Appointments extends CalendarWidget
         $start = $this->resolveAppointmentDateTime($appointment);
         $end = (clone $start)->addHour();
 
-        $title = trim(
-            collect([
-                $appointment->customer_name,
-                $appointment->customer_phone,
-            ])->filter()->join(' • ')
-        );
+        $title = $appointment->customer_name ?: 'Service Appointment';
 
         return CalendarEvent::make($appointment)
             ->title($title ?: 'Service Appointment')
