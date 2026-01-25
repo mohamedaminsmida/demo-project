@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { useLocale } from '../../locales/LocaleProvider';
 import type { CustomerInfo } from '../../types/booking';
 import { FormField, Input } from '../ui';
 
@@ -10,6 +11,7 @@ interface CustomerInfoFormProps {
 }
 
 export default function CustomerInfoForm({ customer, onChange, errors }: CustomerInfoFormProps) {
+    const { content: t } = useLocale();
     const [touchedFields, setTouchedFields] = useState<Partial<Record<keyof CustomerInfo, boolean>>>({});
 
     const updateField = <K extends keyof CustomerInfo>(field: K, value: CustomerInfo[K]) => {
@@ -41,17 +43,17 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Your Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.booking.customer.title}</h3>
 
             <div className="grid gap-4 md:grid-cols-2">
-                <FormField label="Full Name" required>
+                <FormField label={t.booking.customer.fullName} required>
                     <Input
                         value={customer.fullName}
                         onChange={(v) => {
                             updateField('fullName', v);
                         }}
                         onBlur={() => markTouched('fullName')}
-                        placeholder="John Doe"
+                        placeholder={t.booking.customer.fullNamePlaceholder}
                         maxLength={255}
                         autoComplete="name"
                         error={fieldError('fullName')}
@@ -59,7 +61,7 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                     />
                 </FormField>
 
-                <FormField label="Phone Number" required>
+                <FormField label={t.booking.customer.phone} required>
                     <Input
                         type="tel"
                         value={customer.phone}
@@ -67,7 +69,7 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                             updateField('phone', formatUsPhone(v));
                         }}
                         onBlur={() => markTouched('phone')}
-                        placeholder="(212) 555-0123"
+                        placeholder={t.booking.customer.phonePlaceholder}
                         maxLength={20}
                         autoComplete="tel"
                         error={fieldError('phone')}
@@ -75,7 +77,7 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                     />
                 </FormField>
 
-                <FormField label="Email Address" required>
+                <FormField label={t.booking.customer.email} required>
                     <Input
                         type="email"
                         value={customer.email}
@@ -83,21 +85,21 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
                             updateField('email', v);
                         }}
                         onBlur={() => markTouched('email')}
-                        placeholder="john@example.com"
+                        placeholder={t.booking.customer.emailPlaceholder}
                         maxLength={255}
                         autoComplete="email"
                         error={fieldError('email')}
                         required
                     />
                 </FormField>
-                <FormField label="Address" required>
+                <FormField label={t.booking.customer.address} required>
                     <Input
                         value={customer.address}
                         onChange={(v) => {
                             updateField('address', v);
                         }}
                         onBlur={() => markTouched('address')}
-                        placeholder="123 Main St, Springfield"
+                        placeholder={t.booking.customer.addressPlaceholder}
                         maxLength={255}
                         autoComplete="street-address"
                         error={fieldError('address')}

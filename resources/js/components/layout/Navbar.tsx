@@ -2,12 +2,7 @@ import { Fragment } from 'react';
 
 import { Link } from '@inertiajs/react';
 
-const navLinks = [
-    { label: 'Home', href: '/', isActive: true },
-    { label: 'About', href: '/about' },
-    { label: 'Services', href: '/services' },
-    { label: 'Contact us', href: '/contact' },
-];
+const navLinks = [{ label: 'Home', href: '/', isActive: true }];
 
 export default function Navbar() {
     return (

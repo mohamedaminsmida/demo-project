@@ -15,7 +15,7 @@ export interface CustomerInfo {
 
 export interface BookingState {
     vehicle: VehicleInfo;
-    serviceRequirements: Record<string, Record<string, any>>;
+    serviceRequirements: Record<string, Record<string, unknown>>;
     appointment: AppointmentInfo;
     customer: CustomerInfo;
 }

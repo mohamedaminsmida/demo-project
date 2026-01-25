@@ -1,16 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { FormField, Input, Select, TextArea } from '../../components/ui';
+import { useLocale } from '../../locales/LocaleProvider';
 import type { VehicleInfo, VehicleType } from '../../types/vehicle';
-
-const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-    { value: 'car', label: 'Cars' },
-    { value: 'light-truck', label: 'Light Trucks / SUVs' },
-    { value: 'truck', label: 'Trucks' },
-    { value: 'motorcycle', label: 'Motorcycles & Scooters' },
-    { value: 'van', label: 'Vans & Minivans' },
-    { value: 'other', label: 'Other' },
-];
 
 const VEHICLE_BRANDS: { value: string; label: string }[] = [
     'Acura',
@@ -75,6 +67,17 @@ interface VehicleInfoFormProps {
 }
 
 export default function VehicleInfoForm({ vehicle, onChange, showTireSize, errors }: VehicleInfoFormProps) {
+    const { content: t } = useLocale();
+
+    const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
+        { value: 'car', label: t.booking.vehicle.types.car },
+        { value: 'light-truck', label: t.booking.vehicle.types.lightTruck },
+        { value: 'truck', label: t.booking.vehicle.types.truck },
+        { value: 'motorcycle', label: t.booking.vehicle.types.motorcycle },
+        { value: 'van', label: t.booking.vehicle.types.van },
+        { value: 'other', label: t.booking.vehicle.types.other },
+    ];
+
     const [useCustomBrand, setUseCustomBrand] = useState(() => {
         if (!vehicle.make) return false;
         return !VEHICLE_BRANDS.some((brand) => brand.value === vehicle.make);
@@ -112,18 +115,18 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
         const range = Array.from({ length: 45 }, (_, i) => currentYear - i);
 
         return [
-            { value: '', label: 'Select model year' },
-            { value: String(currentYear), label: `${currentYear} (Current Year)` },
+            { value: '', label: t.booking.vehicle.selectModelYear },
+            { value: String(currentYear), label: `${currentYear} (${t.booking.vehicle.currentYear})` },
             ...range.slice(1).map((year) => ({ value: String(year), label: String(year) })),
-            { value: 'pre-1980', label: '1979 or Older' },
+            { value: 'pre-1980', label: t.booking.vehicle.olderThan1980 },
         ];
-    }, []);
+    }, [t]);
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Vehicle Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.booking.vehicle.title}</h3>
             <div className="grid gap-4 md:grid-cols-2">
-                <FormField label="Vehicle Type" required>
+                <FormField label={t.booking.vehicle.vehicleType} required>
                     <Select
                         value={vehicle.vehicleType}
                         onChange={(v) => {
@@ -135,28 +138,28 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                         }}
                         onBlur={() => markTouched('vehicleType')}
                         options={VEHICLE_TYPES}
-                        placeholder="Select vehicle type"
+                        placeholder={t.booking.vehicle.selectVehicleType}
                         error={fieldError('vehicleType')}
                         required
                     />
                 </FormField>
 
                 {vehicle.vehicleType === 'other' && (
-                    <FormField label="Other Vehicle Type" required>
+                    <FormField label={t.booking.vehicle.otherVehicleType} required>
                         <Input
                             value={vehicle.otherType}
                             onChange={(v) => {
                                 updateField('otherType', v);
                             }}
                             onBlur={() => markTouched('otherType')}
-                            placeholder="Describe the vehicle type"
+                            placeholder={t.booking.vehicle.describeVehicleType}
                             error={fieldError('otherType')}
                             required
                         />
                     </FormField>
                 )}
 
-                <FormField label="Vehicle Make" required>
+                <FormField label={t.booking.vehicle.vehicleMake} required>
                     <Select
                         value={useCustomBrand ? '__custom' : vehicle.make}
                         onChange={(v) => {
@@ -169,8 +172,8 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             updateField('make', v);
                         }}
                         onBlur={() => markTouched('make')}
-                        options={[...VEHICLE_BRANDS, { value: '__custom', label: 'Other / Not Listed' }]}
-                        placeholder="Select brand"
+                        options={[...VEHICLE_BRANDS, { value: '__custom', label: t.booking.vehicle.otherNotListed }]}
+                        placeholder={t.booking.vehicle.selectBrand}
                         error={fieldError('make')}
                         required
                     />
@@ -182,27 +185,27 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                                 updateField('make', v);
                             }}
                             onBlur={() => markTouched('make')}
-                            placeholder="Enter brand name"
+                            placeholder={t.booking.vehicle.enterBrandName}
                             error={fieldError('make')}
                             required
                         />
                     )}
                 </FormField>
 
-                <FormField label="Model" required>
+                <FormField label={t.booking.vehicle.model} required>
                     <Input
                         value={vehicle.model}
                         onChange={(v) => {
                             updateField('model', v);
                         }}
                         onBlur={() => markTouched('model')}
-                        placeholder="e.g., Camry"
+                        placeholder={t.booking.vehicle.modelPlaceholder}
                         error={fieldError('model')}
                         required
                     />
                 </FormField>
 
-                <FormField label="Year" required>
+                <FormField label={t.booking.vehicle.year} required>
                     <Select
                         value={vehicle.year}
                         onChange={(v) => {
@@ -210,14 +213,14 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                         }}
                         onBlur={() => markTouched('year')}
                         options={yearOptions}
-                        placeholder="Select model year"
+                        placeholder={t.booking.vehicle.selectModelYear}
                         error={fieldError('year')}
                         required
                     />
                 </FormField>
 
                 {showTireSize && (
-                    <FormField label="Tire Size" required>
+                    <FormField label={t.booking.vehicle.tireSize} required>
                         <Select
                             value={vehicle.tireSize}
                             onChange={(v) => {
@@ -225,34 +228,34 @@ export default function VehicleInfoForm({ vehicle, onChange, showTireSize, error
                             }}
                             onBlur={() => markTouched('tireSize')}
                             options={TIRE_SIZES.map((size) => ({ value: size, label: size }))}
-                            placeholder="Select tire size"
+                            placeholder={t.booking.vehicle.selectTireSize}
                             error={fieldError('tireSize')}
                             required
                         />
                     </FormField>
                 )}
 
-                <FormField label="VIN">
+                <FormField label={t.booking.vehicle.vin}>
                     <Input
                         value={vehicle.vin}
                         onChange={(v) => {
                             updateField('vin', v.toUpperCase());
                         }}
                         onBlur={() => markTouched('vin')}
-                        placeholder="17-character VIN"
+                        placeholder={t.booking.vehicle.vinPlaceholder}
                         error={fieldError('vin')}
                     />
                 </FormField>
             </div>
 
-            <FormField label="Notes">
+            <FormField label={t.booking.vehicle.notes}>
                 <TextArea
                     value={vehicle.notes}
                     onChange={(v) => {
                         updateField('notes', v);
                     }}
                     onBlur={() => markTouched('notes')}
-                    placeholder="Any specific notes for our team"
+                    placeholder={t.booking.vehicle.notesPlaceholder}
                     rows={3}
                     error={fieldError('notes')}
                     maxLength={500}

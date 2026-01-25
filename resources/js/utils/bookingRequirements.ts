@@ -9,7 +9,7 @@ export function getRequirementValue(state: BookingState, serviceId: string, key:
     return state.serviceRequirements[serviceId]?.[key];
 }
 
-export function updateRequirementValue(state: BookingState, serviceId: string, key: string, value: any): BookingState {
+export function updateRequirementValue(state: BookingState, serviceId: string, key: string, value: unknown): BookingState {
     const serviceValues = state.serviceRequirements[serviceId] ?? {};
     return {
         ...state,
@@ -23,7 +23,7 @@ export function updateRequirementValue(state: BookingState, serviceId: string, k
     };
 }
 
-export function isRequirementValueEmpty(requirement: ServiceRequirement, value: any): boolean {
+export function isRequirementValueEmpty(requirement: ServiceRequirement, value: unknown): boolean {
     if (requirement.type === 'toggle' || requirement.type === 'checkbox') {
         return !value;
     }
@@ -35,7 +35,7 @@ export function isRequirementValueEmpty(requirement: ServiceRequirement, value: 
     return value === undefined || value === null || value === '';
 }
 
-export function validateRequirementValue(requirement: ServiceRequirement, value: any): string | null {
+export function validateRequirementValue(requirement: ServiceRequirement, value: unknown): string | null {
     if (isRequirementValueEmpty(requirement, value)) {
         return null;
     }
@@ -75,6 +75,10 @@ export function validateRequirementValue(requirement: ServiceRequirement, value:
             }
             return null;
         case 'date': {
+            if (!(typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
+                return 'Must be a valid date.';
+            }
+
             const dateValue = new Date(value);
             if (Number.isNaN(dateValue.getTime())) {
                 return 'Must be a valid date.';

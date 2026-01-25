@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import CheckIcon from '../../../images/svg/check.svg';
+import { useLocale } from '../../locales/LocaleProvider';
 
 interface AppointmentDatePickerProps {
     selectedDate: string;
@@ -29,6 +30,7 @@ export default function AppointmentDatePicker({
     onDateChange,
     onTimeChange,
 }: AppointmentDatePickerProps) {
+    const { content: t } = useLocale();
     // Derive initial month from saved date
     const getMonthFromDate = (dateStr: string): string | null => {
         if (!dateStr) return null;
@@ -145,13 +147,13 @@ export default function AppointmentDatePicker({
         if (selectedDate !== initialDate) {
             onDateChange(selectedDate);
         }
-    }, [selectedDate, onDateChange]);
+    }, [selectedDate, initialDate, onDateChange]);
 
     useEffect(() => {
         if (selectedTime !== initialTime) {
             onTimeChange(selectedTime);
         }
-    }, [selectedTime, onTimeChange]);
+    }, [selectedTime, initialTime, onTimeChange]);
 
     useEffect(() => {
         if (!selectedDate) {
@@ -296,22 +298,13 @@ export default function AppointmentDatePicker({
         return dates;
     }, [selectedMonth, dayOffSet]);
 
-    const nowReference = useMemo(() => {
-        return availability?.serverTime ? new Date(availability.serverTime) : new Date();
-    }, [availability?.serverTime]);
-
-    const isSameDay = (dateStr: string, now: Date) => {
-        const date = new Date(`${dateStr}T00:00:00`);
-        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
-    };
-
-    const normalizeTimeLabel = (timeStr: string) => {
+    const normalizeTimeLabel = useCallback((timeStr: string) => {
         const parsed = parseTimeString(timeStr);
         if (!parsed) return timeStr.trim();
         const displayHour = parsed.hour === 0 ? 12 : parsed.hour > 12 ? parsed.hour - 12 : parsed.hour;
         const period = parsed.hour >= 12 ? 'PM' : 'AM';
         return `${displayHour}:${String(parsed.minutes).padStart(2, '0')} ${period}`;
-    };
+    }, []);
 
     const availableHours = useMemo(() => {
         if (!availability?.availableHours) {
@@ -328,7 +321,7 @@ export default function AppointmentDatePicker({
                 disabled: unavailable.has(normalizedHour),
             };
         });
-    }, [availability?.availableHours, availability?.unavailableHours]);
+    }, [availability?.availableHours, availability?.unavailableHours, normalizeTimeLabel]);
 
     const handleMonthSelect = (monthValue: string) => {
         setSelectedMonth(monthValue);
@@ -404,7 +397,7 @@ export default function AppointmentDatePicker({
             {/* Month Selection */}
             <div className="space-y-3" style={{ overflowAnchor: 'none' }}>
                 <label className="block text-sm font-medium text-gray-700">
-                    Select Month <span className="text-red-500">*</span>
+                    {t.booking.appointment.selectMonth} <span className="text-red-500">{t.booking.appointment.required}</span>
                 </label>
 
                 {/* Collapsed Month Display */}
@@ -444,7 +437,7 @@ export default function AppointmentDatePicker({
             >
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
-                        Preferred Date <span className="text-red-500">*</span>
+                        {t.booking.appointment.preferredDate} <span className="text-red-500">{t.booking.appointment.required}</span>
                     </label>
 
                     {/* Collapsed Date Display */}
@@ -485,21 +478,23 @@ export default function AppointmentDatePicker({
             >
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
-                        Select Hour <span className="text-red-500">*</span>
+                        {t.booking.appointment.selectHour} <span className="text-red-500">{t.booking.appointment.required}</span>
                     </label>
 
                     {userTimezone && businessTimezone && userTimezone !== businessTimezone && (
                         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                            <p className="font-medium">Times are shown in the garage timezone ({businessTimezone}).</p>
+                            <p className="font-medium">{t.booking.appointment.timezoneNote.replace('{timezone}', businessTimezone)}</p>
                             {selectedLocalTimeLabel && (
                                 <p className="mt-1">
-                                    Your local time: {selectedLocalTimeLabel.localText} ({selectedLocalTimeLabel.userLabel}).
+                                    {t.booking.appointment.yourLocalTime
+                                        .replace('{time}', selectedLocalTimeLabel.localText)
+                                        .replace('{label}', selectedLocalTimeLabel.userLabel)}
                                 </p>
                             )}
                         </div>
                     )}
 
-                    {availabilityLoading && <p className="text-sm text-gray-500">Loading available hours...</p>}
+                    {availabilityLoading && <p className="text-sm text-gray-500">{t.booking.appointment.loadingHours}</p>}
                     {availabilityError && <p className="text-sm text-red-600">{availabilityError}</p>}
 
                     {/* Collapsed Hour Display */}

@@ -28,7 +28,6 @@ export default function ServicePreview({
     title: legacyTitle,
     subtitle: legacySubtitle,
     primaryImage: legacyPrimaryImage,
-    secondaryImage: legacySecondaryImage,
     features: legacyFeatures,
     price: legacyPrice,
     className = '',
@@ -43,8 +42,7 @@ export default function ServicePreview({
     const features = service?.requirements?.length ? service.requirements.map((requirement) => ({ label: requirement.label })) : legacyFeatures || [];
 
     const price = service?.basePrice || legacyPrice;
-    const keyOptions = features;
-    const formattedPrice = typeof price === 'number' ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price) : null;
+    void price;
 
     return (
         <section className={`rounded-2xl bg-[#f5f5f5f5] px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:px-12 ${className}`}>

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Vite;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('BookService');
 })->name('home');
 
 // Test email route (remove in production)
@@ -42,22 +42,6 @@ Route::get('/preview-email', function () {
 
     return view('emails.appointment-confirmation', $sampleData);
 });
-
-Route::get('/services', function () {
-    return Inertia::render('services');
-})->name('services');
-
-Route::get('/contact', function () {
-    return Inertia::render('contact');
-})->name('contact');
-
-Route::get('/privacy-policy', function () {
-    return Inertia::render('privacy-policy');
-})->name('privacy.policy');
-
-Route::get('/service-appointment', function () {
-    return Inertia::render('service-appointment');
-})->name('service.appointment');
 
 Route::get('/appointment', function () {
     return Inertia::render('BookService');

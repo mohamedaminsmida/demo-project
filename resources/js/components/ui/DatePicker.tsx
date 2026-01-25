@@ -36,7 +36,7 @@ function MonthYearPickers({ locale }: { locale: string }) {
 
     const monthsInYear = useMemo(() => {
         if (!focusedDate) return 12;
-        const calendar = (focusedDate as any).calendar;
+        const calendar = (focusedDate as unknown as { calendar?: { getMonthsInYear?: (date: typeof focusedDate) => number } }).calendar;
         if (calendar && typeof calendar.getMonthsInYear === 'function') {
             return calendar.getMonthsInYear(focusedDate);
         }
@@ -203,7 +203,7 @@ export function DatePicker<T extends DateValue>({ label, error, ...props }: Date
         if (props.defaultValue != null) return;
         if (typeof props.onChange !== 'function') return;
         didInitDefault.current = true;
-        props.onChange(todayValue as unknown as any);
+        props.onChange(todayValue as unknown as Parameters<NonNullable<typeof props.onChange>>[0]);
     }, [props, todayValue]);
 
     return (

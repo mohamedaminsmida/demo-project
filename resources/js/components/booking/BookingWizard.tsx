@@ -6,6 +6,7 @@ import PersonIcon from '../../../images/svg/person.svg';
 import SendIcon from '../../../images/svg/send.svg';
 import ServicesListIcon from '../../../images/svg/services_list.svg';
 import ToolIcon from '../../../images/svg/tool.svg';
+import { useLocale } from '../../locales/LocaleProvider';
 
 import Stepper, { Step } from './Stepper';
 
@@ -19,43 +20,18 @@ export interface BookingWizardProps {
 
 const STEP_ICON_CLASS = 'h-5 w-5';
 
-const STEPS: { id: number; title: string; icon: string }[] = [
-    {
-        id: 1,
-        title: 'Service',
-        icon: ServicesListIcon,
-    },
-    {
-        id: 2,
-        title: 'Appointment',
-        icon: DateIcon,
-    },
-    {
-        id: 3,
-        title: 'Vehicle Info',
-        icon: CarIcon,
-    },
-    {
-        id: 4,
-        title: 'Service Details',
-        icon: ToolIcon,
-    },
-    {
-        id: 5,
-        title: 'Customer Info',
-        icon: PersonIcon,
-    },
-    {
-        id: 6,
-        title: 'Submit',
-        icon: SendIcon,
-    },
-];
-
 export default function BookingWizard({ currentStep, onStepChange, onComplete, canProceed, children }: BookingWizardProps) {
+    const { content: t } = useLocale();
     const childArray = React.Children.toArray(children);
 
-    const currentStepMeta = STEPS.find((s) => s.id === currentStep);
+    const STEPS: { id: number; title: string; icon: string }[] = [
+        { id: 1, title: t.booking.wizard.steps.service, icon: ServicesListIcon },
+        { id: 2, title: t.booking.wizard.steps.appointment, icon: DateIcon },
+        { id: 3, title: t.booking.wizard.steps.vehicleInfo, icon: CarIcon },
+        { id: 4, title: t.booking.wizard.steps.serviceDetails, icon: ToolIcon },
+        { id: 5, title: t.booking.wizard.steps.customerInfo, icon: PersonIcon },
+        { id: 6, title: t.booking.wizard.steps.submit, icon: SendIcon },
+    ];
 
     return (
         <div className="space-y-8 overflow-x-hidden pt-6">
@@ -66,8 +42,8 @@ export default function BookingWizard({ currentStep, onStepChange, onComplete, c
                     onStepChange(step);
                 }}
                 onFinalStepCompleted={onComplete}
-                backButtonText="Back"
-                nextButtonText="Continue"
+                backButtonText={t.booking.wizard.back}
+                nextButtonText={t.booking.wizard.continue}
                 canProceed={canProceed}
                 indicatorContainerClassName="-mx-4 px-4 sm:mx-0 sm:px-0"
                 indicatorRowClassName="flex w-full items-start gap-4 py-1 sm:items-start sm:gap-2"

@@ -1,5 +1,6 @@
 import { parseDate } from '@internationalized/date';
 import type { ServiceConfig } from '../../config/services';
+import { useLocale } from '../../locales/LocaleProvider';
 import { computeBookingPricing } from '../../services/bookingPricing';
 import type { BookingState } from '../../types/booking';
 import {
@@ -18,6 +19,8 @@ interface ServiceDetailsStepProps {
 }
 
 export default function ServiceDetailsStep({ services, state, onChange }: ServiceDetailsStepProps) {
+    const { content: t } = useLocale();
+
     if (!services || services.length === 0) {
         return (
             <div className="flex min-h-[400px] items-center justify-center p-8">
@@ -32,8 +35,8 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                             />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900">No Services Selected</h3>
-                    <p className="mt-2 text-gray-600">Please go back and select at least one service to continue.</p>
+                    <h3 className="text-xl font-semibold text-gray-900">{t.booking.serviceDetails.noServicesSelected}</h3>
+                    <p className="mt-2 text-gray-600">{t.booking.serviceDetails.goBackAndSelect}</p>
                 </div>
             </div>
         );
@@ -49,9 +52,11 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
     return (
         <div className="space-y-6">
             <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Service Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t.booking.serviceDetails.title}</h3>
                 <p className="mt-1 text-sm text-gray-600">
-                    Provide details for {services.length} selected service{services.length > 1 ? 's' : ''}
+                    {services.length > 1
+                        ? t.booking.serviceDetails.provideDetailsPlural.replace('{count}', String(services.length))
+                        : t.booking.serviceDetails.provideDetails.replace('{count}', String(services.length))}
                 </p>
             </div>
 
@@ -126,7 +131,9 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                             const value = getRequirementValue(state, serviceId, requirement.key);
                                             const isRequired = requirement.isRequired ?? false;
                                             const requiredError =
-                                                isRequired && isRequirementValueEmpty(requirement, value) ? 'This field is required.' : null;
+                                                isRequired && isRequirementValueEmpty(requirement, value)
+                                                    ? t.booking.serviceDetails.fieldRequired
+                                                    : null;
                                             const validationError = validateRequirementValue(requirement, value);
                                             const errorMessage = requiredError ?? validationError;
 
@@ -184,7 +191,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                                                             ? `${option.label} (+$${option.price.toFixed(2)})`
                                                                             : option.label,
                                                                 }))}
-                                                                placeholder={requirement.placeholder ?? 'Select an option'}
+                                                                placeholder={requirement.placeholder ?? t.booking.serviceDetails.selectOption}
                                                             />
                                                             {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
                                                         </div>
@@ -313,8 +320,8 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                             />
                                         </svg>
                                         <div>
-                                            <p className="text-sm font-semibold">No additional information needed.</p>
-                                            <p className="text-xs text-blue-700/80">This service is ready to book without extra details.</p>
+                                            <p className="text-sm font-semibold">{t.booking.serviceDetails.noAdditionalInfo}</p>
+                                            <p className="text-xs text-blue-700/80">{t.booking.serviceDetails.readyToBook}</p>
                                         </div>
                                     </div>
                                 )}
@@ -331,14 +338,14 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                             <div className="flex items-start justify-between gap-4">
                                 <div>
                                     <p className="font-semibold text-gray-900">{line.name}</p>
-                                    <p className="text-xs text-gray-500">Base + selected options</p>
+                                    <p className="text-xs text-gray-500">{t.booking.serviceDetails.baseAndOptions}</p>
                                 </div>
                                 <p className="font-semibold text-gray-900">${line.total.toFixed(2)}</p>
                             </div>
 
                             <div className="mt-3 space-y-2 text-sm">
                                 <div className="flex justify-between text-gray-700">
-                                    <span>Base price</span>
+                                    <span>{t.booking.serviceDetails.basePrice}</span>
                                     <span>${line.basePrice.toFixed(2)}</span>
                                 </div>
 
@@ -359,12 +366,12 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
 
                 <div className="mt-6 space-y-4">
                     <div className="-mx-2 flex items-center justify-between rounded-xl bg-gray-900 px-5 py-4 text-white sm:mx-0">
-                        <span className="text-lg font-bold">Total</span>
+                        <span className="text-lg font-bold">{t.booking.serviceDetails.total}</span>
                         <span className="text-lg font-bold">${pricing.total.toFixed(2)}</span>
                     </div>
 
                     <div className="-mx-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 sm:mx-0">
-                        <p className="text-[15px] font-bold text-red-700">All payments are made on site, No online payment is required.</p>
+                        <p className="text-[15px] font-bold text-red-700">{t.booking.serviceDetails.paymentNote}</p>
                     </div>
                 </div>
             </div>

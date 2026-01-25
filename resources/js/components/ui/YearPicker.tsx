@@ -95,7 +95,7 @@ export function YearPicker({
                     error && 'border-error-500 focus:ring-error-500/20 focus:border-error-600',
                 )}
             >
-                <SelectValue className="flex-1 truncate data-[placeholder]:text-gray-500" />
+                <SelectValue className="flex-1 truncate data-[placeholder]:text-gray-500" placeholder={placeholder} />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                     <CalendarIcon />
                 </span>

@@ -29,8 +29,14 @@ function toNumber(value: unknown): number | null {
     return null;
 }
 
+type RequirementOption = {
+    value?: unknown;
+    label: string;
+    price?: unknown;
+};
+
 function findSelectedOption(requirement: ServiceRequirement, value: unknown) {
-    const options = (requirement.options ?? []) as any[];
+    const options = (requirement.options ?? []) as RequirementOption[];
     if (!options.length) return null;
     return options.find((opt) => String(opt?.value) === String(value)) ?? null;
 }
@@ -42,7 +48,7 @@ function priceFromRequirement(requirement: ServiceRequirement, rawValue: unknown
         const selected = Array.isArray(rawValue) ? rawValue : [];
         for (const selectedValue of selected) {
             const opt = findSelectedOption(requirement, selectedValue);
-            const optPrice = toNumber((opt as any)?.price);
+            const optPrice = toNumber(opt?.price);
             if (opt && optPrice != null && optPrice > 0) {
                 addons.push({ label: opt.label, amount: optPrice });
             }
@@ -52,7 +58,7 @@ function priceFromRequirement(requirement: ServiceRequirement, rawValue: unknown
 
     if (requirement.type === 'select' || requirement.type === 'radio') {
         const opt = findSelectedOption(requirement, rawValue);
-        const optPrice = toNumber((opt as any)?.price);
+        const optPrice = toNumber(opt?.price);
         if (opt && optPrice != null && optPrice > 0) {
             addons.push({ label: opt.label, amount: optPrice });
         }
@@ -60,8 +66,8 @@ function priceFromRequirement(requirement: ServiceRequirement, rawValue: unknown
     }
 
     if (requirement.type === 'checkbox' || requirement.type === 'toggle') {
-        if (Boolean(rawValue)) {
-            const reqPrice = toNumber((requirement as any)?.price ?? requirement.validations?.price);
+        if (rawValue) {
+            const reqPrice = toNumber((requirement as unknown as { price?: unknown }).price ?? requirement.validations?.price);
             if (reqPrice != null && reqPrice > 0) {
                 addons.push({ label: requirement.label, amount: reqPrice });
             }
@@ -71,7 +77,7 @@ function priceFromRequirement(requirement: ServiceRequirement, rawValue: unknown
 
     if (requirement.type === 'number') {
         const quantity = toNumber(rawValue);
-        const unitPrice = toNumber((requirement as any)?.unitPrice ?? requirement.validations?.unit_price);
+        const unitPrice = toNumber((requirement as unknown as { unitPrice?: unknown }).unitPrice ?? requirement.validations?.unit_price);
         if (quantity != null && unitPrice != null && quantity > 0 && unitPrice > 0) {
             addons.push({ label: requirement.label, amount: quantity * unitPrice });
         }

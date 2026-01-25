@@ -31,27 +31,6 @@ const MapPinIcon = () => (
     </svg>
 );
 
-const contactDetails = [
-    {
-        icon: PhoneIcon,
-        label: 'Call Us',
-        value: '(555) 123-4567',
-        href: 'tel:5551234567',
-    },
-    {
-        icon: EnvelopeIcon,
-        label: 'Email',
-        value: 'hello@luqueatelier.com',
-        href: 'mailto:hello@luqueatelier.com',
-    },
-    {
-        icon: MapPinIcon,
-        label: 'Visit',
-        value: '1234 Gold Street, Montreal, QC',
-        href: 'https://maps.google.com/?q=1234+Gold+Street+Montreal+QC',
-    },
-];
-
 type SettingWorkingHour = {
     day: string;
     open?: string;
@@ -86,7 +65,6 @@ export default function ContactSection() {
 
     const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const dayAbbrevMap: Record<string, string> = contactContent.hours.dayAbbrev;
-    const closedLabel = contactContent.hours.closedLabel;
 
     const workingHoursFromSettings = Array.isArray(settings?.working_hours)
         ? settings.working_hours

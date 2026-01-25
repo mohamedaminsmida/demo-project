@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import {
     DatePicker as AriaDatePicker,
     DatePickerProps as AriaDatePickerProps,

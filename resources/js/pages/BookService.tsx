@@ -15,6 +15,7 @@ import ServicesCards from '../components/services/ServicesCards';
 import { getServiceBySlug, type ServiceConfig } from '../config/services';
 import { useService } from '../hooks/useService';
 import { useServices } from '../hooks/useServices';
+import { useLocale } from '../locales/LocaleProvider';
 import type { BookingState, CustomerInfo } from '../types/booking';
 import type { VehicleInfo } from '../types/vehicle';
 import { getRequirementValue, getServiceRequirements, isRequirementValueEmpty } from '../utils/bookingRequirements';
@@ -22,88 +23,6 @@ import { getRequirementValue, getServiceRequirements, isRequirementValueEmpty } 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
-
-interface ServicePreviewFeature {
-    label: string;
-    description?: string;
-    highlighted?: boolean;
-}
-
-interface ServicePreviewData {
-    title: string;
-    subtitle?: string;
-    features: ServicePreviewFeature[];
-    price?: number;
-}
-
-function buildServicePreview(service: ServiceConfig): ServicePreviewData {
-    const baseFeatures = [
-        { label: 'Professional technicians', description: 'Factory-trained and certified', highlighted: true },
-        { label: 'Same-day availability', description: 'Flexible appointment windows' },
-        { label: 'Transparent pricing', description: 'No surprise fees' },
-    ];
-
-    if (service.category === 'tires') {
-        return {
-            title: `${service.name} Package`,
-            subtitle: 'Tires & Wheels',
-            features: [
-                { label: 'Mount & balance included', highlighted: true },
-                { label: 'TPMS inspection', description: 'Sensor diagnostics' },
-                { label: 'Alignment check', description: 'Recommended for new tires' },
-            ],
-            price: service.basePrice,
-        };
-    }
-
-    if (service.category === 'maintenance') {
-        return {
-            title: `${service.name} Essentials`,
-            subtitle: 'Maintenance',
-            features: [
-                { label: 'OEM-grade fluids & parts', highlighted: true },
-                { label: 'Multi-point inspection', description: 'Complimentary report' },
-                { label: 'Service reminders', description: 'Text/email updates' },
-            ],
-            price: service.basePrice,
-        };
-    }
-
-    if (service.category === 'upgrades') {
-        return {
-            title: `${service.name} Upgrade`,
-            subtitle: 'Upgrades',
-            features: [
-                { label: 'Professional installation', highlighted: true },
-                { label: 'Fitment check', description: 'Compatibility confirmed' },
-                { label: 'Post-install inspection', description: 'Safety + torque check' },
-            ],
-            price: service.basePrice,
-        };
-    }
-
-    return {
-        title: `${service.name} Diagnostics`,
-        subtitle: 'Repairs',
-        features: baseFeatures,
-        price: service.basePrice,
-    };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
-const STEPS = [
-    { id: 1, name: 'Service Summary' },
-    { id: 2, name: 'Appointment' },
-    { id: 3, name: 'Vehicle Info' },
-    { id: 4, name: 'Service Details' },
-    { id: 5, name: 'Customer Info' },
-    { id: 6, name: 'Review & Submit' },
-];
-
-const TIME_SLOTS = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 
 const initialState: BookingState = {
     vehicle: {
@@ -129,45 +48,6 @@ const initialState: BookingState = {
         smsUpdates: false,
     },
 };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper Components
-// ─────────────────────────────────────────────────────────────────────────────
-
-function StepIndicator({ currentStep, className = '' }: { currentStep: number; className?: string }) {
-    return (
-        <div className={`flex items-start justify-between ${className}`}>
-            {STEPS.map((step, index) => (
-                <div key={step.id} className="flex flex-1 flex-col items-center gap-3">
-                    <div className="flex w-full items-center justify-center">
-                        {index > 0 && <div className={`h-1 flex-1 rounded-full ${currentStep > step.id ? 'bg-green-800' : 'bg-gray-200'}`} />}
-                        <div className="mx-2 flex-shrink-0">
-                            <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold transition-colors ${
-                                    currentStep >= step.id ? 'bg-green-800 text-white' : 'bg-gray-200 text-gray-600'
-                                }`}
-                            >
-                                {currentStep > step.id ? (
-                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    step.id
-                                )}
-                            </div>
-                        </div>
-                        {index < STEPS.length - 1 && (
-                            <div className={`h-1 flex-1 rounded-full ${currentStep > step.id ? 'bg-green-800' : 'bg-gray-200'}`} />
-                        )}
-                    </div>
-                    <span className={`text-center text-sm font-medium ${currentStep >= step.id ? 'text-green-800' : 'text-gray-400'}`}>
-                        {step.name}
-                    </span>
-                </div>
-            ))}
-        </div>
-    );
-}
 
 function serviceNeedsTireSize(service?: ServiceConfig | null): boolean {
     if (!service) {
@@ -304,6 +184,7 @@ interface BookServiceProps {
 }
 
 export default function BookService({ serviceSlug }: BookServiceProps) {
+    const { content: t } = useLocale();
     const heroBackground = (
         <div
             className="h-screen w-full bg-cover bg-center bg-no-repeat"
@@ -316,15 +197,26 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Fetch services from database
     const { services: dbServices, loading: servicesLoading } = useServices();
 
-    // Get service slug from URL if not passed as prop
-    const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-    const slug = serviceSlug || urlParams.get('service') || '';
+    const initialSlug = (() => {
+        if (serviceSlug) {
+            return serviceSlug;
+        }
+
+        if (typeof window === 'undefined') {
+            return '';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('service') || '';
+    })();
+
+    const [selectedServiceSlug, setSelectedServiceSlug] = useState<string>(initialSlug);
 
     // Fetch the selected service from database
-    const { service: dbService, loading: serviceLoading } = useService(slug);
+    const { service: dbService, loading: serviceLoading } = useService(selectedServiceSlug);
 
     // Fallback to static config if database service not loaded yet
-    const service = dbService || getServiceBySlug(slug);
+    const service = dbService || getServiceBySlug(selectedServiceSlug);
 
     const [currentStep, setCurrentStep] = useState(1);
     const [state, setState] = useState<BookingState>(initialState);
@@ -347,11 +239,19 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         ].filter((id) => !isNaN(id));
     }, [service, selectedServiceIds]);
 
+    useEffect(() => {
+        if (!servicesLoading && dbServices.length > 0 && !selectedServiceSlug) {
+            setSelectedServiceSlug(dbServices[0]?.slug ?? '');
+        }
+    }, [servicesLoading, dbServices, selectedServiceSlug]);
+
     // Pre-select service from URL query parameter when services are loaded
     useEffect(() => {
-        if (!servicesLoading && dbServices.length > 0 && slug) {
+        if (!servicesLoading && dbServices.length > 0 && selectedServiceSlug) {
             // Find the service that matches the slug from URL
-            const matchingService = dbServices.find((s) => s.slug === slug || s.name.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase());
+            const matchingService = dbServices.find(
+                (s) => s.slug === selectedServiceSlug || s.name.toLowerCase().replace(/\s+/g, '-') === selectedServiceSlug.toLowerCase(),
+            );
             if (matchingService) {
                 const serviceId = matchingService.id.toString();
                 // Only add if not already selected
@@ -363,7 +263,9 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 });
             }
         }
-    }, [servicesLoading, dbServices, slug]);
+    }, [servicesLoading, dbServices, selectedServiceSlug]);
+
+    const isBootstrapping = (!selectedServiceSlug && (servicesLoading || serviceLoading)) || (!service && (servicesLoading || serviceLoading));
 
     useEffect(() => {
         if (currentStep === 3) {
@@ -388,8 +290,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             case 3:
                 // Vehicle Info
                 return Object.keys(validateVehicleInfo(state.vehicle, serviceNeedsTireSize(service))).length === 0;
-            case 4:
-                // Service Details - validate all selected services
+            case 4: // Service Details - validate all selected services
+            {
                 const selectedServices = dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()));
 
                 // Check each selected service has required fields filled
@@ -411,6 +313,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 }
 
                 return true;
+            }
             case 5:
                 // Customer Info
                 return Object.keys(validateCustomerInfo(state.customer)).length === 0;
@@ -422,17 +325,17 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         }
     }, [currentStep, state, service, selectedServiceIds, dbServices]);
 
-    const handleNext = () => {
-        if (currentStep < 6 && canProceed()) {
-            setCurrentStep((prev) => prev + 1);
-        }
-    };
-
-    const handleBack = () => {
-        if (currentStep > 1) {
-            setCurrentStep((prev) => prev - 1);
-        }
-    };
+    if (isBootstrapping) {
+        return (
+            <Layout boxed={true} backgroundColorClass="bg-gray-200" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
+                <Head title="Book Service" />
+                <div className="py-12 text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent" />
+                    <p className="mt-4 text-gray-600">Loading services...</p>
+                </div>
+            </Layout>
+        );
+    }
 
     const handleSubmit = async () => {
         if (!service) return;
@@ -536,18 +439,18 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     };
 
     // Service not found
-    if (!service) {
+    if (selectedServiceSlug && !service && !servicesLoading && !serviceLoading) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
+            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
                 <Head title="Book Service" />
                 <div className="py-12 text-center">
                     <h1 className="mb-4 text-2xl font-bold text-gray-900">Service Not Found</h1>
-                    <p className="mb-6 text-gray-600">The requested service could not be found. Please select a service from our services page.</p>
+                    <p className="mb-6 text-gray-600">The requested service could not be found.</p>
                     <a
-                        href="/services"
+                        href="/"
                         className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700"
                     >
-                        View Services
+                        Back to booking
                     </a>
                 </div>
             </Layout>
@@ -557,7 +460,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     // Loading state - show full-screen loader while submitting
     if (isSubmitting) {
         return (
-            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
+            <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
                 <Head title="Submitting..." />
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="rounded-2xl bg-white p-8 shadow-2xl">
@@ -580,7 +483,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 backgroundColorClass="bg-gray-400"
                 contentBackgroundClass="bg-[#f5f5f5f5]"
                 background={heroBackground}
-                showFooter={false}
+                showFooter={true}
             >
                 <Head title="Booking Confirmed" />
                 <div className="py-12 text-center">
@@ -589,17 +492,17 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     </div>
                     <h1 className="mb-4 text-2xl font-bold text-gray-900">Booking Confirmed!</h1>
                     <p className="mb-2 text-gray-600">
-                        Your appointment for <strong>{service.name}</strong> has been scheduled.
+                        Your appointment for <strong>{service?.name ?? 'your service'}</strong> has been scheduled.
                     </p>
                     <p className="mb-6 text-gray-600">
                         We'll send a confirmation to <strong>{state.customer.email}</strong>
                     </p>
                     <div className="flex justify-center gap-4">
                         <a
-                            href="/services"
+                            href="/"
                             className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700"
                         >
-                            Back to Services
+                            Back to booking
                         </a>
                         <a
                             href="/"
@@ -614,8 +517,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     }
 
     return (
-        <Layout boxed={true} backgroundColorClass="bg-gray-200" contentBackgroundClass="bg-white" background={heroBackground} showFooter={false}>
-            <Head title={`Book ${service.name}`} />
+        <Layout boxed={true} backgroundColorClass="bg-gray-200" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
+            <Head title={`Book ${service?.name ?? 'Service'}`} />
 
             <BookingWizard currentStep={currentStep} onStepChange={setCurrentStep} onComplete={handleSubmit} canProceed={canProceed}>
                 <div>
@@ -623,24 +526,24 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                         <div className="mb-6 bg-white px-6 py-10 shadow-[0_25px_70px_rgba(15,23,42,0.08)] sm:mb-10 sm:px-12">
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>
-                                <p className="mt-4 text-gray-600">Loading service details...</p>
+                                <p className="mt-4 text-gray-600">{t.booking.serviceSelection.loadingServiceDetails}</p>
                             </div>
                         </div>
-                    ) : (
+                    ) : service ? (
                         <ServicePreview service={service} className="mb-6 sm:mb-10" />
-                    )}
+                    ) : null}
 
                     <div className="mt-8 mb-0 px-0 sm:mt-25 sm:mb-6 sm:px-0">
-                        <h2 className="mb-4 text-center text-4xl font-bold text-gray-900 sm:mb-6">Select Services</h2>
+                        <h2 className="mb-4 text-center text-4xl font-bold text-gray-900 sm:mb-6">{t.booking.serviceSelection.title}</h2>
                         {servicesLoading ? (
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>
-                                <p className="mt-4 text-gray-600">Loading services...</p>
+                                <p className="mt-4 text-gray-600">{t.booking.serviceSelection.loadingServices}</p>
                             </div>
                         ) : (
                             <ServicesCards
                                 selectedServiceIds={selectedServiceIds}
-                                onServiceSelect={(serviceId) => {
+                                onServiceSelect={(serviceId: string) => {
                                     setSelectedServiceIds((prev) => {
                                         if (prev.includes(serviceId)) {
                                             return prev.filter((id) => id !== serviceId);
@@ -661,7 +564,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 <VehicleInfoForm
                     vehicle={state.vehicle}
                     onChange={(vehicle) => setState({ ...state, vehicle })}
-                    showTireSize={serviceNeedsTireSize(service)}
+                    showTireSize={service ? serviceNeedsTireSize(service) : false}
                     errors={vehicleErrors}
                 />
                 <ServiceDetailsStep
@@ -671,7 +574,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 />
                 <CustomerInfoForm customer={state.customer} onChange={(customer) => setState({ ...state, customer })} errors={customerErrors} />
                 <ReviewStep
-                    service={service}
+                    service={service!}
                     state={state}
                     selectedServices={dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()))}
                 />

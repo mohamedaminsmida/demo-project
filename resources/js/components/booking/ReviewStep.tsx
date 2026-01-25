@@ -44,7 +44,7 @@ export default function ReviewStep({ service, state, selectedServices }: ReviewS
         });
     };
 
-    const formatRequirementValue = (value: any) => {
+    const formatRequirementValue = (value: unknown) => {
         if (Array.isArray(value)) {
             return value.length > 0 ? value.join(', ') : 'Not provided';
         }
