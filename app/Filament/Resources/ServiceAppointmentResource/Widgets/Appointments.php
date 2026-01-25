@@ -3,11 +3,15 @@
 namespace App\Filament\Resources\ServiceAppointmentResource\Widgets;
 
 use App\Enums\AppointmentStatus;
+use App\Models\Customer;
+use App\Models\Service;
 use App\Models\ServiceAppointment;
 use App\Support\BusinessTimezone;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Support\Facades\FilamentColor;
 use Guava\Calendar\Enums\CalendarViewType;
 use Guava\Calendar\Filament\CalendarWidget;
@@ -24,6 +28,14 @@ class Appointments extends CalendarWidget
     protected bool $useFilamentTimezone = true;
 
     public ?string $statusFilter = null;
+
+    public ?string $dateFromFilter = null;
+
+    public ?string $dateUntilFilter = null;
+
+    public array $serviceFilter = [];
+
+    public ?string $customerIdFilter = null;
 
 
     protected array $options = [
@@ -53,8 +65,54 @@ class Appointments extends CalendarWidget
                 ->label('Filter')
                 ->fillForm([
                     'status' => $this->statusFilter,
+                    'from' => $this->dateFromFilter,
+                    'until' => $this->dateUntilFilter,
+                    'service_ids' => $this->serviceFilter,
+                    'customer_id' => $this->customerIdFilter,
+                ])
+                ->extraModalFooterActions([
+                    Action::make('clearFilters')
+                        ->label('Clear filters')
+                        ->color('gray')
+                        ->action(function (): void {
+                            $this->statusFilter = null;
+                            $this->dateFromFilter = null;
+                            $this->dateUntilFilter = null;
+                            $this->serviceFilter = [];
+                            $this->customerIdFilter = null;
+
+                            $this->refreshRecords();
+
+                            $this->unmountAction();
+                        }),
                 ])
                 ->schema([
+                    DatePicker::make('from')
+                        ->label('From')
+                        ->native(false)
+                        ->reactive()
+                        ->placeholder('All'),
+                    DatePicker::make('until')
+                        ->label('To')
+                        ->native(false)
+                        ->minDate(fn (callable $get) => $get('from'))
+                        ->rules([
+                            'nullable',
+                            'date',
+                            'after_or_equal:from',
+                        ])
+                        ->placeholder('All'),
+                    Select::make('service_ids')
+                        ->label('Service type')
+                        ->options(fn () => Service::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                        ->searchable()
+                        ->multiple()
+                        ->placeholder('All'),
+                    Select::make('customer_id')
+                        ->label('Customer')
+                        ->options(fn () => Customer::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                        ->searchable()
+                        ->placeholder('All'),
                     Select::make('status')
                         ->label('Status')
                         ->options([
@@ -66,8 +124,13 @@ class Appointments extends CalendarWidget
                         ])
                         ->placeholder('All'),
                 ])
+                ->slideOver()
                 ->action(function (array $data): void {
                     $this->statusFilter = $data['status'] ?? null;
+                    $this->dateFromFilter = $data['from'] ?? null;
+                    $this->dateUntilFilter = $data['until'] ?? null;
+                    $this->serviceFilter = array_values(array_filter($data['service_ids'] ?? []));
+                    $this->customerIdFilter = $data['customer_id'] ?? null;
                     $this->refreshRecords();
                 }),
         ];
@@ -88,6 +151,22 @@ class Appointments extends CalendarWidget
 
         if ($this->statusFilter) {
             $query->where('status', $this->statusFilter);
+        }
+
+        if ($this->dateFromFilter) {
+            $query->whereDate('appointment_date', '>=', $this->dateFromFilter);
+        }
+
+        if ($this->dateUntilFilter) {
+            $query->whereDate('appointment_date', '<=', $this->dateUntilFilter);
+        }
+
+        if (! empty($this->serviceFilter)) {
+            $query->whereHas('services', fn ($serviceQuery) => $serviceQuery->whereIn('services.id', $this->serviceFilter));
+        }
+
+        if ($this->customerIdFilter) {
+            $query->where('customer_id', $this->customerIdFilter);
         }
 
         return $query

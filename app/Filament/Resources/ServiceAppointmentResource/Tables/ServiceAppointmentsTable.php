@@ -4,13 +4,17 @@ namespace App\Filament\Resources\ServiceAppointmentResource\Tables;
 
 use App\Enums\AppointmentStatus;
 use App\Filament\Resources\ServiceAppointmentResource;
+use App\Models\Service;
 use App\Models\ServiceAppointment;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
@@ -53,6 +57,51 @@ class ServiceAppointmentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\Filter::make('appointment_date')
+                    ->form([
+                        DatePicker::make('from')->label('From')
+                                                ->native(false)
+                                                ->reactive()
+,
+                        DatePicker::make('until')->label('Until')
+                                                ->native(false)
+                                                ->minDate(fn (callable $get) => $get('from'))
+                                                ->rules([
+                                                    'nullable',
+                                                    'date',
+                                                    'after_or_equal:from',
+                                                ])
+,
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when(
+                                $data['from'] ?? null,
+                                fn ($q, $date) => $q->whereDate('appointment_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['until'] ?? null,
+                                fn ($q, $date) => $q->whereDate('appointment_date', '<=', $date),
+                            );
+                    }),
+                Tables\Filters\SelectFilter::make('service')
+                    ->label('Service type')
+                    ->options(fn () => Service::query()->orderBy('name')->pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->multiple()
+                    ->query(function ($query, array $data) {
+                        $values = $data['values'] ?? null;
+
+                        return $query->when(
+                            filled($values),
+                            fn ($q) => $q->whereHas('services', fn ($serviceQuery) => $serviceQuery->whereIn('services.id', $values)),
+                        );
+                    }),
+                Tables\Filters\SelectFilter::make('customer_id')
+                    ->label('Customer')
+                    ->relationship('customer', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'scheduled' => 'Scheduled',
@@ -61,8 +110,11 @@ class ServiceAppointmentsTable
                         'cancelled' => 'Cancelled',
                         'no_show' => 'No-show',
                     ]),
-                Tables\Filters\TrashedFilter::make(),
-            ])
+            ], layout: FiltersLayout::Modal)
+            ->filtersTriggerAction(fn (Action $action) => $action
+                ->button()
+                ->label('Filter')
+                ->slideOver())
             ->headerActions([
                 ExportAction::make('export_service_appointments')
                     ->label('Export CSV')
@@ -102,7 +154,7 @@ class ServiceAppointmentsTable
                                             ? $record->status
                                             : AppointmentStatus::from($record->status);
 
-                                        return $status->label();
+                                        return $status->value;
                                     }),
                                 Column::make('final_price')
                                     ->heading('Final Price')

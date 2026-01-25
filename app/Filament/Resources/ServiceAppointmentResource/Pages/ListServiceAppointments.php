@@ -11,6 +11,24 @@ class ListServiceAppointments extends ListRecords
 {
     protected static string $resource = ServiceAppointmentResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->dispatchAppointmentsFilters();
+    }
+
+    public function updatedTableFilters(): void
+    {
+        $this->dispatchAppointmentsFilters();
+    }
+
+    protected function dispatchAppointmentsFilters(): void
+    {
+        $this->dispatch('appointments-table-filters-updated', filters: $this->tableFilters ?? [])
+            ->to(Appointments::class);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
