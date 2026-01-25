@@ -39,8 +39,8 @@ export default function ServicePreview({
     const subtitle = service?.category?.toUpperCase() || legacySubtitle;
     const primaryImage = service?.image || legacyPrimaryImage || defaultServiceImage;
 
-    // Build features from service details or use legacy features
-    const features = service?.details?.includes ? service.details.includes.map((item) => ({ label: item })) : legacyFeatures || [];
+    // Build features from service requirements or use legacy features
+    const features = service?.requirements?.length ? service.requirements.map((requirement) => ({ label: requirement.label })) : legacyFeatures || [];
 
     const price = service?.basePrice || legacyPrice;
     const keyOptions = features;

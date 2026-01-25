@@ -18,6 +18,19 @@ class ServicesTable
                 Tables\Columns\ImageColumn::make('image')
                     ->label('Image')
                     ->circular()
+                    ->getStateUsing(function ($record) {
+                        $path = $record?->image;
+
+                        if (! $path) {
+                            return null;
+                        }
+
+                        if (str_starts_with($path, 'http')) {
+                            return $path;
+                        }
+
+                        return asset('storage/' . ltrim($path, '/'));
+                    })
                     ->defaultImageUrl(url('/images/default-service.png')),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

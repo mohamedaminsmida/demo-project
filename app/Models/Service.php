@@ -17,7 +17,6 @@ class Service extends Model
         'name',
         'service_category_id',
         'description',
-        'details',
         'image',
         'estimated_duration',
         'max_concurrent_bookings',
@@ -28,7 +27,6 @@ class Service extends Model
     protected $casts = [
         'base_price' => 'decimal:2',
         'is_active' => 'boolean',
-        'details' => 'array',
         'max_concurrent_bookings' => 'integer',
     ];
 

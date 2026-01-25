@@ -31,20 +31,12 @@ export interface ServiceRequirement {
     sortOrder?: number;
 }
 
-export interface ServiceDetails {
-    includes?: string[];
-    pricing_tiers?: Array<{ name: string; price: number; description?: string }>;
-    features?: string[];
-    [key: string]: any; // Allow additional custom fields
-}
-
 export interface ServiceConfig {
     id: string;
     slug: string;
     name: string;
     category: ServiceCategory;
     description: string;
-    details?: ServiceDetails | null;
     image?: string | null;
     estimatedDuration: string;
     basePrice?: number;

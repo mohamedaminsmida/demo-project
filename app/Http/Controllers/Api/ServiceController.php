@@ -32,7 +32,6 @@ class ServiceController extends Controller
                         ]
                         : null,
                     'description' => $service->description,
-                    'details' => $service->details ?? null,
                     'image' => $service->image ? asset('storage/' . $service->image) : null,
                     'estimatedDuration' => $service->estimated_duration,
                     'basePrice' => $service->base_price ? (float) $service->base_price : null,
@@ -89,7 +88,6 @@ class ServiceController extends Controller
                     ]
                     : null,
                 'description' => $service->description,
-                'details' => $service->details ?? null,
                 'image' => $service->image ? asset('storage/' . $service->image) : null,
                 'estimatedDuration' => $service->estimated_duration,
                 'basePrice' => $service->base_price ? (float) $service->base_price : null,

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ServiceResource\Schemas;
 
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -15,6 +16,7 @@ class ServiceInfolist
         return $schema
             ->components([
                 Section::make('Service Overview')
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -43,39 +45,28 @@ class ServiceInfolist
                             ->placeholder('No description.')
                             ->columnSpanFull(),
                     ]),
-                Section::make('Service Details')
+                Section::make('Service Image')
+                    ->columnSpanFull()
                     ->schema([
-                        TextEntry::make('details')
-                            ->label('Details')
-                            ->formatStateUsing(function ($state): ?string {
-                                if (! is_array($state) || $state === []) {
+                        ImageEntry::make('image')
+                            ->hidden(fn ($record) => blank($record?->image))
+                            ->getStateUsing(function ($record) {
+                                $path = $record?->image;
+
+                                if (! $path) {
                                     return null;
                                 }
 
-                                return collect($state)
-                                    ->map(function ($value, $key): string {
-                                        $valueText = is_array($value)
-                                            ? json_encode($value)
-                                            : (string) $value;
+                                if (str_starts_with($path, 'http')) {
+                                    return $path;
+                                }
 
-                                        return sprintf('%s: %s', $key, $valueText);
-                                    })
-                                    ->implode(' • ');
+                                return asset('storage/' . ltrim($path, '/'));
                             })
-                            ->placeholder('No details provided.')
-                            ->columnSpanFull(),
-                    ]),
-                Section::make('Timestamps')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                TextEntry::make('created_at')
-                                    ->label('Created')
-                                    ->dateTime('M d, Y g:i A'),
-                                TextEntry::make('updated_at')
-                                    ->label('Updated')
-                                    ->dateTime('M d, Y g:i A'),
-                            ]),
+                            ->label('Image')
+                            ->height(280)
+                            ->width('100%')
+                            ->extraAttributes(['class' => 'rounded-lg shadow-md']),
                     ]),
             ]);
     }

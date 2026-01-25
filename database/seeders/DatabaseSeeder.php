@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminsSeeder::class,
             ServicesSeeder::class,
-            ServiceDetailsSeeder::class,
         ]);
 
         // Seed default settings with working hours
