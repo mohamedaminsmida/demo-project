@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use App\Support\BusinessTimezone;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -61,6 +62,18 @@ class Settings extends Page implements HasForms
                     ])
                     ->collapsible()
                     ->icon('heroicon-o-wrench-screwdriver'),
+                Components\Section::make('Location & Timezone')
+                    ->schema([
+                        Forms\Components\Select::make('timezone')
+                            ->label('Business Timezone')
+                            ->options($this->getUsTimezones())
+                            ->default('America/Los_Angeles')
+                            ->searchable()
+                            ->required()
+                            ->helperText('Select the timezone where your garage is located. All appointment times will be displayed in this timezone.'),
+                    ])
+                    ->collapsible()
+                    ->icon('heroicon-o-globe-americas'),
                 Components\Section::make('Timing')
                     ->schema([
                         Forms\Components\Repeater::make('working_hours')
@@ -151,9 +164,23 @@ class Settings extends Page implements HasForms
             Setting::create($data);
         }
 
+        BusinessTimezone::clearCache();
+
         Notification::make()
             ->title('Settings saved')
             ->success()
             ->send();
+    }
+
+    private function getUsTimezones(): array
+    {
+        return [
+            'America/New_York' => 'Eastern Time (ET) - New York, Miami, Atlanta',
+            'America/Chicago' => 'Central Time (CT) - Chicago, Houston, Dallas',
+            'America/Denver' => 'Mountain Time (MT) - Denver, Phoenix, Salt Lake City',
+            'America/Los_Angeles' => 'Pacific Time (PT) - Los Angeles, Seattle, San Francisco',
+            'America/Anchorage' => 'Alaska Time (AKT) - Anchorage',
+            'Pacific/Honolulu' => 'Hawaii Time (HT) - Honolulu',
+        ];
     }
 }

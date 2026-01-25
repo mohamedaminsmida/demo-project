@@ -5,6 +5,9 @@ namespace App\Filament\Resources\CustomerResource\Tables;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Maatwebsite\Excel\Excel as ExcelWriter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Actions\ViewAction;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -37,6 +40,19 @@ class CustomersTable
             ->filters([
                 //
             ])
+            ->headerActions([
+                ExportAction::make('export_customers')
+                    ->label('Export CSV')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->exports([
+                        ExcelExport::make('customers-table')
+                            ->fromTable()
+                            ->withWriterType(ExcelWriter::CSV)
+                            ->withFilename(fn () => 'customers-' . now()->format('Y-m-d_His'))
+                            ->queue()
+                            ->withChunkSize(200),
+                    ]),
+            ])
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
@@ -50,9 +66,6 @@ class CustomersTable
                         ->modalDescription('Are you sure you want to delete this customer? This will also delete all associated vehicles and appointments.')
                         ->modalSubmitActionLabel('Yes, delete'),
                 ]),
-            ])
-            ->bulkActions([
-                // Bulk actions configured here
             ]);
     }
 }

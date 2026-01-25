@@ -12,6 +12,10 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Maatwebsite\Excel\Excel as ExcelWriter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ServiceAppointmentsTable
 {
@@ -58,6 +62,92 @@ class ServiceAppointmentsTable
                         'no_show' => 'No-show',
                     ]),
                 Tables\Filters\TrashedFilter::make(),
+            ])
+            ->headerActions([
+                ExportAction::make('export_service_appointments')
+                    ->label('Export CSV')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->exports([
+                        ExcelExport::make('service-appointments-table')
+                            ->fromTable()
+                            ->modifyQueryUsing(fn ($query) => $query->with([
+                                'customer',
+                                'vehicle',
+                                'services',
+                                'appointmentServices.service',
+                                'appointmentServices.requirementValues.requirement',
+                            ]))
+                            ->withColumns([
+                                Column::make('id')
+                                    ->heading('ID'),
+                                Column::make('customer_name')
+                                    ->heading('Customer'),
+                                Column::make('customer_phone')
+                                    ->heading('Phone'),
+                                Column::make('customer_email')
+                                    ->heading('Email'),
+                                Column::make('vehicle')
+                                    ->heading('Vehicle')
+                                    ->formatStateUsing(fn (ServiceAppointment $record) => optional($record->vehicle, fn ($vehicle) => trim("{$vehicle->year} {$vehicle->brand} {$vehicle->model}")) ?: 'N/A'),
+                                Column::make('services_list')
+                                    ->heading('Services')
+                                    ->formatStateUsing(fn (ServiceAppointment $record) => $record->services->pluck('name')->filter()->join(', ') ?: 'N/A'),
+                                Column::make('appointment_date_time')
+                                    ->heading('Appointment Date')
+                                    ->formatStateUsing(fn (ServiceAppointment $record) => $record->appointment_date?->format('Y-m-d') . ' ' . ($record->appointment_time ?? '')),
+                                Column::make('status')
+                                    ->heading('Status')
+                                    ->formatStateUsing(function (ServiceAppointment $record) {
+                                        $status = $record->status instanceof AppointmentStatus
+                                            ? $record->status
+                                            : AppointmentStatus::from($record->status);
+
+                                        return $status->label();
+                                    }),
+                                Column::make('final_price')
+                                    ->heading('Final Price')
+                                    ->formatStateUsing(fn (ServiceAppointment $record) => $record->final_price !== null ? number_format((float) $record->final_price, 2) : 'Not set'),
+                                Column::make('service_details')
+                                    ->heading('Service Details')
+                                    ->formatStateUsing(function (ServiceAppointment $record) {
+                                        $sections = [];
+
+                                        foreach ($record->appointmentServices as $appointmentService) {
+                                            $serviceName = $appointmentService->service->name ?? 'Service';
+
+                                            $details = $appointmentService->requirementValues
+                                                ->map(function ($value) {
+                                                    $label = $value->requirement?->label
+                                                        ?? $value->requirement?->key
+                                                        ?? 'Detail';
+                                                    $raw = $value->value;
+
+                                                    $formatted = match (true) {
+                                                        is_array($raw) => implode(', ', array_filter($raw, fn ($item) => $item !== null && $item !== '')),
+                                                        is_bool($raw) => $raw ? 'Yes' : 'No',
+                                                        $raw === null || $raw === '' => 'Not provided',
+                                                        default => (string) $raw,
+                                                    };
+
+                                                    return "{$label}: {$formatted}";
+                                                })
+                                                ->filter()
+                                                ->values();
+
+                                            $sections[] = $serviceName . ': ' . ($details->isNotEmpty() ? $details->join(' | ') : 'No additional details');
+                                        }
+
+                                        return implode(PHP_EOL, $sections) ?: 'No service details available';
+                                    }),
+                                Column::make('created_at')
+                                    ->heading('Created At')
+                                    ->formatStateUsing(fn (ServiceAppointment $record) => optional($record->created_at)?->toDateTimeString()),
+                            ])
+                            ->withWriterType(ExcelWriter::CSV)
+                            ->withFilename(fn () => 'appointments-' . now()->format('Y-m-d_His'))
+                            ->queue()
+                            ->withChunkSize(200),
+                    ]),
             ])
             ->recordActions([
                 ActionGroup::make([

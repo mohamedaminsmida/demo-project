@@ -15,6 +15,7 @@ class SettingsController extends Controller
         return response()->json([
             'settings' => [
                 'working_hours' => $settings?->working_hours ?? [],
+                'timezone' => $settings?->timezone,
             ],
         ]);
     }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ServiceAppointmentResource\Widgets;
 
 use App\Enums\AppointmentStatus;
 use App\Models\ServiceAppointment;
+use App\Support\BusinessTimezone;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -19,6 +20,8 @@ class Appointments extends CalendarWidget
     protected CalendarViewType $calendarView = CalendarViewType::DayGridMonth;
 
     protected bool $eventClickEnabled = true;
+
+    protected bool $useFilamentTimezone = true;
 
     public ?string $statusFilter = null;
 
@@ -119,7 +122,7 @@ class Appointments extends CalendarWidget
             ? $appointment->appointment_date->toDateString()
             : Carbon::parse($appointment->appointment_date)->toDateString();
 
-        return Carbon::parse(sprintf('%s %s', $date, $appointment->appointment_time), config('app.timezone'));
+        return Carbon::parse(sprintf('%s %s', $date, $appointment->appointment_time), BusinessTimezone::get());
     }
 
     private function statusColor(?AppointmentStatus $status): string

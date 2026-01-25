@@ -47,6 +47,98 @@ export default function AppointmentDatePicker({
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
     const [availabilityError, setAvailabilityError] = useState<string | null>(null);
     const [dayOffSet, setDayOffSet] = useState<Set<number>>(new Set());
+    const [businessTimezone, setBusinessTimezone] = useState<string>('America/Los_Angeles');
+
+    const userTimezone = useMemo(() => {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+            return null;
+        }
+    }, []);
+
+    const getUtcOffsetMinutes = (timeZone: string, date: Date): number | null => {
+        try {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone,
+                timeZoneName: 'shortOffset',
+                year: 'numeric',
+            }).formatToParts(date);
+
+            const tzPart = parts.find((part) => part.type === 'timeZoneName')?.value;
+            if (!tzPart) return null;
+
+            const match = tzPart.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/i);
+            if (!match) return null;
+
+            const sign = match[1] === '-' ? -1 : 1;
+            const hours = parseInt(match[2], 10);
+            const minutes = match[3] ? parseInt(match[3], 10) : 0;
+            return sign * (hours * 60 + minutes);
+        } catch {
+            return null;
+        }
+    };
+
+    const parseTimeString = (timeStr: string) => {
+        const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return null;
+        let hour = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        const period = match[3].toUpperCase();
+        if (period === 'PM' && hour !== 12) hour += 12;
+        if (period === 'AM' && hour === 12) hour = 0;
+        return { hour, minutes };
+    };
+
+    const getTzShortName = (timeZone: string, date: Date): string | null => {
+        try {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone,
+                timeZoneName: 'short',
+                hour: '2-digit',
+            }).formatToParts(date);
+            return parts.find((part) => part.type === 'timeZoneName')?.value ?? null;
+        } catch {
+            return null;
+        }
+    };
+
+    const selectedLocalTimeLabel = useMemo(() => {
+        if (!selectedDate || !selectedTime || !userTimezone || !businessTimezone) return null;
+
+        const parsed = parseTimeString(selectedTime);
+        if (!parsed) return null;
+
+        const [year, month, day] = selectedDate.split('-').map((value) => parseInt(value, 10));
+        if (!year || !month || !day) return null;
+
+        const utcCandidate = new Date(Date.UTC(year, month - 1, day, parsed.hour, parsed.minutes, 0));
+        const businessOffset = getUtcOffsetMinutes(businessTimezone, utcCandidate);
+        if (businessOffset === null) return null;
+
+        const instant = new Date(utcCandidate.getTime() - businessOffset * 60 * 1000);
+
+        const businessLabel = getTzShortName(businessTimezone, instant) ?? businessTimezone;
+        const userLabel = getTzShortName(userTimezone, instant) ?? userTimezone;
+
+        const localText = new Intl.DateTimeFormat('en-US', {
+            timeZone: userTimezone,
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+        }).format(instant);
+
+        return {
+            localText,
+            businessLabel,
+            userLabel,
+            instant,
+        };
+    }, [selectedDate, selectedTime, userTimezone, businessTimezone]);
 
     // Sync with parent when values change
     useEffect(() => {
@@ -128,6 +220,9 @@ export default function AppointmentDatePicker({
             })
             .then((payload) => {
                 const entries = Array.isArray(payload?.settings?.working_hours) ? (payload.settings.working_hours as WorkingHourEntry[]) : [];
+                const tz =
+                    typeof payload?.settings?.timezone === 'string' && payload.settings.timezone ? payload.settings.timezone : 'America/Los_Angeles';
+                setBusinessTimezone(tz);
                 const dayIndexMap: Record<string, number> = {
                     sunday: 0,
                     monday: 1,
@@ -208,17 +303,6 @@ export default function AppointmentDatePicker({
     const isSameDay = (dateStr: string, now: Date) => {
         const date = new Date(`${dateStr}T00:00:00`);
         return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
-    };
-
-    const parseTimeString = (timeStr: string) => {
-        const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (!match) return null;
-        let hour = parseInt(match[1], 10);
-        const minutes = parseInt(match[2], 10);
-        const period = match[3].toUpperCase();
-        if (period === 'PM' && hour !== 12) hour += 12;
-        if (period === 'AM' && hour === 12) hour = 0;
-        return { hour, minutes };
     };
 
     const normalizeTimeLabel = (timeStr: string) => {
@@ -403,6 +487,17 @@ export default function AppointmentDatePicker({
                     <label className="block text-sm font-medium text-gray-700">
                         Select Hour <span className="text-red-500">*</span>
                     </label>
+
+                    {userTimezone && businessTimezone && userTimezone !== businessTimezone && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                            <p className="font-medium">Times are shown in the garage timezone ({businessTimezone}).</p>
+                            {selectedLocalTimeLabel && (
+                                <p className="mt-1">
+                                    Your local time: {selectedLocalTimeLabel.localText} ({selectedLocalTimeLabel.userLabel}).
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {availabilityLoading && <p className="text-sm text-gray-500">Loading available hours...</p>}
                     {availabilityError && <p className="text-sm text-red-600">{availabilityError}</p>}

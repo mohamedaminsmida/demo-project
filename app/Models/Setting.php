@@ -12,6 +12,7 @@ class Setting extends Model
     protected $fillable = [
         'working_hours',
         'total_capacity',
+        'timezone',
         'footer_phone',
         'footer_email',
         'footer_address',
