@@ -22,15 +22,11 @@ export function RadioGroup({ name, label, options, value, onChange, error, colum
             {label && (
                 <span className="text-sm font-medium text-gray-900">
                     {label}
-                    {isRequired && <span className="text-error-500 ml-0.5">*</span>}
+                    {isRequired && <span className="ml-0.5 text-red-600">*</span>}
                 </span>
             )}
             <div
-                className={cx(
-                    columns === 2 
-                        ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' 
-                        : 'flex flex-col gap-3'
-                )}
+                className={cx(columns === 2 ? 'grid grid-cols-1 gap-3 sm:grid-cols-2' : 'flex flex-col gap-3')}
                 role="radiogroup"
             >
                 {options.map((option) => {
@@ -41,8 +37,28 @@ export function RadioGroup({ name, label, options, value, onChange, error, colum
                         <label
                             key={option.value}
                             htmlFor={inputId}
-                            className="relative flex items-center gap-2 cursor-pointer select-none py-1"
+                            className={cx(
+                                'flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3 transition focus-within:ring-2 focus-within:ring-green-500',
+                                isSelected
+                                    ? 'border-green-600 bg-green-50 text-green-900 shadow-sm'
+                                    : 'border-gray-200 bg-white text-gray-800 hover:border-green-200'
+                            )}
                         >
+                            <span className="flex-1 text-sm font-medium">{option.label}</span>
+                            <span
+                                className={cx(
+                                    'flex h-5 w-5 items-center justify-center rounded-full border-2 transition',
+                                    isSelected ? 'border-green-600 bg-green-600' : 'border-gray-300 bg-white'
+                                )}
+                                aria-hidden="true"
+                            >
+                                <span
+                                    className={cx(
+                                        'h-2 w-2 rounded-full bg-white transition-opacity',
+                                        isSelected ? 'opacity-100' : 'opacity-0'
+                                    )}
+                                />
+                            </span>
                             <input
                                 type="radio"
                                 id={inputId}
@@ -50,14 +66,13 @@ export function RadioGroup({ name, label, options, value, onChange, error, colum
                                 value={option.value}
                                 checked={isSelected}
                                 onChange={(e) => onChange?.(e.target.value)}
-                                className="h-5 w-5 accent-green-600 cursor-pointer"
+                                className="sr-only"
                             />
-                            <span className="text-sm text-gray-700">{option.label}</span>
                         </label>
                     );
                 })}
             </div>
-            {error && <p className="text-xs text-error-600">{error}</p>}
+            {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
     );
 }

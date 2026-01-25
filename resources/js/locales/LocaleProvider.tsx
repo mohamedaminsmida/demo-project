@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type PropsWithChildren, type ReactElement } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren, type ReactElement } from 'react';
 
 import { locales, type LocaleCode, type LocaleContent } from '.';
 
@@ -14,6 +14,12 @@ export function LocaleProvider({ children }: PropsWithChildren): ReactElement {
     const [currentCode, setCurrentCode] = useState<LocaleCode>('EN');
     const content = useMemo(() => locales[currentCode], [currentCode]);
     const value = useMemo<LocaleContextValue>(() => ({ currentCode, content, setLocale: setCurrentCode }), [currentCode, content]);
+
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        const lang = currentCode === 'FR' ? 'fr' : currentCode === 'ES' ? 'es' : 'en';
+        document.documentElement.lang = lang;
+    }, [currentCode]);
 
     return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }

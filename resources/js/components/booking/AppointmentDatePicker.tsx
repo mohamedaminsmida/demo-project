@@ -302,10 +302,23 @@ export default function AppointmentDatePicker({
     const selectedDateLabel = availableDates.find((d) => d.value === selectedDate)?.label;
     const selectedHourLabel = availableHours.find((h) => h.value === selectedHour)?.label;
 
+    const preserveScrollPosition = (action: () => void) => {
+        if (typeof window === 'undefined') {
+            action();
+            return;
+        }
+
+        const scrollY = window.scrollY;
+        action();
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: scrollY });
+        });
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" style={{ overflowAnchor: 'none' }}>
             {/* Month Selection */}
-            <div className="space-y-3">
+            <div className="space-y-3" style={{ overflowAnchor: 'none' }}>
                 <label className="block text-sm font-medium text-gray-700">
                     Select Month <span className="text-red-500">*</span>
                 </label>
@@ -313,7 +326,7 @@ export default function AppointmentDatePicker({
                 {/* Collapsed Month Display */}
                 {selectedMonth ? (
                     <div
-                        onClick={handleChangeMonth}
+                        onClick={() => preserveScrollPosition(handleChangeMonth)}
                         className="cursor-pointer rounded-lg border border-green-500 bg-green-50 px-4 py-3 text-center transition-colors hover:bg-green-100"
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -328,7 +341,7 @@ export default function AppointmentDatePicker({
                             <button
                                 key={month.value}
                                 type="button"
-                                onClick={() => handleMonthSelect(month.value)}
+                                onClick={() => preserveScrollPosition(() => handleMonthSelect(month.value))}
                                 className="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:border-green-300 hover:bg-green-50"
                             >
                                 {month.label}
@@ -343,6 +356,7 @@ export default function AppointmentDatePicker({
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     selectedMonth ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
                 }`}
+                style={{ overflowAnchor: 'none' }}
             >
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
@@ -352,7 +366,7 @@ export default function AppointmentDatePicker({
                     {/* Collapsed Date Display */}
                     {selectedDate ? (
                         <div
-                            onClick={handleChangeDate}
+                            onClick={() => preserveScrollPosition(handleChangeDate)}
                             className="cursor-pointer rounded-lg border border-green-500 bg-green-50 px-4 py-3 text-center transition-all duration-300 hover:bg-green-100"
                         >
                             <div className="flex items-center justify-center gap-2">
@@ -367,7 +381,7 @@ export default function AppointmentDatePicker({
                                 <button
                                     key={date.value}
                                     type="button"
-                                    onClick={() => handleDateSelect(date.value)}
+                                    onClick={() => preserveScrollPosition(() => handleDateSelect(date.value))}
                                     className="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:border-green-300 hover:bg-green-50"
                                 >
                                     {date.label}
@@ -383,6 +397,7 @@ export default function AppointmentDatePicker({
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     selectedDate ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
                 }`}
+                style={{ overflowAnchor: 'none' }}
             >
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
@@ -395,7 +410,7 @@ export default function AppointmentDatePicker({
                     {/* Collapsed Hour Display */}
                     {selectedHour ? (
                         <div
-                            onClick={() => setSelectedHour(null)}
+                            onClick={() => preserveScrollPosition(() => setSelectedHour(null))}
                             className="cursor-pointer rounded-lg border border-green-500 bg-green-50 px-4 py-3 text-center transition-all duration-300 hover:bg-green-100"
                         >
                             <div className="flex items-center justify-center gap-2">
@@ -410,7 +425,7 @@ export default function AppointmentDatePicker({
                                 <button
                                     key={hour.value}
                                     type="button"
-                                    onClick={() => handleHourSelect(hour.value)}
+                                    onClick={() => preserveScrollPosition(() => handleHourSelect(hour.value))}
                                     disabled={hour.disabled}
                                     className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
                                         hour.disabled

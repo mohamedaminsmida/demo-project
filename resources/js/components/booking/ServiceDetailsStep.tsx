@@ -1,3 +1,4 @@
+import { parseDate } from '@internationalized/date';
 import type { ServiceConfig } from '../../config/services';
 import { computeBookingPricing } from '../../services/bookingPricing';
 import type { BookingState } from '../../types/booking';
@@ -8,7 +9,7 @@ import {
     updateRequirementValue,
     validateRequirementValue,
 } from '../../utils/bookingRequirements';
-import { Checkbox, FormField, Input, Select, TextArea } from '../ui';
+import { Checkbox, DatePicker, FormField, Input, RadioGroup, Select, TextArea } from '../ui';
 
 interface ServiceDetailsStepProps {
     services: ServiceConfig[];
@@ -66,53 +67,55 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                         const value = getRequirementValue(state, serviceId, requirement.key);
                         return isRequirementValueEmpty(requirement, value);
                     });
-                    const statusLabel = !hasOptions || !hasMissingRequired ? 'Ready' : 'Incomplete';
                     const statusStyles =
                         !hasOptions || !hasMissingRequired
                             ? 'bg-white text-green-700 border border-white'
                             : 'bg-amber-100/90 text-amber-900 border border-amber-200';
 
+                    const pricingLine = pricing.services.find((line) => line.serviceId === serviceId);
+
+                    const normalizedImage =
+                        typeof service.image === 'string' && service.image.length > 0
+                            ? service.image.startsWith('http') || service.image.startsWith('/')
+                                ? service.image
+                                : `/storage/${service.image}`
+                            : null;
+
+                    const cardBackgroundStyle = normalizedImage
+                        ? {
+                              backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.85) 10%, rgba(0, 0, 0, 0.35) 75%), url(${normalizedImage})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              backgroundRepeat: 'no-repeat',
+                          }
+                        : undefined;
+
+                    const priceAmount = pricingLine ? pricingLine.total.toFixed(2) : null;
+
                     return (
                         <div key={service.id} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
                             <div
-                                className={`relative min-h-[110px] px-6 py-5 text-white ${service.image ? '' : 'bg-gradient-to-r from-green-700 via-green-600 to-emerald-500'}`}
+                                className={`relative flex min-h-[80px] items-center px-4 py-3 text-white ${
+                                    normalizedImage ? '' : 'bg-gradient-to-r from-green-700 via-green-600 to-emerald-500'
+                                }`}
+                                style={cardBackgroundStyle}
                             >
-                                {service.image && (
-                                    <img
-                                        src={service.image}
-                                        alt=""
-                                        className="absolute inset-0 h-full w-full object-cover"
-                                        style={{ zIndex: 0 }}
-                                        loading="lazy"
-                                    />
+                                {!normalizedImage && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/25" style={{ zIndex: 1 }} />
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/25" style={{ zIndex: 1 }} />
-                                <div className="relative" style={{ zIndex: 2 }}>
-                                    <div className="flex flex-wrap items-center justify-between gap-4">
-                                        <div>
-                                            {service.category && (
-                                                <p className="text-xs font-semibold tracking-[0.2em] text-white/70 uppercase">{service.category}</p>
-                                            )}
-                                            <h4 className="text-2xl font-semibold tracking-tight">{service.name}</h4>
-                                        </div>
+                                <div className="relative flex w-full flex-wrap items-center justify-between gap-4" style={{ zIndex: 2 }}>
+                                    <div>
+                                        {service.category && (
+                                            <p className="text-xs font-semibold tracking-[0.2em] text-white/70 uppercase">{service.category}</p>
+                                        )}
+                                        <h4 className="text-lg font-semibold tracking-tight sm:text-2xl">{service.name}</h4>
+                                    </div>
+                                    {priceAmount && (
                                         <span className={`rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${statusStyles}`}>
-                                            {statusLabel}
+                                            <span>$</span>
+                                            <span className="ml-1">{priceAmount}</span>
                                         </span>
-                                    </div>
-                                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-white/80">
-                                        {service.estimatedDuration && (
-                                            <div className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-                                                <span>Duration: {service.estimatedDuration}</span>
-                                            </div>
-                                        )}
-                                        {service.basePrice && (
-                                            <div className="flex items-center gap-2">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-                                                <span>Starting at ${service.basePrice.toFixed(2)}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -220,48 +223,26 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                             }
 
                                             if (requirement.type === 'radio') {
+                                                const radioOptions = (requirement.options ?? []).map((option) => ({
+                                                    value: option.value,
+                                                    label:
+                                                        typeof option.price === 'number'
+                                                            ? `${option.label} (+$${option.price.toFixed(2)})`
+                                                            : option.label,
+                                                }));
+
                                                 return (
-                                                    <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                        <div className="space-y-2">
-                                                            <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                                                {(requirement.options ?? []).map((option) => (
-                                                                    <label
-                                                                        key={option.value}
-                                                                        className="flex cursor-pointer items-center gap-2.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700"
-                                                                    >
-                                                                        <input
-                                                                            type="radio"
-                                                                            name={`${serviceId}-${requirement.key}`}
-                                                                            value={option.value}
-                                                                            checked={value === option.value}
-                                                                            onChange={() =>
-                                                                                onChange(
-                                                                                    updateRequirementValue(
-                                                                                        state,
-                                                                                        serviceId,
-                                                                                        requirement.key,
-                                                                                        option.value,
-                                                                                    ),
-                                                                                )
-                                                                            }
-                                                                            className="h-4 w-4 accent-blue-600"
-                                                                        />
-                                                                        {typeof option.price === 'number' ? (
-                                                                            <span>
-                                                                                {option.label}{' '}
-                                                                                <span className="text-xs text-gray-500">
-                                                                                    (+${option.price.toFixed(2)})
-                                                                                </span>
-                                                                            </span>
-                                                                        ) : (
-                                                                            option.label
-                                                                        )}
-                                                                    </label>
-                                                                ))}
-                                                            </div>
-                                                            {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
-                                                        </div>
-                                                    </FormField>
+                                                    <RadioGroup
+                                                        key={requirement.key}
+                                                        name={`${serviceId}-${requirement.key}`}
+                                                        label={requirement.label}
+                                                        options={radioOptions}
+                                                        value={typeof value === 'string' ? value : ''}
+                                                        onChange={(next) => onChange(updateRequirementValue(state, serviceId, requirement.key, next))}
+                                                        error={errorMessage ?? undefined}
+                                                        columns={radioOptions.length > 2 ? 2 : 1}
+                                                        isRequired={isRequired}
+                                                    />
                                                 );
                                             }
 
@@ -285,14 +266,26 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                             }
 
                                             if (requirement.type === 'date') {
+                                                const parsedDateValue = typeof value === 'string' && value ? parseDate(value) : null;
+
                                                 return (
                                                     <FormField key={requirement.key} label={requirement.label} required={isRequired}>
-                                                        <Input
-                                                            type="date"
-                                                            value={value ?? ''}
-                                                            onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
-                                                            error={errorMessage ?? undefined}
-                                                        />
+                                                        <div className="space-y-2">
+                                                            <DatePicker
+                                                                value={parsedDateValue ?? undefined}
+                                                                onChange={(next) =>
+                                                                    onChange(
+                                                                        updateRequirementValue(
+                                                                            state,
+                                                                            serviceId,
+                                                                            requirement.key,
+                                                                            next ? next.toString() : '',
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            />
+                                                            {errorMessage && <p className="text-xs text-red-600">{errorMessage}</p>}
+                                                        </div>
                                                     </FormField>
                                                 );
                                             }
@@ -331,10 +324,10 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                 })}
             </div>
 
-            <div className="space-y-5 p-6">
+            <div className="w-full space-y-5 px-0 py-6 sm:px-6">
                 <div className="space-y-4">
                     {pricing.services.map((line) => (
-                        <div key={line.serviceId} className="rounded-xl border border-gray-100 bg-white p-4">
+                        <div key={line.serviceId} className="w-full rounded-xl border border-gray-100 bg-white p-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
                                     <p className="font-semibold text-gray-900">{line.name}</p>
@@ -359,20 +352,20 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                         ))}
                                     </div>
                                 )}
-
-                                <div className="mt-6 space-y-4">
-                                    <div className="flex items-center justify-between rounded-xl bg-gray-900 px-5 py-4 text-white">
-                                        <span className="text-lg font-bold">Total</span>
-                                        <span className="text-lg font-bold">${pricing.total.toFixed(2)}</span>
-                                    </div>
-
-                                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                                        <p className="text-[15px] font-bold text-red-700">All payments are on-site.</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     ))}
+                </div>
+
+                <div className="mt-6 space-y-4">
+                    <div className="-mx-2 flex items-center justify-between rounded-xl bg-gray-900 px-5 py-4 text-white sm:mx-0">
+                        <span className="text-lg font-bold">Total</span>
+                        <span className="text-lg font-bold">${pricing.total.toFixed(2)}</span>
+                    </div>
+
+                    <div className="-mx-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 sm:mx-0">
+                        <p className="text-[15px] font-bold text-red-700">All payments are made on site, No online payment is required.</p>
+                    </div>
                 </div>
             </div>
         </div>

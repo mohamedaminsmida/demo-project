@@ -630,7 +630,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                         <ServicePreview service={service} className="mb-6 sm:mb-10" />
                     )}
 
-                    <div className="mt-8 mb-4 px-0 sm:mt-25 sm:mb-6 sm:px-0">
+                    <div className="mt-8 mb-0 px-0 sm:mt-25 sm:mb-6 sm:px-0">
                         <h2 className="mb-4 text-center text-4xl font-bold text-gray-900 sm:mb-6">Select Services</h2>
                         {servicesLoading ? (
                             <div className="py-12 text-center">
@@ -678,7 +678,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             </BookingWizard>
 
             {submitError && (
-                <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700">
+                <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700 md:mt-4">
                     <p>{submitError}</p>
                 </div>
             )}

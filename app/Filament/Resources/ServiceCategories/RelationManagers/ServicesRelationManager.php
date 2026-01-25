@@ -66,10 +66,20 @@ class ServicesRelationManager extends RelationManager
                 ActionGroup::make([
                     Action::make('view')
                         ->icon('heroicon-o-eye')
+                        ->color('gray')
                         ->url(fn (Service $record) => ServiceResource::getUrl('view', ['record' => $record])),
                     Action::make('edit')
                         ->icon('heroicon-o-pencil-square')
+                        ->color('primary')
                         ->url(fn (Service $record) => ServiceResource::getUrl('edit', ['record' => $record])),
+                    Action::make('delete')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete this service?')
+                        ->modalSubheading('This action cannot be undone.')
+                        ->modalButton('Delete service')
+                        ->action(fn (Service $record) => $record->delete()),
                 ]),
             ])
             ->bulkActions([
