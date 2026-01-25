@@ -30,10 +30,6 @@ class VehiclesTable
                         'warning' => 'truck',
                         'info' => 'van',
                     ]),
-                Tables\Columns\TextColumn::make('tire_size'),
-                Tables\Columns\IconColumn::make('is_primary')
-                    ->boolean()
-                    ->label('Primary'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -47,7 +43,6 @@ class VehiclesTable
                         'truck' => 'Truck',
                         'van' => 'Van',
                     ]),
-                Tables\Filters\TrashedFilter::make(),
             ])
             ->recordActions([
                 ActionGroup::make([

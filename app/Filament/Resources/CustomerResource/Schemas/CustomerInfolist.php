@@ -28,6 +28,15 @@ class CustomerInfolist
                                 TextEntry::make('created_at')
                                     ->label('Created')
                                     ->dateTime('M d, Y g:i A'),
+
+                                               TextEntry::make('vehicles_count')
+                            ->label('Vehicles')
+                            ->counts('vehicles')
+                            ->badge(),
+                        TextEntry::make('appointments_count')
+                            ->label('Appointments')
+                            ->counts('appointments')
+                            ->badge(),
                             ]),
                     ]),
 
@@ -53,19 +62,6 @@ class CustomerInfolist
                             ->placeholder('No notes provided.')
                             ->columnSpanFull(),
                     ]),
-
-                Section::make('Related Data')
-                    ->schema([
-                        TextEntry::make('vehicles_count')
-                            ->label('Vehicles')
-                            ->counts('vehicles')
-                            ->badge(),
-                        TextEntry::make('appointments_count')
-                            ->label('Appointments')
-                            ->counts('appointments')
-                            ->badge(),
-                    ])
-                    ->columns(2),
             ]);
     }
 }

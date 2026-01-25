@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\VehicleResource\Schemas;
 
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -35,9 +34,6 @@ class VehicleInfolist
                                 TextEntry::make('tire_size')
                                     ->label('Tire Size')
                                     ->placeholder('Not specified'),
-                                IconEntry::make('is_primary')
-                                    ->label('Primary Vehicle')
-                                    ->boolean(),
                             ]),
                     ]),
 

@@ -5,7 +5,6 @@ namespace App\Filament\Resources\VehicleResource\Schemas;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -50,9 +49,6 @@ class VehicleForm
                             ->maxLength(255)
                             ->placeholder('e.g., 225/65R17')
                             ->nullable(),
-                        Toggle::make('is_primary')
-                            ->label('Primary Vehicle')
-                            ->default(false),
                     ])
                     ->columns(2),
 

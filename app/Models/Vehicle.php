@@ -22,11 +22,6 @@ class Vehicle extends Model
         'vin',
         'tire_size',
         'notes',
-        'is_primary',
-    ];
-
-    protected $casts = [
-        'is_primary' => 'boolean',
     ];
 
     /**

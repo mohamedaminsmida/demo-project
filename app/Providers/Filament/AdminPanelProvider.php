@@ -14,8 +14,6 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Actions\Action;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -26,7 +24,9 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Joaopaulolndev\FilamentEditProfile\FilamentEditProfilePlugin;
 use Joaopaulolndev\FilamentEditProfile\Pages\EditProfilePage;
-use Illuminate\Support\Facades\Storage;
+use App\Filament\Widgets\AppointmentMetricsStats;
+use App\Filament\Widgets\AppointmentsPerMonthChart;
+use App\Filament\Widgets\DashboardAppointmentFilters;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -61,10 +61,10 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->sidebarCollapsibleOnDesktop()
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                DashboardAppointmentFilters::class,
+                AppointmentMetricsStats::class,
+                AppointmentsPerMonthChart::class,
             ])
             ->middleware([
                 EncryptCookies::class,
