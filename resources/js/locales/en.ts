@@ -169,6 +169,14 @@ const en = {
             submitLabel: 'Submit Request',
         },
     },
+    servicesCards: {
+        loading: 'Loading services...',
+        error: 'Failed to load categories',
+        noCategories: 'No service categories found.',
+        noServices: 'No services available at the moment.',
+        services: 'services',
+        noCategoryServices: 'No services available in this category.',
+    },
     booking: {
         wizard: {
             steps: {
@@ -188,6 +196,7 @@ const en = {
             loadingServiceDetails: 'Loading service details...',
         },
         appointment: {
+            title: 'Appointment Date',
             selectMonth: 'Select Month',
             preferredDate: 'Preferred Date',
             selectHour: 'Select Hour',
@@ -253,6 +262,29 @@ const en = {
             address: 'Address',
             addressPlaceholder: '123 Main St, Springfield',
         },
+        review: {
+            title: 'Review Your Booking',
+        },
+        page: {
+            loadingServices: 'Loading services...',
+            serviceNotFoundTitle: 'Service Not Found',
+            serviceNotFoundMessage: 'The requested service could not be found.',
+            backToBooking: 'Back to booking',
+            submittingHeadTitle: 'Submitting...',
+            submittingTitle: 'Submitting your Appointment...',
+            submittingSubtitle: 'Please wait while we process your request',
+            bookingConfirmedHeadTitle: 'Booking Confirmed',
+            bookingConfirmedTitle: 'Booking Confirmed!',
+            bookingConfirmedMessage: 'Your appointment for {service} has been scheduled.',
+            yourServiceFallback: 'your service',
+            appointmentLine: 'Appointment: {appointment}',
+            confirmationSentTo: "We'll send a confirmation to",
+            backToServices: 'Back to Services',
+            goHome: 'Go Home',
+            correctVehicleDetails: 'Please correct the highlighted vehicle details before submitting.',
+            correctContactDetails: 'Please correct the highlighted contact details before submitting.',
+            genericError: 'An error occurred',
+        },
     },
     footer: {
         about:
@@ -285,6 +317,7 @@ const en = {
             line: 'Privacy Policy © {year} Luque Tires',
             link: 'Privacy Policy',
         },
+        poweredBy: 'Powered by',
     },
 } as const;
 

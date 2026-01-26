@@ -169,6 +169,14 @@ const fr = {
             submitLabel: 'Envoyer la demande',
         },
     },
+    servicesCards: {
+        loading: 'Chargement des services...',
+        error: 'Erreur lors du chargement des catégories',
+        noCategories: 'Aucune catégorie de services trouvée.',
+        noServices: 'Aucun service disponible pour le moment.',
+        services: 'services',
+        noCategoryServices: 'Aucun service disponible dans cette catégorie.',
+    },
     booking: {
         wizard: {
             steps: {
@@ -188,6 +196,7 @@ const fr = {
             loadingServiceDetails: 'Chargement des détails du service...',
         },
         appointment: {
+            title: 'Date de rendez-vous',
             selectMonth: 'Sélectionner le mois',
             preferredDate: 'Date souhaitée',
             selectHour: 'Sélectionner l\'heure',
@@ -246,12 +255,35 @@ const fr = {
             title: 'Vos informations',
             fullName: 'Nom complet',
             fullNamePlaceholder: 'Jean Dupont',
-            phone: 'Numéro de téléphone',
+            phone: 'Téléphone',
             phonePlaceholder: '(212) 555-0123',
             email: 'Adresse e-mail',
             emailPlaceholder: 'jean@exemple.com',
             address: 'Adresse',
             addressPlaceholder: '123 Rue Principale, Ville',
+        },
+        review: {
+            title: 'Vérifiez votre réservation',
+        },
+        page: {
+            loadingServices: 'Chargement des services...',
+            serviceNotFoundTitle: 'Service introuvable',
+            serviceNotFoundMessage: 'Le service demandé est introuvable.',
+            backToBooking: 'Retour à la réservation',
+            submittingHeadTitle: 'Envoi...',
+            submittingTitle: 'Envoi de votre rendez-vous...',
+            submittingSubtitle: 'Veuillez patienter pendant le traitement de votre demande',
+            bookingConfirmedHeadTitle: 'Réservation confirmée',
+            bookingConfirmedTitle: 'Réservation confirmée !',
+            bookingConfirmedMessage: 'Votre rendez-vous pour {service} a été programmé.',
+            yourServiceFallback: 'votre service',
+            appointmentLine: 'Rendez-vous : {appointment}',
+            confirmationSentTo: 'Nous enverrons une confirmation à',
+            backToServices: 'Retour aux services',
+            goHome: 'Accueil',
+            correctVehicleDetails: 'Veuillez corriger les détails du véhicule surlignés avant d\'envoyer.',
+            correctContactDetails: 'Veuillez corriger les coordonnées surlignées avant d\'envoyer.',
+            genericError: 'Une erreur est survenue',
         },
     },
     footer: {
@@ -285,6 +317,7 @@ const fr = {
             line: 'Politique de confidentialité © {year} Luque Tires',
             link: 'Politique de confidentialité',
         },
+        poweredBy: 'Développé par',
     },
 } as const;
 

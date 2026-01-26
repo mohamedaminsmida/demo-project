@@ -11,7 +11,7 @@ export default function Footer() {
                 <div className="flex flex-col items-center justify-between gap-4 text-xs text-slate-700 sm:flex-row lg:text-sm">
                     <p>{footer.privacy.line.replace('{year}', String(currentYear))}</p>
                     <div className="flex items-center gap-2 text-xs text-slate-700 lg:text-sm">
-                        <span>Powered by</span>
+                        <span>{footer.poweredBy}</span>
                         <a href="https://strivehawk.us/" target="_blank" rel="noreferrer">
                             <img src={strivehawkLogo} alt="Strivehawk" className="h-7 w-auto" />
                         </a>

@@ -338,10 +338,10 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     if (isBootstrapping) {
         return (
             <Layout boxed={true} backgroundColorClass="bg-gray-200" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
-                <Head title="Book Service" />
+                <Head title={t.booking.page.loadingServices} />
                 <div className="py-12 text-center">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent" />
-                    <p className="mt-4 text-gray-600">Loading services...</p>
+                    <p className="mt-4 text-gray-600">{t.booking.page.loadingServices}</p>
                 </div>
             </Layout>
         );
@@ -354,7 +354,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         if (Object.keys(nextVehicleErrors).length > 0) {
             setVehicleErrors(nextVehicleErrors);
             setCurrentStep(3);
-            setSubmitError('Please correct the highlighted vehicle details before submitting.');
+            setSubmitError(t.booking.page.correctVehicleDetails);
             return;
         }
 
@@ -362,7 +362,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         if (state.vehicle.vehicleType === 'other' && (!normalizedOtherType || normalizedOtherType.length < 2)) {
             setVehicleErrors({ otherType: 'Vehicle type must be between 2 and 50 characters.' });
             setCurrentStep(3);
-            setSubmitError('Please correct the highlighted vehicle details before submitting.');
+            setSubmitError(t.booking.page.correctVehicleDetails);
             return;
         }
 
@@ -370,7 +370,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
         if (Object.keys(nextCustomerErrors).length > 0) {
             setCustomerErrors(nextCustomerErrors);
             setCurrentStep(5);
-            setSubmitError('Please correct the highlighted contact details before submitting.');
+            setSubmitError(t.booking.page.correctContactDetails);
             return;
         }
 
@@ -402,9 +402,6 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 sms_updates: state.customer.smsUpdates,
             },
         };
-
-        console.log('Submitting appointment with payload:', payload);
-        console.log('Appointment state:', state.appointment);
 
         try {
             const response = await fetch('/api/appointments', {
@@ -442,7 +439,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             setSubmitSuccess(true);
         } catch (error) {
             console.error('Submit error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred');
+            setSubmitError(error instanceof Error ? error.message : t.booking.page.genericError);
         } finally {
             setIsSubmitting(false);
         }
@@ -452,15 +449,15 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     if (selectedServiceSlug && !service && !servicesLoading && !serviceLoading) {
         return (
             <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
-                <Head title="Book Service" />
+                <Head title={t.booking.page.serviceNotFoundTitle} />
                 <div className="py-12 text-center">
-                    <h1 className="mb-4 text-2xl font-bold text-gray-900">Service Not Found</h1>
-                    <p className="mb-6 text-gray-600">The requested service could not be found.</p>
+                    <h1 className="mb-4 text-2xl font-bold text-gray-900">{t.booking.page.serviceNotFoundTitle}</h1>
+                    <p className="mb-6 text-gray-600">{t.booking.page.serviceNotFoundMessage}</p>
                     <a
                         href="/"
                         className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700"
                     >
-                        Back to booking
+                        {t.booking.page.backToBooking}
                     </a>
                 </div>
             </Layout>
@@ -471,13 +468,13 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     if (isSubmitting) {
         return (
             <Layout boxed={true} backgroundColorClass="bg-gray-300" contentBackgroundClass="bg-white" background={heroBackground} showFooter={true}>
-                <Head title="Submitting..." />
+                <Head title={t.booking.page.submittingHeadTitle} />
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="rounded-2xl bg-white p-8 shadow-2xl">
                         <div className="flex flex-col items-center gap-4">
                             <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-green-600"></div>
-                            <p className="text-lg font-semibold text-gray-900">Submitting your Appointment...</p>
-                            <p className="text-sm text-gray-500">Please wait while we process your request</p>
+                            <p className="text-lg font-semibold text-gray-900">{t.booking.page.submittingTitle}</p>
+                            <p className="text-sm text-gray-500">{t.booking.page.submittingSubtitle}</p>
                         </div>
                     </div>
                 </div>
@@ -499,31 +496,33 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                 background={heroBackground}
                 showFooter={true}
             >
-                <Head title="Booking Confirmed" />
+                <Head title={t.booking.page.bookingConfirmedHeadTitle} />
                 <div className="py-12 text-center">
                     <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                        <img src={CheckIcon} alt="Booking confirmed" className="h-8 w-8" />
+                        <img src={CheckIcon} alt={t.booking.page.bookingConfirmedHeadTitle} className="h-8 w-8" />
                     </div>
-                    <h1 className="mb-4 text-2xl font-bold text-gray-900">Booking Confirmed!</h1>
+                    <h1 className="mb-4 text-2xl font-bold text-gray-900">{t.booking.page.bookingConfirmedTitle}</h1>
                     <p className="mb-2 text-gray-600">
-                        Your appointment for <strong>{service?.name ?? 'your service'}</strong> has been scheduled.
+                        {t.booking.page.bookingConfirmedMessage.replace('{service}', service?.name ?? t.booking.page.yourServiceFallback)}
                     </p>
-                    {appointmentLabel && <p className="mb-2 text-gray-600">Appointment: {appointmentLabel}</p>}
+                    {appointmentLabel && (
+                        <p className="mb-2 text-gray-600">{t.booking.page.appointmentLine.replace('{appointment}', appointmentLabel)}</p>
+                    )}
                     <p className="mb-6 text-gray-600">
-                        We'll send a confirmation to <strong>{state.customer.email}</strong>
+                        {t.booking.page.confirmationSentTo} <strong>{state.customer.email}</strong>
                     </p>
                     <div className="flex justify-center gap-4">
                         <a
                             href="https://luquetires.com/services/"
                             className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700"
                         >
-                            Back to Services
+                            {t.booking.page.backToServices}
                         </a>
                         <a
                             href="https://luquetires.com"
                             className="inline-flex items-center rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
                         >
-                            Go Home
+                            {t.booking.page.goHome}
                         </a>
                     </div>
                 </div>
@@ -549,7 +548,7 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     ) : null}
 
                     <div className="mt-8 mb-0 px-0 sm:mt-25 sm:mb-6 sm:px-0">
-                        <h2 className="mb-4 text-center text-4xl font-bold text-gray-900 sm:mb-6">{t.booking.serviceSelection.title}</h2>
+                        <h2 className="mb-4 text-center text-2xl font-bold text-gray-900 sm:mb-6 sm:text-2xl">{t.booking.serviceSelection.title}</h2>
                         {servicesLoading ? (
                             <div className="py-12 text-center">
                                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-700 border-r-transparent"></div>

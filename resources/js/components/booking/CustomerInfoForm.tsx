@@ -43,7 +43,7 @@ export default function CustomerInfoForm({ customer, onChange, errors }: Custome
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">{t.booking.customer.title}</h3>
+            <h3 className="text-2xl font-bold text-gray-900 sm:text-2xl">{t.booking.customer.title}</h3>
 
             <div className="grid gap-4 md:grid-cols-2">
                 <FormField label={t.booking.customer.fullName} required>

@@ -1,5 +1,6 @@
 import { ChevronDown } from '@untitledui/icons';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocale } from '../../locales/LocaleProvider';
 import AnimatedList from './AnimatedList';
 
 // API types (matching your backend models)
@@ -47,6 +48,7 @@ export async function fetchServiceCategories(): Promise<ServiceCategoryApi[]> {
 }
 
 export default function ServicesCards({ categories: propCategories, className = '', selectedServiceIds = [], onServiceSelect }: ServicesCardsProps) {
+    const { content: t } = useLocale();
     const [categories, setCategories] = useState<ServiceCategoryApi[] | null>(propCategories || null);
     const [loading, setLoading] = useState(!propCategories);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export default function ServicesCards({ categories: propCategories, className = 
             if (propCategories) return;
             fetchServiceCategories()
                 .then(setCategories)
-                .catch(() => setError('Failed to load categories'))
+                .catch(() => setError(t.servicesCards.error))
                 .finally(() => setLoading(false));
         }, [propCategories]);
     }
@@ -114,13 +116,13 @@ export default function ServicesCards({ categories: propCategories, className = 
         return result;
     }, [categories, selectedServiceIds]);
 
-    if (loading) return <div className="p-10 text-center">Loading services...</div>;
+    if (loading) return <div className="p-10 text-center">{t.servicesCards.loading}</div>;
     if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
-    if (!categories?.length) return <div className="p-10 text-center">No service categories found.</div>;
+    if (!categories?.length) return <div className="p-10 text-center">{t.servicesCards.noCategories}</div>;
 
     // Check if there are any active services at all
     const hasAnyServices = categories.some((cat) => cat.services?.some((s) => s.is_active));
-    if (!hasAnyServices) return <div className="p-10 text-center">No services available at the moment.</div>;
+    if (!hasAnyServices) return <div className="p-10 text-center">{t.servicesCards.noServices}</div>;
 
     // Helper to get a fallback background image
     const getBackgroundImage = (service: ServiceApi) => {
@@ -146,7 +148,7 @@ export default function ServicesCards({ categories: propCategories, className = 
                                         <h2 className="text-lg font-semibold text-gray-900 sm:text-2xl dark:text-white">{category.name}</h2>
                                         <div className="flex items-center gap-3">
                                             <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-800 sm:px-2.5 sm:text-xs dark:bg-green-900 dark:text-green-200">
-                                                {categoryServices.length} services
+                                                {categoryServices.length} {t.servicesCards.services}
                                             </span>
                                             <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                         </div>
@@ -157,9 +159,7 @@ export default function ServicesCards({ categories: propCategories, className = 
                             {isExpanded && (
                                 <div className="p-4">
                                     {categoryServices.length === 0 ? (
-                                        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                                            No services available in this category.
-                                        </div>
+                                        <div className="py-8 text-center text-gray-500 dark:text-gray-400">{t.servicesCards.noCategoryServices}</div>
                                     ) : (
                                         <AnimatedList
                                             items={categoryServices}

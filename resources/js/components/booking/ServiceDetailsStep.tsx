@@ -52,7 +52,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
     return (
         <div className="space-y-6">
             <div className="border-b border-gray-200 pb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{t.booking.serviceDetails.title}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 sm:text-2xl">{t.booking.serviceDetails.title}</h3>
                 <p className="mt-1 text-sm text-gray-600">
                     {services.length > 1
                         ? t.booking.serviceDetails.provideDetailsPlural.replace('{count}', String(services.length))
@@ -141,7 +141,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                                 return (
                                                     <FormField key={requirement.key} label={requirement.label} required={isRequired}>
                                                         <TextArea
-                                                            value={value ?? ''}
+                                                            value={typeof value === 'string' ? value : ''}
                                                             onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
                                                             placeholder={requirement.placeholder ?? undefined}
                                                             rows={3}
@@ -157,7 +157,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                                     <FormField key={requirement.key} label={requirement.label} required={isRequired}>
                                                         <Input
                                                             type="number"
-                                                            value={value ?? ''}
+                                                            value={value === null || value === undefined ? '' : String(value)}
                                                             onChange={(v) =>
                                                                 onChange(
                                                                     updateRequirementValue(
@@ -180,7 +180,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                                     <FormField key={requirement.key} label={requirement.label} required={isRequired}>
                                                         <div className="space-y-2">
                                                             <Select
-                                                                value={value ?? ''}
+                                                                value={typeof value === 'string' ? value : ''}
                                                                 onChange={(v) =>
                                                                     onChange(updateRequirementValue(state, serviceId, requirement.key, v))
                                                                 }
@@ -300,7 +300,7 @@ export default function ServiceDetailsStep({ services, state, onChange }: Servic
                                             return (
                                                 <FormField key={requirement.key} label={requirement.label} required={isRequired}>
                                                     <Input
-                                                        value={value ?? ''}
+                                                        value={typeof value === 'string' ? value : ''}
                                                         onChange={(v) => onChange(updateRequirementValue(state, serviceId, requirement.key, v))}
                                                         placeholder={requirement.placeholder ?? undefined}
                                                         maxLength={50}

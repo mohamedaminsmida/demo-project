@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import type { ServiceConfig } from '../../config/services';
+import { useLocale } from '../../locales/LocaleProvider';
 import { computeBookingPricing } from '../../services/bookingPricing';
 import type { BookingState } from '../../types/booking';
 import { getServiceRequirements, isRequirementValueEmpty } from '../../utils/bookingRequirements';
@@ -12,6 +13,7 @@ interface ReviewStepProps {
 }
 
 export default function ReviewStep({ service, state, selectedServices }: ReviewStepProps) {
+    const { content: t } = useLocale();
     const services = selectedServices.length > 0 ? selectedServices : [service];
     const pricing = computeBookingPricing(services, state);
 
@@ -69,7 +71,7 @@ export default function ReviewStep({ service, state, selectedServices }: ReviewS
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Review Your Booking</h3>
+            <h3 className="text-2xl font-bold text-gray-900 sm:text-2xl">{t.booking.review.title}</h3>
 
             <div className="space-y-4">
                 <div className="rounded-lg border border-gray-200 p-4">
@@ -114,7 +116,7 @@ export default function ReviewStep({ service, state, selectedServices }: ReviewS
                     <DetailRow label="Date" value={formatDate(state.appointment.date)} />
                     <DetailRow label="Time" value={state.appointment.time || 'Not selected'} />
                     {state.customer.address && <DetailRow label="Address" value={state.customer.address} />}
-                    <DetailRow label="Payment" value="All payments are made on site, No online payment is required." />
+                    <DetailRow label="Payment" value={t.booking.serviceDetails.paymentNote} />
                 </div>
 
                 <div className="rounded-lg border border-gray-200 p-4">

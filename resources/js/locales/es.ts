@@ -169,6 +169,14 @@ const es = {
             submitLabel: 'Enviar solicitud',
         },
     },
+    servicesCards: {
+        loading: 'Cargando servicios...',
+        error: 'Error al cargar categorías',
+        noCategories: 'No se encontraron categorías de servicios.',
+        noServices: 'No hay servicios disponibles en este momento.',
+        services: 'servicios',
+        noCategoryServices: 'No hay servicios disponibles en esta categoría.',
+    },
     booking: {
         wizard: {
             steps: {
@@ -188,6 +196,7 @@ const es = {
             loadingServiceDetails: 'Cargando detalles del servicio...',
         },
         appointment: {
+            title: 'Fecha de cita',
             selectMonth: 'Seleccionar mes',
             preferredDate: 'Fecha preferida',
             selectHour: 'Seleccionar hora',
@@ -243,20 +252,43 @@ const es = {
             paymentNote: 'Todos los pagos se realizan en el sitio, no se requiere pago en línea.',
         },
         customer: {
-            title: 'Tu información',
+            title: 'Tus datos',
             fullName: 'Nombre completo',
             fullNamePlaceholder: 'Juan Pérez',
-            phone: 'Número de teléfono',
+            phone: 'Teléfono',
             phonePlaceholder: '(212) 555-0123',
             email: 'Correo electrónico',
             emailPlaceholder: 'juan@ejemplo.com',
             address: 'Dirección',
             addressPlaceholder: '123 Calle Principal, Ciudad',
         },
+        review: {
+            title: 'Revisa tu reserva',
+        },
+        page: {
+            loadingServices: 'Cargando servicios...',
+            serviceNotFoundTitle: 'Servicio no encontrado',
+            serviceNotFoundMessage: 'No se pudo encontrar el servicio solicitado.',
+            backToBooking: 'Volver a reservar',
+            submittingHeadTitle: 'Enviando...',
+            submittingTitle: 'Enviando tu cita...',
+            submittingSubtitle: 'Espera mientras procesamos tu solicitud',
+            bookingConfirmedHeadTitle: 'Reserva confirmada',
+            bookingConfirmedTitle: '¡Reserva confirmada!',
+            bookingConfirmedMessage: 'Tu cita para {service} ha sido programada.',
+            yourServiceFallback: 'tu servicio',
+            appointmentLine: 'Cita: {appointment}',
+            confirmationSentTo: 'Enviaremos una confirmación a',
+            backToServices: 'Volver a Servicios',
+            goHome: 'Ir al inicio',
+            correctVehicleDetails: 'Corrige los detalles del vehículo resaltados antes de enviar.',
+            correctContactDetails: 'Corrige los datos de contacto resaltados antes de enviar.',
+            genericError: 'Ocurrió un error',
+        },
     },
     footer: {
         about:
-            'Luque Tires comenzó como un pequeño taller familiar con un objetivo sencillo: mantener a nuestros vecinos seguros en la carretera. Fundado en la confianza, la honestidad y el trabajo duro, pronto nos convertimos en algo más que un lugar para comprar llantas: nos volvimos parte de la comunidad.',
+            'Luque Tires comenzó como un pequeño taller familiar con un objetivo simple: mantener a nuestros vecinos seguros en la carretera. Basados en la confianza, la honestidad y el trabajo duro, rápidamente nos convertimos en más que una tienda de llantas: nos convertimos en parte de la comunidad.',
         contact: {
             title: 'Información de contacto',
             phone: '+1 360-736-8313',
@@ -285,6 +317,7 @@ const es = {
             line: 'Política de privacidad © {year} Luque Tires',
             link: 'Política de privacidad',
         },
+        poweredBy: 'Desarrollado por',
     },
 } as const;
 
