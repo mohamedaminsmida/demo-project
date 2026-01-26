@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendBrevoTransactionalEmail;
 use Hofmannsven\Brevo\Facades\Brevo;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -82,16 +83,16 @@ class BrevoController extends Controller
         ]);
 
         try {
-            $result = Brevo::TransactionalEmailsApi()->sendTransacEmail([
+            SendBrevoTransactionalEmail::dispatch([
                 'sender' => $request->sender,
                 'to' => $request->to,
                 'subject' => $request->subject,
                 'htmlContent' => $request->htmlContent,
-            ]);
+            ])->onQueue('emails');
 
             return response()->json([
                 'success' => true,
-                'data' => $result
+                'queued' => true
             ]);
         } catch (\Exception $e) {
             return response()->json([

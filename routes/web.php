@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Inertia\Inertia;
@@ -8,20 +7,6 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('BookService');
 })->name('home');
-
-// Test email route (remove in production)
-Route::get('/test-email', function () {
-    try {
-        Mail::raw('Hello from ' . config('app.name') . '! This is a test email.', function ($message) {
-            $message->to('test@example.com')
-                    ->subject('Test Email - ' . config('app.name'));
-        });
-
-        return 'Email sent! Check your Mailtrap inbox (or storage/logs if using log driver).';
-    } catch (\Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
-});
 
 // Preview appointment confirmation email template
 Route::get('/preview-email', function () {

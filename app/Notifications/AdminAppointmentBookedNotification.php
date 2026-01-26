@@ -11,9 +11,9 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 
-class AdminAppointmentBookedNotification extends Notification
+class AdminAppointmentBookedNotification extends Notification implements ShouldQueue
 {
-    use Queueable, ShouldQueue;
+    use Queueable;
 
     public function __construct(
         private readonly ServiceAppointment $appointment

@@ -278,6 +278,7 @@ const fr = {
             bookingConfirmedMessage: 'Votre rendez-vous pour {service} a été programmé.',
             yourServiceFallback: 'votre service',
             appointmentLine: 'Rendez-vous : {appointment}',
+            atConnector: 'à',
             confirmationSentTo: 'Nous enverrons une confirmation à',
             backToServices: 'Retour aux services',
             goHome: 'Accueil',

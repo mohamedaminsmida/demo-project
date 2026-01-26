@@ -5,11 +5,12 @@ namespace App\Notifications;
 use App\Models\ServiceAppointment;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Vite;
 
-class AppointmentRescheduledNotification extends Notification
+class AppointmentRescheduledNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

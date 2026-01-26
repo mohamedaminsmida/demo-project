@@ -10,9 +10,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Vite;
 
-class AppointmentConfirmationNotification extends Notification
+class AppointmentConfirmationNotification extends Notification implements ShouldQueue
 {
-    use Queueable, ShouldQueue;
+    use Queueable;
 
     /**
      * Create a new notification instance.

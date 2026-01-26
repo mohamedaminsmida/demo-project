@@ -10,7 +10,8 @@ use App\Models\ServiceAppointment;
 use App\Models\ServiceRequirementValue;
 use App\Models\Setting;
 use App\Models\Vehicle;
-use App\Services\EmailService;
+use App\Jobs\SendAdminAppointmentBookedEmail;
+use App\Jobs\SendAppointmentConfirmationEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -337,7 +338,10 @@ class AppointmentController extends Controller
             ]);
 
             // Attach services to the appointment with their per-service details
+            $finalPrice = 0.0;
             foreach ($services as $service) {
+                $service->loadMissing('requirements');
+
                 $appointmentService = AppointmentService::create([
                     'service_appointment_id' => $appointment->id,
                     'service_id' => $service->id,
@@ -349,11 +353,53 @@ class AppointmentController extends Controller
                     ? ($serviceRequirementsPayload[$serviceId] ?? [])
                     : [];
 
-                $service->loadMissing('requirements');
+                $addonsTotal = 0.0;
 
                 foreach ($service->requirements as $requirement) {
                     if (! array_key_exists($requirement->key, $serviceValues)) {
                         continue;
+                    }
+
+                    $rawValue = $serviceValues[$requirement->key];
+
+                    if (in_array($requirement->type, ['select', 'radio'], true)) {
+                        $selected = (string) $rawValue;
+                        $options = is_array($requirement->options) ? $requirement->options : [];
+                        foreach ($options as $option) {
+                            if (! is_array($option)) {
+                                continue;
+                            }
+                            if ((string) ($option['value'] ?? '') !== $selected) {
+                                continue;
+                            }
+                            $addonsTotal += (float) ($option['price'] ?? 0);
+                            break;
+                        }
+                    } elseif ($requirement->type === 'multiselect') {
+                        $selectedValues = is_array($rawValue) ? $rawValue : [];
+                        $selectedSet = array_map('strval', $selectedValues);
+                        $options = is_array($requirement->options) ? $requirement->options : [];
+                        foreach ($options as $option) {
+                            if (! is_array($option)) {
+                                continue;
+                            }
+                            if (! in_array((string) ($option['value'] ?? ''), $selectedSet, true)) {
+                                continue;
+                            }
+                            $addonsTotal += (float) ($option['price'] ?? 0);
+                        }
+                    } elseif (in_array($requirement->type, ['checkbox', 'toggle'], true)) {
+                        if (filter_var($rawValue, FILTER_VALIDATE_BOOLEAN)) {
+                            $addonsTotal += (float) ($requirement->price ?? 0);
+                        }
+                    } elseif ($requirement->type === 'number') {
+                        $quantity = is_numeric($rawValue) ? (float) $rawValue : 0.0;
+                        $unitPrice = is_array($requirement->validations ?? null)
+                            ? (float) (($requirement->validations['unit_price'] ?? 0))
+                            : 0.0;
+                        if ($quantity > 0 && $unitPrice > 0) {
+                            $addonsTotal += $quantity * $unitPrice;
+                        }
                     }
 
                     ServiceRequirementValue::create([
@@ -362,27 +408,36 @@ class AppointmentController extends Controller
                         'value' => $serviceValues[$requirement->key],
                     ]);
                 }
+
+                $serviceTotal = (float) ($service->base_price ?? 0) + $addonsTotal;
+                $appointmentService->forceFill([
+                    'price' => $serviceTotal,
+                ])->save();
+
+                $finalPrice += $serviceTotal;
             }
+
+            $appointment->forceFill([
+                'final_price' => $finalPrice,
+            ])->save();
 
             DB::commit();
 
             // Send booking emails using Brevo Email Service
             $appointment->load(['services', 'vehicle']);
-            
+
             Log::info('Preparing to send appointment emails', [
                 'appointment_id' => $appointment->id,
                 'customer_email' => $appointment->customer_email,
                 'customer_name' => $appointment->customer_name,
             ]);
-            
-            $emailService = new EmailService();
-            
+
             $adminEmail = null;
             $adminEmailSource = null;
-            
+
             // Try to find a user with 'admin' role
             $adminUser = \App\Models\User::role('admin')->first();
-            
+
             if ($adminUser) {
                 $adminEmail = $adminUser->email;
                 $adminEmailSource = 'user.role(admin)';
@@ -400,16 +455,16 @@ class AppointmentController extends Controller
                     'admin_email' => $adminEmail,
                     'admin_email_source' => $adminEmailSource,
                 ]);
-                $adminEmailSent = $emailService->sendAppointmentNotificationToAdmin($appointment, $adminEmail);
-                Log::info('Admin email result', ['sent' => $adminEmailSent]);
+                SendAdminAppointmentBookedEmail::dispatch($appointment->id, $adminEmail)
+                    ->onQueue('emails');
             } else {
                 Log::warning('No admin email configured, skipping admin notification');
             }
 
             // Send confirmation email to customer
             Log::info('Sending customer confirmation email');
-            $customerEmailSent = $emailService->sendAppointmentConfirmation($appointment);
-            Log::info('Customer email result', ['sent' => $customerEmailSent]);
+            SendAppointmentConfirmationEmail::dispatch($appointment->id)
+                ->onQueue('emails');
 
             return response()->json([
                 'success' => true,

@@ -18,7 +18,7 @@
                     <!-- Logo Header -->
                     <tr>
                         <td align="center" style="padding:28px 40px 20px;background-color:#ffffff;">
-                            <img src="{{ url('images/logo_black.png') }}" alt="{{ $companyName }} Logo"
+                            <img src="{{ $logoUrl ?? asset('images/logo_black.png') }}" alt="{{ $companyName }} Logo"
                                 style="display:block;height:100px;width:auto;" />
                         </td>
                     </tr>
@@ -174,7 +174,7 @@
                                         style="display:inline-block;margin-top:12px;color:#9ca3af;text-decoration:none;font-size:13px;">Privacy
                                         Policy</a>
                                 </div>
-                                <img src="{{ asset('images/logo.png') }}" alt="Luque Tires Logo"
+                                <img src="{{ $footerLogoUrl ?? asset('images/logo.png') }}" alt="Luque Tires Logo"
                                     style="position:absolute;right:0;top:50%;transform:translateY(-50%);height:48px;width:auto;" />
                             </div>
                         </td>

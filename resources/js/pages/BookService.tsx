@@ -229,7 +229,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
 
     const formatSuccessDate = (dateStr: string) => {
         if (!dateStr) return '';
-        return new Date(dateStr).toLocaleDateString(undefined, {
+        const locale = typeof document !== 'undefined' && document.documentElement.lang ? document.documentElement.lang : undefined;
+        return new Date(dateStr).toLocaleDateString(locale, {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -486,7 +487,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     if (submitSuccess) {
         const successDate = formatSuccessDate(state.appointment.date);
         const successTime = state.appointment.time || '';
-        const appointmentLabel = successDate && successTime ? `${successDate} at ${successTime}` : successDate || successTime;
+        const atConnector = t.booking.page.atConnector;
+        const appointmentLabel = successDate && successTime ? `${successDate} ${atConnector} ${successTime}` : successDate || successTime;
 
         return (
             <Layout
