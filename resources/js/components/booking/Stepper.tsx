@@ -172,7 +172,7 @@ export default function Stepper({
                             disabled={canProceed ? !canProceed() : false}
                             className="inline-flex w-full cursor-pointer items-center justify-center rounded-full bg-green-700 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-green-700 sm:w-auto"
                         >
-                            {isLastStep ? 'Confirm Booking' : nextButtonText}
+                            {isLastStep ? 'Confirm Appointment' : nextButtonText}
                         </button>
                     </div>
                 )}

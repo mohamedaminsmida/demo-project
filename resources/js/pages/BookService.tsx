@@ -227,6 +227,16 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
     const [vehicleErrors, setVehicleErrors] = useState<Partial<Record<keyof VehicleInfo, string>>>({});
     const [customerErrors, setCustomerErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
 
+    const formatSuccessDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
     const allServiceIds = useMemo(() => {
         if (!service) return [] as number[];
 
@@ -290,8 +300,8 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
             case 3:
                 // Vehicle Info
                 return Object.keys(validateVehicleInfo(state.vehicle, serviceNeedsTireSize(service))).length === 0;
-            case 4: // Service Details - validate all selected services
-            {
+            case 4: {
+                // Service Details - validate all selected services
                 const selectedServices = dbServices.filter((s) => selectedServiceIds.includes(s.id.toString()));
 
                 // Check each selected service has required fields filled
@@ -477,6 +487,10 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
 
     // Success state
     if (submitSuccess) {
+        const successDate = formatSuccessDate(state.appointment.date);
+        const successTime = state.appointment.time || '';
+        const appointmentLabel = successDate && successTime ? `${successDate} at ${successTime}` : successDate || successTime;
+
         return (
             <Layout
                 boxed={true}
@@ -494,18 +508,19 @@ export default function BookService({ serviceSlug }: BookServiceProps) {
                     <p className="mb-2 text-gray-600">
                         Your appointment for <strong>{service?.name ?? 'your service'}</strong> has been scheduled.
                     </p>
+                    {appointmentLabel && <p className="mb-2 text-gray-600">Appointment: {appointmentLabel}</p>}
                     <p className="mb-6 text-gray-600">
                         We'll send a confirmation to <strong>{state.customer.email}</strong>
                     </p>
                     <div className="flex justify-center gap-4">
                         <a
-                            href="/"
+                            href="https://luquetires.com/services/"
                             className="inline-flex items-center rounded-full bg-green-800 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green-700"
                         >
-                            Back to booking
+                            Back to Services
                         </a>
                         <a
-                            href="/"
+                            href="https://luquetires.com"
                             className="inline-flex items-center rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
                         >
                             Go Home

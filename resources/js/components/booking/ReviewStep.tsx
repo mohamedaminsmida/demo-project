@@ -79,61 +79,40 @@ export default function ReviewStep({ service, state, selectedServices }: ReviewS
                             <p className="text-xs text-gray-500">Base + selected options</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs font-medium text-gray-500">Total</p>
                             <p className="text-lg font-bold text-gray-900">{formatMoney(pricing.total)}</p>
+                            <p className="text-xs font-medium text-gray-500">Total</p>
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {filledServiceRequirements.length > 0 && (
-                            <div className="rounded-lg border border-gray-100 bg-white p-3">
-                                <h5 className="mb-2 font-semibold text-gray-900">Service details</h5>
-                                {filledServiceRequirements.map((row, idx) => (
-                                    <DetailRow
-                                        key={`${row.serviceName}-${row.label}-${idx}`}
-                                        label={`${row.serviceName} - ${row.label}`}
-                                        value={formatRequirementValue(row.value)}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                    {filledServiceRequirements.length > 0 && (
+                        <details className="group rounded-lg border border-gray-100 bg-white p-3">
+                            <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-gray-900">
+                                <span>View details</span>
+                                <span className="text-gray-400 transition-transform group-open:rotate-180">▾</span>
+                            </summary>
 
-                        <div className="rounded-lg border border-gray-100 bg-white p-3">
-                            <h5 className="mb-2 font-semibold text-gray-900">Pricing summary</h5>
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-sm text-gray-700">
-                                    <span>Base total</span>
-                                    <span>{formatMoney(baseTotal)}</span>
-                                </div>
-
-                                {selectedOptions.length > 0 && (
-                                    <div className="space-y-1">
-                                        <p className="pt-2 text-sm font-medium text-gray-900">Selected options</p>
-                                        {selectedOptions.map((addon, idx) => (
-                                            <div key={`${addon.serviceName}-addon-${idx}`} className="flex justify-between text-sm text-gray-700">
-                                                <span>
-                                                    {addon.serviceName} - {addon.label}
-                                                </span>
-                                                <span>+{formatMoney(addon.amount)}</span>
-                                            </div>
+                            <div className="mt-3 space-y-3">
+                                <div>
+                                    <h5 className="mb-2 text-sm font-semibold text-gray-900">Service details</h5>
+                                    <div className="rounded-lg border border-gray-100 bg-white">
+                                        {filledServiceRequirements.map((row, idx) => (
+                                            <DetailRow
+                                                key={`${row.serviceName}-${row.label}-${idx}`}
+                                                label={`${row.serviceName} - ${row.label}`}
+                                                value={formatRequirementValue(row.value)}
+                                            />
                                         ))}
                                     </div>
-                                )}
-
-                                <div className="mt-2 flex justify-between text-sm font-semibold text-gray-900">
-                                    <span>Total</span>
-                                    <span>{formatMoney(pricing.total)}</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </details>
+                    )}
                 </div>
 
                 <div className="rounded-lg border border-gray-200 p-4">
                     <h4 className="mb-3 border-b border-gray-200 pb-2 font-semibold text-gray-900">Appointment</h4>
                     <DetailRow label="Date" value={formatDate(state.appointment.date)} />
                     <DetailRow label="Time" value={state.appointment.time || 'Not selected'} />
-                    <DetailRow label="Time zone" value={Intl.DateTimeFormat().resolvedOptions().timeZone || 'Not available'} />
                     {state.customer.address && <DetailRow label="Address" value={state.customer.address} />}
                     <DetailRow label="Payment" value="All payments are made on site, No online payment is required." />
                 </div>
@@ -143,7 +122,7 @@ export default function ReviewStep({ service, state, selectedServices }: ReviewS
                     <DetailRow label="Full Name" value={state.customer.fullName} />
                     <DetailRow label="Phone" value={state.customer.phone} />
                     <DetailRow label="Email" value={state.customer.email} />
-                    <DetailRow label="Email Updates" value={state.customer.smsUpdates ? 'Enabled' : 'Disabled'} />
+                    {state.customer.address && <DetailRow label="Address" value={state.customer.address} />}
                 </div>
             </div>
         </div>

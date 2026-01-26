@@ -13,12 +13,12 @@ export default function Header() {
     return (
         <header className="z-40 w-full bg-transparent px-4 py-0.5 text-white md:px-6 md:py-1">
             <PageLoaderBar />
-            <div className="mx-auto w-full max-w-5xl px-2 py-0.5 text-white md:px-6 md:py-1">
+            <div className="mx-auto w-full max-w-none px-2 py-0.5 text-white md:max-w-5xl md:px-0 md:py-1">
                 {/* Mobile: back button left, logo centered, language switcher right */}
                 <div className="relative flex min-h-[3.5rem] items-center justify-between gap-3 md:hidden">
                     <button
                         type="button"
-                        className="flex h-8 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-green-700 shadow-sm backdrop-blur-sm transition hover:bg-white/15"
+                        className="flex h-8 w-12 cursor-pointer items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-green-700 shadow-sm backdrop-blur-sm transition hover:bg-white/15"
                         onClick={() => {
                             if (typeof window !== 'undefined' && window.history.length > 1) {
                                 window.history.back();
@@ -37,9 +37,9 @@ export default function Header() {
                         </svg>
                     </button>
 
-                    <div className="pointer-events-none absolute top-1 left-1/2 -translate-x-1/2">
+                    <a href="https://luquetires.com/" className="pointer-events-auto absolute top-1 left-1/2 -ml-2 -translate-x-1/2 md:-ml-0">
                         <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto object-contain" />
-                    </div>
+                    </a>
 
                     <div>
                         <LanguageSelector
@@ -59,10 +59,10 @@ export default function Header() {
                 <div className="relative hidden min-h-[4rem] items-center justify-between md:flex">
                     <button
                         type="button"
-                        className="flex h-11 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-green-700 shadow-sm backdrop-blur-sm transition hover:bg-white/15"
+                        className="flex h-11 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-green-700 shadow-sm backdrop-blur-sm transition hover:bg-white/15"
                         onClick={() => {
-                            if (typeof window !== 'undefined' && window.history.length > 1) {
-                                window.history.back();
+                            if (typeof window !== 'undefined') {
+                                window.location.href = 'https://luquetires.com/';
                             }
                         }}
                         aria-label="Go back"
@@ -78,9 +78,9 @@ export default function Header() {
                         </svg>
                     </button>
 
-                    <div className="pointer-events-none absolute top-1 left-1/2 -translate-x-1/2">
+                    <a href="https://luquetires.com/" className="pointer-events-auto absolute top-1 left-1/2 -translate-x-1/2">
                         <img src={logoImage} alt="Luque Atelier logo" className="h-16 w-auto object-contain sm:h-22 lg:h-26" />
-                    </div>
+                    </a>
 
                     <LanguageSelector
                         current={{ code: localeContent.code, name: localeContent.name, flag: localeContent.flag }}
